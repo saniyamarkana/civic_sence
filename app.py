@@ -390,7 +390,8 @@ def dsa_linked_list():
         removed = live_ll.delete_by_id(cid)
         return jsonify({"success": True if removed else False, "removed": removed})
 
-    # GET
+    # Get
+    
     nodes = [n.data for n in live_ll.get_nodes()]
     return jsonify({"nodes": nodes, "size": live_ll.size()})
 
