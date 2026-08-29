@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicSense — Smart Civic Complaint Management & DSA Platform</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <canvas class="bg-particles" id="particleCanvas"></canvas>
+
+  <div class="auth-container">
+    <!-- Left Branding Hero -->
+    <div class="auth-brand">
+      <div class="auth-brand-content">
+        <div class="brand-icon">🏛️</div>
+        <h1 class="brand-title">CivicSense</h1>
+        <p class="brand-tagline">
+          Empowering Citizens & Municipal Authorities with intelligent civic issue tracking and practical Data Structures & Algorithms.
+        </p>
+
+        <div class="brand-features">
+          <div class="feature-item">
+            <i class="fa-solid fa-bolt-lightning feature-icon"></i>
+            <div>
+              <div style="font-weight: 700; font-size: 13px;">Instant Civic Reporting</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Submit potholes, water leaks, and garbage in seconds</div>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <i class="fa-solid fa-code-branch feature-icon" style="color: var(--accent-purple);"></i>
+            <div>
+              <div style="font-weight: 700; font-size: 13px;">Phase 1 DSA Engine</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Interactive Linked List, Stack, Queue & Expression Parsers</div>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <i class="fa-solid fa-clock-rotate-left feature-icon" style="color: var(--status-pending);"></i>
+            <div>
+              <div style="font-weight: 700; font-size: 13px;">Live Audit & Timeline</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Track status updates and departmental actions in real-time</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Login / Register Card -->
+    <div class="auth-form-wrapper">
+      <div class="auth-card glass-card">
+        <!-- Mode Tabs: Login / Register -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <button class="btn btn-sm btn-primary" id="tabLogin" onclick="switchAuthTab('login')" style="flex: 1;">Sign In</button>
+          <button class="btn btn-sm btn-secondary" id="tabRegister" onclick="switchAuthTab('register')" style="flex: 1;">Create Account</button>
+        </div>
+
+        <!-- Role Switcher (for login) -->
+        <div id="roleSwitcher" class="role-switcher">
+          <button class="role-btn active" data-role="citizen" onclick="selectRole('citizen')">
+            <i class="fa-solid fa-user"></i> Citizen
+          </button>
+          <button class="role-btn" data-role="admin" onclick="selectRole('admin')">
+            <i class="fa-solid fa-shield-halved"></i> Admin
+          </button>
+          <button class="role-btn" data-role="department" onclick="selectRole('department')">
+            <i class="fa-solid fa-building"></i> Dept
+          </button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-envelope"></i> Email Address</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-lock"></i> Password</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+          </div>
+
+          <div id="loginError" style="color: var(--status-rejected); font-size: 12px; margin-bottom: 15px; display: none;"></div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 15px;">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Portal
+          </button>
+
+          <!-- Quick Fill Credentials Demo Buttons -->
+          <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color); text-align: center;">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">⚡ Quick Test Credentials:</div>
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="quickFill('citizen@civicsense.com', 'citizen123', 'citizen')">👤 Citizen</button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="quickFill('admin@civicsense.com', 'admin123', 'admin')">🛡️ Admin</button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="quickFill('sanitation@civicsense.com', 'dept123', 'department')">🏢 Dept</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Register Form (Citizen Only) -->
+        <form id="registerForm" onsubmit="handleRegister(event)" style="display: none;">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-user"></i> Full Name</label>
+            <input type="text" id="regName" class="form-control" placeholder="e.g. Rahul Sharma" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-envelope"></i> Email Address</label>
+            <input type="email" id="regEmail" class="form-control" placeholder="rahul@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-phone"></i> Phone Number</label>
+            <input type="tel" id="regPhone" class="form-control" placeholder="9876543210">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-location-dot"></i> Area / Ward / Address</label>
+            <input type="text" id="regAddress" class="form-control" placeholder="Area A, Sector 4">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-lock"></i> Create Password</label>
+            <input type="password" id="regPassword" class="form-control" placeholder="Minimum 4 characters" required>
+          </div>
+
+          <div id="regError" style="color: var(--status-rejected); font-size: 12px; margin-bottom: 15px; display: none;"></div>
+
+          <button type="submit" class="btn btn-success" style="width: 100%; padding: 14px; font-size: 15px;">
+            <i class="fa-solid fa-user-plus"></i> Create Citizen Account
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Department Portal — CivicSense</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">🏢</div>
+        <div>
+          <div class="sidebar-brand-name">CivicSense</div>
+          <div class="sidebar-sub">{{ user.department or 'Municipal Dept' }}</div>
+        </div>
+      </div>
+
+      <div class="user-badge">
+        <div class="user-avatar" style="background: linear-gradient(135deg, #06b6d4, #10b981);">👷</div>
+        <div class="user-info">
+          <div class="user-name">{{ user.name }}</div>
+          <div class="user-role" style="color: var(--accent-cyan);">Field Officer</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">OPERATIONS</div>
+        <a class="nav-link active" data-tab="dashboard" onclick="switchDeptTab('dashboard')">
+          <i class="fa-solid fa-chart-line"></i> Work Overview
+        </a>
+        <a class="nav-link" data-tab="assigned" onclick="switchDeptTab('assigned')">
+          <i class="fa-solid fa-clipboard-list"></i> Assigned Tasks
+        </a>
+        <a class="nav-link" data-tab="updater" onclick="switchDeptTab('updater')">
+          <i class="fa-solid fa-wrench"></i> Update Work Status
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/logout" class="nav-link logout-link">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <h2 class="page-title" id="deptHeaderTitle">
+          <i class="fa-solid fa-building" style="color: var(--accent-cyan);"></i> {{ user.department }} Dashboard
+        </h2>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary btn-sm" onclick="loadDeptData()">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <!-- ════════════════════════════════════════════════════════════════
+             TAB 1: WORK OVERVIEW
+             ════════════════════════════════════════════════════════════════ -->
+        <section id="deptTab_dashboard">
+          <div class="stats-grid">
+            <div class="glass-card stat-card">
+              <div class="stat-icon-wrapper" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
+                <i class="fa-solid fa-inbox"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="deptStatTotal">0</div>
+                <div class="stat-label">Assigned Tasks</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card">
+              <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.15); color: var(--status-pending);">
+                <i class="fa-solid fa-hourglass-start"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="deptStatPending">0</div>
+                <div class="stat-label">Pending Start</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card">
+              <div class="stat-icon-wrapper" style="background: rgba(59, 130, 246, 0.15); color: var(--status-progress);">
+                <i class="fa-solid fa-person-digging"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="deptStatProgress">0</div>
+                <div class="stat-label">In Progress</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card">
+              <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.15); color: var(--status-resolved);">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="deptStatResolved">0</div>
+                <div class="stat-label">Resolved</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Urgent High-Priority Tasks Card -->
+          <div class="glass-card" style="padding: 25px; margin-bottom: 25px;">
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--status-rejected); margin-bottom: 15px;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Urgent High-Priority Assignments
+            </h3>
+            <div id="deptUrgentList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             TAB 2: ASSIGNED TASKS
+             ════════════════════════════════════════════════════════════════ -->
+        <section id="deptTab_assigned" style="display: none;">
+          <div class="glass-card" style="padding: 20px; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                  <th style="padding: 12px 10px;">ID</th>
+                  <th style="padding: 12px 10px;">Title</th>
+                  <th style="padding: 12px 10px;">Location</th>
+                  <th style="padding: 12px 10px;">Priority</th>
+                  <th style="padding: 12px 10px;">Status</th>
+                  <th style="padding: 12px 10px;">Quick Action</th>
+                </tr>
+              </thead>
+              <tbody id="deptAssignedTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             TAB 3: UPDATE STATUS FORM
+             ════════════════════════════════════════════════════════════════ -->
+        <section id="deptTab_updater" style="display: none;">
+          <div class="glass-card" style="max-width: 680px; margin: 0 auto; padding: 30px;">
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">⚙️ Record Work Update</h3>
+
+            <form onsubmit="submitDeptWorkUpdate(event)">
+              <div class="form-group">
+                <label class="form-label">Select Assigned Complaint:</label>
+                <select id="deptComplaintSelect" class="form-control" required></select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Update Status to:</label>
+                <select id="deptTargetStatus" class="form-control">
+                  <option value="In Progress">In Progress (Field Work Underway)</option>
+                  <option value="Resolved">Resolved (Work Completed)</option>
+                  <option value="Pending">Pending (Awaiting Materials / Crew)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Field Remarks & Resolution Details:</label>
+                <textarea id="deptWorkRemarks" class="form-control" placeholder="Describe the actions taken, crew deployed, or resolution summary..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                <i class="fa-solid fa-floppy-disk"></i> Log Status Update
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Quick Solve & Remarks Modal -->
+  <div id="deptSolveModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 540px; padding: 30px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 id="deptSolveModalTitle" style="font-size: 18px; font-weight: 800; color: var(--status-resolved);">
+          <i class="fa-solid fa-circle-check"></i> Mark Complaint as Resolved
+        </h3>
+        <button class="btn btn-sm btn-secondary" onclick="closeDeptSolveModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">
+        Record the resolution summary and proof of work for citizen verification.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label">Resolution Work Details *</label>
+        <textarea id="deptSolveNotes" class="form-control" placeholder="e.g. Cleared waste dump, disinfected area with lime powder, and placed 2 new closed bins." style="height: 100px;" required></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="closeDeptSolveModal()">Cancel</button>
+        <button class="btn btn-success" onclick="confirmDeptSolve()"><i class="fa-solid fa-check"></i> Complete & Solve</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/department.js"></script>
+</body>
+</html>
