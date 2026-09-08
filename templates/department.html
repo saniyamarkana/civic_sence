@@ -53,7 +53,10 @@
         <h2 class="page-title" id="deptHeaderTitle">
           <i class="fa-solid fa-building" style="color: var(--accent-cyan);"></i> {{ user.department }} Dashboard
         </h2>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <span id="deptHeaderBadge" class="badge badge-approved" style="font-size: 11px; padding: 6px 12px;">
+            <i class="fa-solid fa-shield-halved"></i> {{ user.name }} · Active
+          </span>
           <button class="btn btn-secondary btn-sm" onclick="loadDeptData()">
             <i class="fa-solid fa-rotate"></i> Refresh
           </button>
@@ -61,6 +64,64 @@
       </header>
 
       <div class="page-content">
+        <!-- ════════════════════════════════════════════════════════════════
+             DEPARTMENT HERO BANNER
+             ════════════════════════════════════════════════════════════════ -->
+        <div class="dept-hero-banner">
+          <div>
+            <div class="dept-hero-title-wrap">
+              <div class="dept-hero-title">
+                <span>🏢</span> {{ user.department or 'Municipal Services' }}
+              </div>
+              <span class="dept-command-tag">
+                <i class="fa-solid fa-shield-halved"></i> Field Command Active
+              </span>
+            </div>
+            <div class="dept-hero-sub">
+              Central field operations &amp; triage console · Automated dispatch, verification workflows, and citizen service delivery.
+            </div>
+
+            <div class="dept-hero-meta-row">
+              <span class="dept-meta-pill">
+                <i class="fa-solid fa-location-dot" style="color: #f43f5e;"></i>
+                Zone: <strong>Central Urban · Ward 12</strong>
+              </span>
+              <span class="dept-meta-pill">
+                <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i>
+                Response Standard: <strong>24 Hours</strong>
+              </span>
+              <span class="dept-meta-pill">
+                <i class="fa-solid fa-people-group" style="color: var(--accent-cyan);"></i>
+                Crew Status: <strong>Rapid Deployment Ready</strong>
+              </span>
+            </div>
+          </div>
+
+          <!-- Right: Live Dispatch & Status Panel (New Pure UI) -->
+          <div class="dept-hero-right">
+            <div class="hero-live-card">
+              <div class="live-radar-badge">
+                <div class="radar-ping-wrap">
+                  <span class="radar-dot"></span>
+                  <span class="radar-wave"></span>
+                </div>
+                <span>Live Dispatch</span>
+              </div>
+              <div class="hero-clock-val" id="deptLiveClock">--:--:--</div>
+              <div class="hero-date-val" id="deptLiveDate">Loading date...</div>
+            </div>
+
+            <div class="hero-actions-col">
+              <button type="button" class="hero-action-pill" onclick="loadDeptData()" title="Sync live database">
+                <i class="fa-solid fa-arrows-rotate"></i> <span>Sync</span>
+              </button>
+              <button type="button" class="hero-action-pill hero-action-pill-accent" onclick="switchDeptTab('assigned')" title="Open Tasks Board">
+                <i class="fa-solid fa-table-list"></i> <span>Tasks Table</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- ════════════════════════════════════════════════════════════════
              TAB 1: WORK OVERVIEW
              ════════════════════════════════════════════════════════════════ -->
@@ -71,8 +132,8 @@
                 <i class="fa-solid fa-inbox"></i>
               </div>
               <div>
-                <div class="stat-val" id="deptStatTotal">0</div>
-                <div class="stat-label">Assigned Tasks</div>
+                <div class="stat-val" id="deptStatTotal" style="color: var(--accent-cyan);">0</div>
+                <div class="stat-label">Total Assigned Tasks</div>
               </div>
             </div>
 
@@ -81,18 +142,18 @@
                 <i class="fa-solid fa-hourglass-start"></i>
               </div>
               <div>
-                <div class="stat-val" id="deptStatPending">0</div>
+                <div class="stat-val" id="deptStatPending" style="color: var(--status-pending);">0</div>
                 <div class="stat-label">Pending Start</div>
               </div>
             </div>
 
             <div class="glass-card stat-card">
-              <div class="stat-icon-wrapper" style="background: rgba(59, 130, 246, 0.15); color: var(--status-progress);">
+              <div class="stat-icon-wrapper" style="background: rgba(59, 130, 246, 0.15); color: #38bdf8;">
                 <i class="fa-solid fa-person-digging"></i>
               </div>
               <div>
-                <div class="stat-val" id="deptStatProgress">0</div>
-                <div class="stat-label">In Progress</div>
+                <div class="stat-val" id="deptStatProgress" style="color: #38bdf8;">0</div>
+                <div class="stat-label">In Field Progress</div>
               </div>
             </div>
 
@@ -101,35 +162,92 @@
                 <i class="fa-solid fa-circle-check"></i>
               </div>
               <div>
-                <div class="stat-val" id="deptStatResolved">0</div>
-                <div class="stat-label">Resolved</div>
+                <div class="stat-val" id="deptStatResolved" style="color: var(--status-resolved);">0</div>
+                <div class="stat-label">Resolved &amp; Closed</div>
               </div>
+            </div>
+          </div>
+
+          <!-- Department Resolution Rate Card -->
+          <div class="glass-card" style="padding: 22px 25px; margin-bottom: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary);">
+                  <i class="fa-solid fa-chart-simple" style="color: var(--accent-cyan);"></i> Resolution Efficiency Rate
+                </h4>
+                <div id="deptProgressSubtitle" style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                  Calculating task progress...
+                </div>
+              </div>
+              <div id="deptProgressPercent" style="font-size: 22px; font-weight: 800; color: var(--status-resolved);">
+                0%
+              </div>
+            </div>
+            <div class="progress-bar-wrap">
+              <div id="deptProgressFill" class="progress-bar-fill" style="width: 0%;"></div>
             </div>
           </div>
 
           <!-- Urgent High-Priority Tasks Card -->
           <div class="glass-card" style="padding: 25px; margin-bottom: 25px;">
-            <h3 style="font-size: 16px; font-weight: 800; color: var(--status-rejected); margin-bottom: 15px;">
-              <i class="fa-solid fa-triangle-exclamation"></i> Urgent High-Priority Assignments
-            </h3>
-            <div id="deptUrgentList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3 style="font-size: 16px; font-weight: 800; color: var(--status-rejected); margin: 0;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Urgent High-Priority Assignments
+              </h3>
+              <span id="deptUrgentCountBadge" class="badge badge-rejected" style="font-size: 10px;">0 Urgent</span>
+            </div>
+            <div id="deptUrgentList" style="display: flex; flex-direction: column; gap: 12px;"></div>
           </div>
         </section>
 
         <!-- ════════════════════════════════════════════════════════════════
-             TAB 2: ASSIGNED TASKS
+             TAB 2: ASSIGNED TASKS (DEDICATED TABLE VIEW)
              ════════════════════════════════════════════════════════════════ -->
         <section id="deptTab_assigned" style="display: none;">
-          <div class="glass-card" style="padding: 20px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+          <!-- Controls Toolbar: Search & Filter Pills -->
+          <div class="glass-card" style="padding: 18px 22px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px;">
+              <div style="flex: 1; min-width: 280px; position: relative;">
+                <input type="text" id="deptSearchInput" class="form-control" placeholder="🔍 Search tasks by ID, title, location, citizen..." oninput="filterDeptTasks()">
+              </div>
+
+              <div style="font-size: 13px; font-weight: 700; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span id="deptTaskCountBadge">2 Tasks Assigned</span>
+              </div>
+            </div>
+
+            <!-- Quick Filter Pill Tabs -->
+            <div class="filter-pill-bar">
+              <button class="filter-pill active" data-filter="All" onclick="setQuickFilter('All')">
+                All Tasks <span class="pill-count" id="pillAll">0</span>
+              </button>
+              <button class="filter-pill" data-filter="Pending" onclick="setQuickFilter('Pending')">
+                ⏳ Pending Start <span class="pill-count" id="pillPending">0</span>
+              </button>
+              <button class="filter-pill" data-filter="In Progress" onclick="setQuickFilter('In Progress')">
+                🔧 In Progress <span class="pill-count" id="pillProgress">0</span>
+              </button>
+              <button class="filter-pill" data-filter="Resolved" onclick="setQuickFilter('Resolved')">
+                ✅ Resolved <span class="pill-count" id="pillResolved">0</span>
+              </button>
+              <button class="filter-pill" data-filter="High" onclick="setQuickFilter('High')">
+                🔴 High Priority <span class="pill-count" id="pillHigh">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Dedicated Premium Table View -->
+          <div class="glass-card" style="padding: 0; overflow-x: auto; border-radius: 16px;">
+            <table style="width: 100%; min-width: 900px; border-collapse: collapse; text-align: left; font-size: 13px;">
               <thead>
-                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                  <th style="padding: 12px 10px;">ID</th>
-                  <th style="padding: 12px 10px;">Title</th>
-                  <th style="padding: 12px 10px;">Location</th>
-                  <th style="padding: 12px 10px;">Priority</th>
-                  <th style="padding: 12px 10px;">Status</th>
-                  <th style="padding: 12px 10px;">Quick Action</th>
+                <tr style="background: rgba(14, 21, 38, 0.85); border-bottom: 1px solid rgba(6, 182, 212, 0.2); color: var(--text-muted); font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
+                  <th style="padding: 16px 18px; width: 75px;">ID</th>
+                  <th style="padding: 16px 18px; width: 35%;">Issue &amp; Category</th>
+                  <th style="padding: 16px 18px; width: 23%;">Location &amp; Date</th>
+                  <th style="padding: 16px 18px; width: 12%;">Priority</th>
+                  <th style="padding: 16px 18px; width: 14%;">Status</th>
+                  <th style="padding: 16px 18px; width: 16%; text-align: right;">Actions</th>
                 </tr>
               </thead>
               <tbody id="deptAssignedTableBody"></tbody>
@@ -141,32 +259,44 @@
              TAB 3: UPDATE STATUS FORM
              ════════════════════════════════════════════════════════════════ -->
         <section id="deptTab_updater" style="display: none;">
-          <div class="glass-card" style="max-width: 680px; margin: 0 auto; padding: 30px;">
-            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 20px;">⚙️ Record Work Update</h3>
+          <div class="glass-card" style="max-width: 720px; margin: 0 auto; padding: 35px;">
+            <h3 style="font-size: 19px; font-weight: 800; margin-bottom: 6px;">
+              <i class="fa-solid fa-wrench" style="color: var(--accent-cyan);"></i> Record Field Work Update
+            </h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 24px;">
+              Update assignment stages, record deployed field crew notes, or mark tasks as completed.
+            </p>
 
             <form onsubmit="submitDeptWorkUpdate(event)">
               <div class="form-group">
-                <label class="form-label">Select Assigned Complaint:</label>
-                <select id="deptComplaintSelect" class="form-control" required></select>
+                <label class="form-label">1. Select Assigned Complaint *</label>
+                <select id="deptComplaintSelect" class="form-control" onchange="onDeptSelectComplaint(this.value)" required></select>
+              </div>
+
+              <!-- Selected Task Summary Preview Card -->
+              <div id="deptSelectedTaskSummary" style="display: none; background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; font-size: 13px;">
               </div>
 
               <div class="form-group">
-                <label class="form-label">Update Status to:</label>
+                <label class="form-label">2. Update Status to *</label>
                 <select id="deptTargetStatus" class="form-control">
-                  <option value="In Progress">In Progress (Field Work Underway)</option>
-                  <option value="Resolved">Resolved (Work Completed)</option>
-                  <option value="Pending">Pending (Awaiting Materials / Crew)</option>
+                  <option value="In Progress">🔧 In Progress (Field Crew Dispatched / Work Underway)</option>
+                  <option value="Resolved">✅ Resolved (Issue Solved &amp; Verified)</option>
+                  <option value="Pending">⏳ Pending (Awaiting Materials / Inspection)</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label class="form-label">Field Remarks & Resolution Details:</label>
-                <textarea id="deptWorkRemarks" class="form-control" placeholder="Describe the actions taken, crew deployed, or resolution summary..."></textarea>
+                <label class="form-label">3. Field Remarks &amp; Resolution Details</label>
+                <textarea id="deptWorkRemarks" class="form-control" placeholder="Describe the action taken, crew deployed, materials replaced, or resolution summary..." style="height: 100px;"></textarea>
               </div>
 
-              <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
-                <i class="fa-solid fa-floppy-disk"></i> Log Status Update
-              </button>
+              <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="switchDeptTab('assigned')">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 26px;">
+                  <i class="fa-solid fa-floppy-disk"></i> Log Status Update
+                </button>
+              </div>
             </form>
           </div>
         </section>
@@ -174,30 +304,63 @@
     </main>
   </div>
 
+  <!-- Task Details Modal -->
+  <div id="deptDetailModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.84); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 650px; padding: 30px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+        <h3 id="deptDetailTitle" style="font-size: 18px; font-weight: 800; color: var(--text-primary);">
+          📋 Task Details
+        </h3>
+        <button class="btn btn-sm btn-secondary" onclick="closeDeptDetailModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="deptDetailContent"></div>
+    </div>
+  </div>
+
   <!-- Quick Solve & Remarks Modal -->
-  <div id="deptSolveModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
-    <div class="glass-card" style="width: 100%; max-width: 540px; padding: 30px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+  <div id="deptSolveModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.84); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 560px; padding: 30px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
         <h3 id="deptSolveModalTitle" style="font-size: 18px; font-weight: 800; color: var(--status-resolved);">
           <i class="fa-solid fa-circle-check"></i> Mark Complaint as Resolved
         </h3>
         <button class="btn btn-sm btn-secondary" onclick="closeDeptSolveModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">
-        Record the resolution summary and proof of work for citizen verification.
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+        Record the resolution summary and proof photo for citizen and municipal verification.
       </p>
 
       <div class="form-group">
         <label class="form-label">Resolution Work Details *</label>
-        <textarea id="deptSolveNotes" class="form-control" placeholder="e.g. Cleared waste dump, disinfected area with lime powder, and placed 2 new closed bins." style="height: 100px;" required></textarea>
+        <textarea id="deptSolveNotes" class="form-control" placeholder="e.g. Cleared 2 metric tons of waste dump, sanitized street curb, and placed closed bins." style="height: 100px;" required></textarea>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+      <!-- Solution Image Upload -->
+      <div class="form-group">
+        <label class="form-label"><i class="fa-solid fa-camera" style="color: var(--status-resolved);"></i> Upload Proof of Resolution Photo (Optional)</label>
+        <div class="img-upload-zone" id="solveImgZone">
+          <input type="file" id="solveImgInput" accept="image/*" onchange="previewSolveImg(this)">
+          <div class="upload-icon" style="color: var(--status-resolved);"><i class="fa-solid fa-image"></i></div>
+          <span class="upload-label">Click or drag to attach proof photo</span>
+          <span class="upload-hint">PNG, JPG, WEBP up to 10MB</span>
+        </div>
+        <div id="solveImgPreview" style="display:none;" class="img-preview-wrap">
+          <img id="solveImgPreviewImg" src="" alt="Preview">
+          <button class="remove-img-btn" onclick="removeSolveImg()" type="button"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; border-top: 1px solid var(--border-color); padding-top: 16px;">
         <button class="btn btn-secondary" onclick="closeDeptSolveModal()">Cancel</button>
-        <button class="btn btn-success" onclick="confirmDeptSolve()"><i class="fa-solid fa-check"></i> Complete & Solve</button>
+        <button class="btn btn-success" onclick="confirmDeptSolve()"><i class="fa-solid fa-check"></i> Complete &amp; Solve</button>
       </div>
     </div>
+  </div>
+
+  <!-- Image Lightbox -->
+  <div class="img-lightbox" id="imgLightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Full image">
   </div>
 
   <div class="toast-container" id="toastContainer"></div>

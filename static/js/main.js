@@ -2,8 +2,6 @@
    CivicSense — Core JavaScript (Particle Canvas, Auth, Toast Notifications)
    ========================================================================== */
 
-let currentAuthRole = 'citizen';
-
 // ─────────────────────────── Particle Background Animation ───────────────────────────
 const canvas = document.getElementById('particleCanvas');
 if (canvas) {
@@ -66,12 +64,14 @@ function showToast(message, type = 'info') {
   const icons = {
     success: 'fa-solid fa-circle-check',
     error: 'fa-solid fa-circle-exclamation',
-    info: 'fa-solid fa-circle-info'
+    info: 'fa-solid fa-circle-info',
+    warning: 'fa-solid fa-triangle-exclamation'
   };
   const colors = {
     success: '#10b981',
     error: '#ef4444',
-    info: '#06b6d4'
+    info: '#06b6d4',
+    warning: '#f59e0b'
   };
 
   toast.innerHTML = `
@@ -87,6 +87,9 @@ function showToast(message, type = 'info') {
   }, 3500);
 }
 
+let currentAuthRole = 'citizen';
+let currentRegRole = 'citizen';
+
 // ─────────────────────────── Auth Page Functions ───────────────────────────
 function switchAuthTab(mode) {
   const isLogin = (mode === 'login');
@@ -100,9 +103,66 @@ function switchAuthTab(mode) {
 
 function selectRole(role) {
   currentAuthRole = role;
-  document.querySelectorAll('.role-btn').forEach(btn => {
+  document.querySelectorAll('#roleSwitcher .role-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.role === role);
   });
+}
+
+function selectRegRole(role) {
+  currentRegRole = role;
+  document.querySelectorAll('#regRoleSwitcher .reg-role-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.role === role);
+  });
+
+  const nameLabel = document.getElementById('regNameLabel');
+  const nameInput = document.getElementById('regName');
+  const emailLabel = document.getElementById('regEmailLabel');
+  const emailInput = document.getElementById('regEmail');
+  const deptGroup = document.getElementById('regDeptGroup');
+  const phoneLabel = document.getElementById('regPhoneLabel');
+  const phoneInput = document.getElementById('regPhone');
+  const addressLabel = document.getElementById('regAddressLabel');
+  const addressInput = document.getElementById('regAddress');
+  const submitBtn = document.getElementById('regSubmitBtn');
+
+  if (role === 'department') {
+    nameLabel.innerHTML = '<i class="fa-solid fa-id-badge"></i> Officer / Staff Name';
+    nameInput.placeholder = 'e.g. Officer Vikram Singh';
+    emailLabel.innerHTML = '<i class="fa-regular fa-envelope"></i> Official Department Email';
+    emailInput.placeholder = 'vikram.sanitation@civicsense.com';
+    deptGroup.style.display = 'block';
+    phoneLabel.innerHTML = '<i class="fa-solid fa-phone"></i> Official Contact / Mobile Number';
+    phoneInput.placeholder = '9876543210';
+    addressLabel.innerHTML = '<i class="fa-solid fa-building"></i> Department Office / Branch Location';
+    addressInput.placeholder = 'Municipal Zone 2 Office, City Center';
+    submitBtn.className = 'btn btn-primary';
+    submitBtn.innerHTML = '<i class="fa-solid fa-building-user"></i> <span>Create Department Account</span>';
+  } else if (role === 'admin') {
+    nameLabel.innerHTML = '<i class="fa-solid fa-user-shield"></i> Administrator Full Name';
+    nameInput.placeholder = 'e.g. Rajesh Verma';
+    emailLabel.innerHTML = '<i class="fa-regular fa-envelope"></i> Official Admin Email';
+    emailInput.placeholder = 'admin.rajesh@civicsense.com';
+    deptGroup.style.display = 'none';
+    phoneLabel.innerHTML = '<i class="fa-solid fa-phone"></i> Official Phone Number';
+    phoneInput.placeholder = '9999999999';
+    addressLabel.innerHTML = '<i class="fa-solid fa-landmark"></i> Headquarters / City Hall Location';
+    addressInput.placeholder = 'City Hall, Central Secretariat, Ward 1';
+    submitBtn.className = 'btn btn-primary';
+    submitBtn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> <span>Create Admin Account</span>';
+  } else {
+    // citizen
+    nameLabel.innerHTML = '<i class="fa-regular fa-user"></i> Full Name';
+    nameInput.placeholder = 'e.g. Rahul Sharma';
+    emailLabel.innerHTML = '<i class="fa-regular fa-envelope"></i> Email Address';
+    emailInput.placeholder = 'rahul@example.com';
+    deptGroup.style.display = 'none';
+    phoneLabel.innerHTML = '<i class="fa-solid fa-phone"></i> Phone Number';
+    phoneInput.placeholder = '9876543210';
+    addressLabel.innerHTML = '<i class="fa-solid fa-location-dot"></i> Area / Ward / Address';
+    addressInput.placeholder = 'Area A, Sector 4';
+    submitBtn.className = 'btn btn-success';
+    submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> <span>Create Citizen Account</span>';
+  }
 }
 
 function quickFill(email, password, role) {
@@ -150,21 +210,44 @@ async function handleRegister(e) {
   const phone = document.getElementById('regPhone').value.trim();
   const address = document.getElementById('regAddress').value.trim();
   const password = document.getElementById('regPassword').value.trim();
+  const department = currentRegRole === 'department' ? document.getElementById('regDepartment').value : '';
   const errDiv = document.getElementById('regError');
   errDiv.style.display = 'none';
+
+  if (!name || !email || !password) {
+    errDiv.textContent = 'Please fill all required fields.';
+    errDiv.style.display = 'block';
+    return;
+  }
+
+  if (currentRegRole === 'department' && !department) {
+    errDiv.textContent = 'Please select a department for the officer account.';
+    errDiv.style.display = 'block';
+    return;
+  }
 
   try {
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, address, password })
+      body: JSON.stringify({
+        name,
+        email,
+        phone,
+        address,
+        password,
+        role: currentRegRole,
+        department
+      })
     });
     const data = await res.json();
 
     if (data.success) {
-      showToast('Account created! Please sign in.', 'success');
+      showToast(data.message || 'Account created! Please sign in.', 'success');
       switchAuthTab('login');
+      selectRole(currentRegRole);
       document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = password;
     } else {
       errDiv.textContent = data.message || 'Registration failed.';
       errDiv.style.display = 'block';

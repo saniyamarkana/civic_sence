@@ -29,7 +29,7 @@ class LinkedList:
     # ──────────────── Insert Operations ────────────────
 
     def insert_at_beginning(self, data):
-        """Insert a new node at the beginning. O(1)"""
+        """Insert a new node at the beginning."""
         new_node = Node(data)
         new_node.next = self.head
         self.head = new_node

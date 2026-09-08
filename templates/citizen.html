@@ -57,6 +57,22 @@
           <i class="fa-solid fa-list-check" style="color: var(--accent-cyan);"></i> My Complaints & Status
         </h2>
         <div style="display: flex; gap: 12px; align-items: center;">
+          <!-- Notification Bell -->
+          <div class="notif-bell-wrapper" id="citizenBellWrapper">
+            <button class="notif-bell-btn" id="citizenBellBtn" onclick="toggleNotifDropdown()" title="Notifications">
+              <i class="fa-solid fa-bell"></i>
+              <span class="notif-badge hidden" id="citizenBadge">0</span>
+            </button>
+            <div class="notif-dropdown" id="citizenNotifDropdown">
+              <div class="notif-header">
+                <h4><i class="fa-solid fa-bell"></i> Notifications</h4>
+                <button class="notif-mark-all-btn" onclick="markAllNotifRead()"><i class="fa-solid fa-check-double"></i> Mark all read</button>
+              </div>
+              <div class="notif-list" id="citizenNotifList">
+                <div class="notif-empty">Loading...</div>
+              </div>
+            </div>
+          </div>
           <button class="btn btn-primary btn-sm" onclick="switchTab('report')">
             <i class="fa-solid fa-plus"></i> File New Issue
           </button>
@@ -145,7 +161,7 @@
               Provide clear details and location to ensure rapid municipal action and DSA routing.
             </p>
 
-            <form id="newComplaintForm" onsubmit="submitNewComplaint(event)">
+            <form id="newComplaintForm" enctype="multipart/form-data" onsubmit="submitNewComplaint(event)">
               <!-- Step 1: Category Selection Grid -->
               <div class="form-group">
                 <label class="form-label">1. Select Issue Category</label>
@@ -210,6 +226,20 @@
               <div class="form-group">
                 <label class="form-label">5. Detailed Description</label>
                 <textarea id="reportDesc" class="form-control" placeholder="Provide additional context, hazards, or specific landmarks..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">6. Attach Issue Photo (Optional)</label>
+                <div class="img-upload-zone" id="complaintImgZone">
+                  <input type="file" id="complaintImgInput" name="complaint_image" accept="image/*" onchange="previewComplaintImg(this)">
+                  <div class="upload-icon"><i class="fa-solid fa-camera"></i></div>
+                  <span class="upload-label">Click or drag to attach a photo</span>
+                  <span class="upload-hint">PNG, JPG, WEBP up to 10MB</span>
+                </div>
+                <div id="complaintImgPreview" style="display:none;" class="img-preview-wrap">
+                  <img id="complaintImgPreviewImg" src="" alt="Preview">
+                  <button class="remove-img-btn" onclick="removeComplaintImg()" type="button"><i class="fa-solid fa-xmark"></i></button>
+                </div>
               </div>
 
               <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px;">
@@ -314,14 +344,14 @@
 
   <!-- Individual Complaint Details Modal -->
   <div id="complaintDetailModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
-    <div class="glass-card" style="width: 100%; max-width: 680px; padding: 30px; max-height: 90vh; overflow-y: auto;">
+    <div class="glass-card" style="width: 100%; max-width: 680px; padding: 30px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
       <div id="complaintDetailContent"></div>
     </div>
   </div>
 
   <!-- Timeline History Modal -->
   <div id="timelineModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
-    <div class="glass-card" style="width: 100%; max-width: 540px; padding: 30px; max-height: 85vh; overflow-y: auto;">
+    <div class="glass-card" style="width: 100%; max-width: 540px; padding: 30px; max-height: 85vh; overflow-y: auto; overflow-x: hidden;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 id="modalTitle" style="font-size: 18px; font-weight: 800;">Timeline Tracking</h3>
         <button class="btn btn-sm btn-secondary" onclick="closeTimelineModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -331,9 +361,24 @@
     </div>
   </div>
 
+  <!-- Image Lightbox -->
+  <div class="img-lightbox" id="imgLightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Full image">
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="/static/js/main.js"></script>
   <script src="/static/js/citizen.js"></script>
+  <script>
+    // Close notif dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const wrapper = document.getElementById('citizenBellWrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        const dd = document.getElementById('citizenNotifDropdown');
+        if (dd) dd.classList.remove('open');
+      }
+    });
+  </script>
 </body>
 </html>

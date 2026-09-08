@@ -106,36 +106,147 @@ async function loadAdminDashboard() {
   }
 }
 
+// Canonical categories metadata with modern vibrant theme and icons
+const CANONICAL_CATEGORIES = {
+  'Garbage':            { name: 'Garbage',          icon: '🗑️', color: '#10b981', border: '#059669', bgGrad: 'rgba(16, 185, 129, 0.75)' },
+  'Streetlight':        { name: 'Streetlight',      icon: '💡', color: '#f59e0b', border: '#d97706', bgGrad: 'rgba(245, 158, 11, 0.75)' },
+  'Water Leakage':      { name: 'Water Leak',       icon: '💧', color: '#06b6d4', border: '#0891b2', bgGrad: 'rgba(6, 182, 212, 0.75)' },
+  'Pothole':            { name: 'Pothole',          icon: '🕳️', color: '#ec4899', border: '#db2777', bgGrad: 'rgba(236, 72, 153, 0.75)' },
+  'Drainage':           { name: 'Drainage',         icon: '🌊', color: '#3b82f6', border: '#2563eb', bgGrad: 'rgba(59, 130, 246, 0.75)' },
+  'Illegal Parking':    { name: 'Parking',          icon: '🚗', color: '#8b5cf6', border: '#7c3aed', bgGrad: 'rgba(139, 92, 246, 0.75)' },
+  'Public Cleanliness': { name: 'Cleanliness',      icon: '🧹', color: '#14b8a6', border: '#0f766e', bgGrad: 'rgba(20, 184, 166, 0.75)' },
+  'Damaged Road':       { name: 'Damaged Road',     icon: '🚧', color: '#f97316', border: '#c2410c', bgGrad: 'rgba(249, 115, 22, 0.75)' }
+};
+
+function normalizeCategoryName(raw) {
+  if (!raw) return 'Garbage';
+  const s = String(raw).trim().toLowerCase();
+  if (s.includes('garbage') || s.includes('waste') || s.includes('trash') || s.includes('dump')) return 'Garbage';
+  if (s.includes('streetlight') || s.includes('street light') || s.includes('light')) return 'Streetlight';
+  if (s.includes('water') || s.includes('leak') || s.includes('supply') || s.includes('pipe')) return 'Water Leakage';
+  if (s.includes('drain') || s.includes('sewage')) return 'Drainage';
+  if (s.includes('pothole') || s.includes('hole')) return 'Pothole';
+  if (s.includes('parking')) return 'Illegal Parking';
+  if (s.includes('clean') || s.includes('sanitation') || s.includes('sweeping')) return 'Public Cleanliness';
+  if (s.includes('road')) return 'Damaged Road';
+  return raw.trim();
+}
+
 function renderCategoryChart(data) {
   const ctx = document.getElementById('categoryChart');
   if (!ctx) return;
 
-  const labels = data.map(d => d.category);
-  const counts = data.map(d => d.cnt);
+  // Aggregate and merge counts strictly by canonical category
+  const categoryMap = {};
+  (data || []).forEach(d => {
+    const norm = normalizeCategoryName(d.category);
+    categoryMap[norm] = (categoryMap[norm] || 0) + Number(d.cnt || 0);
+  });
+
+  const activeCategories = Object.keys(categoryMap).filter(k => categoryMap[k] > 0);
+  activeCategories.sort((a, b) => categoryMap[b] - categoryMap[a]);
+
+  // Update badge count in header
+  const badge = document.getElementById('chartCategoryBadge');
+  if (badge) {
+    const totalComplaints = Object.values(categoryMap).reduce((acc, v) => acc + v, 0);
+    badge.textContent = `${activeCategories.length} Categories · ${totalComplaints} Issues`;
+  }
+
+  const labels = activeCategories.length
+    ? activeCategories.map(cat => {
+        const meta = CANONICAL_CATEGORIES[cat];
+        return meta ? `${meta.icon} ${meta.name}` : cat;
+      })
+    : ['No Complaints'];
+
+  const counts = activeCategories.length
+    ? activeCategories.map(cat => categoryMap[cat])
+    : [0];
+
+  const bgColors = activeCategories.length
+    ? activeCategories.map(cat => (CANONICAL_CATEGORIES[cat] ? CANONICAL_CATEGORIES[cat].bgGrad : 'rgba(6, 182, 212, 0.75)'))
+    : ['rgba(6, 182, 212, 0.3)'];
+
+  const borderColors = activeCategories.length
+    ? activeCategories.map(cat => (CANONICAL_CATEGORIES[cat] ? CANONICAL_CATEGORIES[cat].color : '#06b6d4'))
+    : ['rgba(6, 182, 212, 0.6)'];
 
   if (categoryChartInstance) categoryChartInstance.destroy();
 
   categoryChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: labels.length ? labels : ['No Data'],
+      labels: labels,
       datasets: [{
         label: 'Complaints',
-        data: counts.length ? counts : [0],
-        backgroundColor: [
-          '#06b6d4', '#3b82f6', '#10b981', '#f59e0b',
-          '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'
-        ],
-        borderRadius: 8
+        data: counts,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 2,
+        borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 2, bottomRight: 2 },
+        maxBarThickness: 45,
+        barPercentage: 0.6,
+        categoryPercentage: 0.75
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(14, 21, 38, 0.95)',
+          titleColor: '#f8fafc',
+          bodyColor: '#cbd5e1',
+          borderColor: 'rgba(6, 182, 212, 0.4)',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 10,
+          displayColors: true,
+          callbacks: {
+            label: function(context) {
+              const val = context.raw || 0;
+              return ` Total Complaints: ${val}`;
+            },
+            afterLabel: function() {
+              return '💡 Click bar to view complaints';
+            }
+          }
+        }
+      },
       scales: {
-        x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } },
-        y: { ticks: { color: '#94a3b8', precision: 0 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        x: {
+          ticks: {
+            color: '#cbd5e1',
+            font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' }
+          },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#94a3b8',
+            stepSize: 1,
+            precision: 0,
+            font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 }
+          },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        }
+      },
+      onClick: (evt, elements) => {
+        if (elements && elements.length > 0) {
+          const index = elements[0].index;
+          const selectedCat = activeCategories[index];
+          if (selectedCat) {
+            switchAdminTab('complaints');
+            const searchInput = document.getElementById('admCompSearch');
+            if (searchInput) {
+              searchInput.value = selectedCat;
+              filterAdminComplaints();
+            }
+          }
+        }
       }
     }
   });
@@ -170,7 +281,7 @@ function renderAdminComplaints(data) {
       <td style="padding: 12px 10px;"><span class="badge ${c.priority === 'High' ? 'badge-rejected' : 'badge-pending'}">${c.priority}</span></td>
       <td style="padding: 12px 10px; font-weight: 600; color: var(--accent-cyan);">
         ${c.department || '<span style="color: var(--text-muted);">Unassigned</span>'}<br>
-        <small style="color: var(--text-muted); font-weight: normal;">${c.assigned_officer_name ? '👷 ' + c.assigned_officer_name : 'No officer assigned'}</small>
+        <small style="color: var(--text-muted); font-weight: normal;">${c.assigned_officer_name ? '\u{1F477} ' + c.assigned_officer_name : 'No officer assigned'}</small>
       </td>
       <td style="padding: 12px 10px;"><span class="badge badge-${c.status.toLowerCase().replace(' ', '_')}">● ${c.status}</span></td>
       <td style="padding: 12px 10px;">
@@ -195,6 +306,7 @@ function filterAdminComplaints() {
 
   renderAdminComplaints(filtered);
 }
+
 
 async function loadOfficersForDept(dept, selectedOfficerId = null) {
   const select = document.getElementById('admModalOfficer');
@@ -257,15 +369,31 @@ async function openAdminModal(id) {
     const c = data.complaint;
 
     // Update title
-    document.getElementById('admModalTitle').textContent = `🗂️ Manage Complaint #${id}`;
+    document.getElementById('admModalTitle').textContent = `🗂️ Manage & Assign Complaint #${id}`;
 
-    // Set form values
+    // Set hidden form values for status and priority (Read-only for Admin)
     document.getElementById('admModalStatus').value = c.status || 'Pending';
     document.getElementById('admModalPriority').value = c.priority || 'Medium';
+
+    // Update Read-only Status Display Badge
+    const statusBadge = document.getElementById('admStatusBadge');
+    if (statusBadge) {
+      statusBadge.className = `badge badge-${(c.status || 'Pending').toLowerCase().replace(' ', '_')}`;
+      statusBadge.textContent = c.status || 'Pending';
+    }
+
+    // Update Read-only Priority Display Badge
+    const prioBadge = document.getElementById('admPriorityBadge');
+    if (prioBadge) {
+      prioBadge.className = `badge ${c.priority === 'High' ? 'badge-rejected' : (c.priority === 'Low' ? 'badge-resolved' : 'badge-pending')}`;
+      prioBadge.textContent = c.priority || 'Medium';
+    }
+
+    // Editable Admin fields: Department, Officer, Remarks
     document.getElementById('admModalDept').value = c.department || 'Sanitation Department';
     document.getElementById('admModalRemarks').value = c.admin_remarks || '';
 
-    // Show citizen info banner
+    // Show citizen info banner (Read-only)
     document.getElementById('admModalCitizenInfo').innerHTML = `
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <div>
@@ -280,6 +408,35 @@ async function openAdminModal(id) {
         </div>
       </div>
     `;
+
+    // Show issue description (Read-only)
+    const descWrap = document.getElementById('admModalDescWrap');
+    const descEl = document.getElementById('admModalDesc');
+    if (descWrap && descEl) {
+      descEl.textContent = c.description || 'No detailed description provided.';
+      descWrap.style.display = 'block';
+    }
+
+    // Show complaint image preview if available (Read-only)
+    const imgContainer = document.getElementById('admModalImages');
+    if (imgContainer) {
+      if (c.complaint_image) {
+        imgContainer.style.display = 'flex';
+        imgContainer.innerHTML = `
+          <div style="background: rgba(14,21,38,0.7); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 14px; width: 100%;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">
+              <i class="fa-solid fa-camera" style="color: var(--accent-cyan);"></i> Citizen Attached Photo Evidence
+            </div>
+            <img src="/static/uploads/complaint_images/${escapeHtml(c.complaint_image)}" alt="Citizen Photo"
+                 style="max-height: 160px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); object-fit: cover;"
+                 onclick="openLightbox('/static/uploads/complaint_images/${escapeHtml(c.complaint_image)}')">
+          </div>
+        `;
+      } else {
+        imgContainer.style.display = 'none';
+        imgContainer.innerHTML = '';
+      }
+    }
 
     // Load officers for the department
     await loadOfficersForDept(c.department || 'Sanitation Department', c.assigned_officer_id);
@@ -298,8 +455,6 @@ function closeAdminModal() {
 
 async function saveAdminComplaintChanges() {
   const btn = document.getElementById('admSaveBtn');
-  const status = document.getElementById('admModalStatus').value;
-  const priority = document.getElementById('admModalPriority').value;
   const department = document.getElementById('admModalDept').value;
   const officerSelect = document.getElementById('admModalOfficer');
   const assigned_officer_id = officerSelect.value ? parseInt(officerSelect.value) : null;
@@ -309,24 +464,21 @@ async function saveAdminComplaintChanges() {
     : null;
   const admin_remarks = document.getElementById('admModalRemarks').value.trim();
 
-  // Button loading state
+  // Admin only assigns department, officer, and instructions (status and priority remain untouched)
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Assigning...';
   }
 
   try {
     const payload = {
-      status,
-      priority,
       department,
       admin_remarks,
       remarks: assigned_officer_name
-        ? `Assigned to Officer: ${assigned_officer_name} | Status: ${status}`
-        : `Status updated to ${status}`
+        ? `Assigned to Field Officer: ${assigned_officer_name} (${department})`
+        : `Assigned to ${department}`
     };
 
-    // Only include officer if selected
     if (assigned_officer_id) {
       payload.assigned_officer_id = assigned_officer_id;
       payload.assigned_officer_name = assigned_officer_name;
@@ -340,102 +492,374 @@ async function saveAdminComplaintChanges() {
 
     const data = await res.json();
 
-    if (data.success) {
+    if (res.ok && data.success) {
       const msg = assigned_officer_name
         ? `✅ Complaint #${currentManagingId} assigned to ${assigned_officer_name}!`
-        : `✅ Complaint #${currentManagingId} updated to "${status}"!`;
+        : `✅ Department assigned to ${department}!`;
       showToast(msg, 'success');
       closeAdminModal();
       loadAdminComplaints();
-      // Refresh dashboard stats too
       loadAdminDashboard();
     } else {
-      showToast(data.message || 'Failed to save changes', 'error');
+      showToast(data.message || 'Failed to assign complaint.', 'error');
     }
   } catch (err) {
-    showToast('Network error. Please check server connection.', 'error');
+    showToast('Network error while assigning complaint.', 'error');
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Save & Assign';
+      btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Assign Department &amp; Officer';
     }
   }
 }
 
 // ─────────────────────────── User Management ───────────────────────────
+let currentUserFilter = 'All';
+let currentManagingUserId = null;
+
 async function loadAdminUsers() {
   try {
     const res = await fetch('/api/users');
     allUsers = await res.json();
-    renderUsers(allUsers);
+    updateUserStats(allUsers);
+    filterUsers();
   } catch (e) {
     showToast('Failed to load users', 'error');
   }
+}
+
+function updateUserStats(users) {
+  const total = users.length;
+  const citizens = users.filter(u => u.role === 'citizen').length;
+  const depts = users.filter(u => u.role === 'department').length;
+  const admins = users.filter(u => u.role === 'admin').length;
+  const active = users.filter(u => u.status === 'active').length;
+  const blocked = users.filter(u => u.status === 'blocked').length;
+
+  const elTotal = document.getElementById('userStatTotal');
+  if (elTotal) elTotal.textContent = total;
+  const elCit = document.getElementById('userStatCitizen');
+  if (elCit) elCit.textContent = citizens;
+  const elDept = document.getElementById('userStatDept');
+  if (elDept) elDept.textContent = depts;
+  const elAdm = document.getElementById('userStatAdmin');
+  if (elAdm) elAdm.textContent = admins;
+
+  const pAll = document.getElementById('userPillAll');
+  if (pAll) pAll.textContent = total;
+  const pCit = document.getElementById('userPillCitizen');
+  if (pCit) pCit.textContent = citizens;
+  const pDept = document.getElementById('userPillDept');
+  if (pDept) pDept.textContent = depts;
+  const pAdm = document.getElementById('userPillAdmin');
+  if (pAdm) pAdm.textContent = admins;
+  const pAct = document.getElementById('userPillActive');
+  if (pAct) pAct.textContent = active;
+  const pBlk = document.getElementById('userPillBlocked');
+  if (pBlk) pBlk.textContent = blocked;
+}
+
+function setUserFilter(filter) {
+  currentUserFilter = filter;
+  document.querySelectorAll('#adminTab_users .filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+  });
+  filterUsers();
+}
+
+function filterUsers() {
+  const q = (document.getElementById('userSearch') ? document.getElementById('userSearch').value : '').toLowerCase().trim();
+  let filtered = allUsers;
+
+  if (currentUserFilter === 'citizen') {
+    filtered = filtered.filter(u => u.role === 'citizen');
+  } else if (currentUserFilter === 'department') {
+    filtered = filtered.filter(u => u.role === 'department');
+  } else if (currentUserFilter === 'admin') {
+    filtered = filtered.filter(u => u.role === 'admin');
+  } else if (currentUserFilter === 'active') {
+    filtered = filtered.filter(u => u.status === 'active');
+  } else if (currentUserFilter === 'blocked') {
+    filtered = filtered.filter(u => u.status === 'blocked');
+  }
+
+  if (q) {
+    filtered = filtered.filter(u =>
+      `${u.id} ${u.name} ${u.email} ${u.role} ${u.department || ''}`.toLowerCase().includes(q)
+    );
+  }
+
+  renderUsers(filtered);
 }
 
 function renderUsers(users) {
   const tbody = document.getElementById('usersTableBody');
   if (!tbody) return;
 
-  tbody.innerHTML = users.map(u => `
-    <tr style="border-bottom: 1px solid var(--border-color);">
-      <td style="padding: 12px 10px; font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 700;">#${u.id}</td>
-      <td style="padding: 12px 10px; font-weight: 600;">${escapeHtml(u.name)}</td>
-      <td style="padding: 12px 10px; color: var(--text-secondary);">${u.email}</td>
-      <td style="padding: 12px 10px;"><span class="badge badge-approved">${u.role.toUpperCase()}</span></td>
-      <td style="padding: 12px 10px; color: var(--text-secondary);">${u.department || '-'}</td>
-      <td style="padding: 12px 10px;">
-        <span class="badge ${u.status === 'active' ? 'badge-resolved' : 'badge-rejected'}">● ${u.status}</span>
-      </td>
-      <td style="padding: 12px 10px;">
-        <button class="btn btn-sm ${u.status === 'active' ? 'btn-danger' : 'btn-success'}" onclick="toggleUserStatus(${u.id}, '${u.status === 'active' ? 'blocked' : 'active'}')">
-          ${u.status === 'active' ? 'Block' : 'Unblock'}
-        </button>
-      </td>
-    </tr>
-  `).join('');
-}
+  if (!users || users.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
+          <div>No user accounts match your search or filter criteria.</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
 
-function filterUsers() {
-  const q = document.getElementById('userSearch').value.toLowerCase().trim();
-  const filtered = allUsers.filter(u => `${u.id} ${u.name} ${u.email} ${u.role}`.toLowerCase().includes(q));
-  renderUsers(filtered);
+  tbody.innerHTML = users.map(u => {
+    const isSelf = (window.CURRENT_ADMIN_ID && u.id === window.CURRENT_ADMIN_ID);
+    const initial = (u.name || 'U').charAt(0).toUpperCase();
+
+    // Role badge & avatar styling
+    let roleBadge = '';
+    let avatarBg = '';
+    if (u.role === 'admin') {
+      roleBadge = `<span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);"><i class="fa-solid fa-crown"></i> ADMIN</span>`;
+      avatarBg = 'linear-gradient(135deg, #f59e0b, #ef4444)';
+    } else if (u.role === 'department') {
+      roleBadge = `<span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);"><i class="fa-solid fa-building"></i> OFFICER</span>`;
+      avatarBg = 'linear-gradient(135deg, #38bdf8, #2563eb)';
+    } else {
+      roleBadge = `<span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);"><i class="fa-solid fa-user"></i> CITIZEN</span>`;
+      avatarBg = 'linear-gradient(135deg, #10b981, #059669)';
+    }
+
+    return `
+      <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="padding: 14px 18px; font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 700;">#${u.id}</td>
+        <td style="padding: 14px 18px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: ${avatarBg}; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+              ${initial}
+            </div>
+            <div>
+              <div style="font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+                ${escapeHtml(u.name)}
+                ${isSelf ? '<span class="badge" style="font-size: 9px; padding: 2px 6px; background: rgba(245,158,11,0.2); color: #f59e0b;">YOU</span>' : ''}
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted);">${u.phone ? `📞 ${u.phone}` : 'Account ID #' + u.id}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding: 14px 18px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px; word-break: break-all;">
+          ${escapeHtml(u.email)}
+        </td>
+        <td style="padding: 14px 18px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${roleBadge}
+            ${isSelf ? `
+              <span title="Cannot change own role" style="color: var(--text-muted); font-size: 11px; cursor: not-allowed;"><i class="fa-solid fa-lock"></i></span>
+            ` : `
+              <button type="button" class="btn btn-sm btn-secondary" onclick="openRoleModal(${u.id}, '${escapeHtml(u.name)}', '${u.role}', '${escapeHtml(u.department || '')}')" title="Change user role" style="padding: 3px 8px; font-size: 10px;">
+                <i class="fa-solid fa-pen"></i> Role
+              </button>
+            `}
+          </div>
+        </td>
+        <td style="padding: 14px 18px; color: var(--text-secondary);">
+          ${u.department ? `<span style="display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-building" style="color: var(--accent-cyan); font-size: 11px;"></i> ${escapeHtml(u.department)}</span>` : '<span style="color: var(--text-muted);">-</span>'}
+        </td>
+        <td style="padding: 14px 18px;">
+          <span class="badge ${u.status === 'active' ? 'badge-resolved' : 'badge-rejected'}" style="display: inline-flex; align-items: center; gap: 6px;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor;"></span>
+            ${u.status.toUpperCase()}
+          </span>
+        </td>
+        <td style="padding: 14px 18px; text-align: right;">
+          ${isSelf ? `
+            <span class="badge" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 6px 12px; font-size: 11px;">
+              <i class="fa-solid fa-shield-halved"></i> Protected
+            </span>
+          ` : `
+            <button class="btn btn-sm ${u.status === 'active' ? 'btn-danger' : 'btn-success'}" onclick="toggleUserStatus(${u.id}, '${u.status === 'active' ? 'blocked' : 'active'}')" style="padding: 6px 12px; font-size: 11px;">
+              <i class="fa-solid ${u.status === 'active' ? 'fa-ban' : 'fa-check'}"></i>
+              ${u.status === 'active' ? 'Block' : 'Unblock'}
+            </button>
+          `}
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 async function toggleUserStatus(uid, status) {
-  await fetch(`/api/users/${uid}/status`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status })
-  });
-  showToast(`User status set to ${status}`, 'info');
-  loadAdminUsers();
+  if (window.CURRENT_ADMIN_ID && uid === window.CURRENT_ADMIN_ID) {
+    showToast('You cannot block or deactivate your own admin account!', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/users/${uid}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(data.message || `User status set to ${status}.`, 'info');
+      await loadAdminUsers();
+    } else {
+      showToast(data.message || 'Failed to update user status.', 'error');
+    }
+  } catch (err) {
+    showToast('Network error while updating user status.', 'error');
+  }
 }
 
-function openAddUserModal() { document.getElementById('addUserModal').style.display = 'flex'; }
-function closeAddUserModal() { document.getElementById('addUserModal').style.display = 'none'; }
+function openRoleModal(uid, name, role, dept) {
+  if (window.CURRENT_ADMIN_ID && uid === window.CURRENT_ADMIN_ID) {
+    showToast('You cannot change your own administrator role.', 'warning');
+    return;
+  }
+  currentManagingUserId = uid;
+  const infoEl = document.getElementById('changeRoleUserInfo');
+  if (infoEl) infoEl.innerHTML = `Modifying role for <strong>${escapeHtml(name)}</strong> (User #${uid})`;
+
+  const roleSelect = document.getElementById('changeRoleSelect');
+  if (roleSelect) roleSelect.value = role;
+
+  const deptGroup = document.getElementById('changeRoleDeptGroup');
+  const deptSelect = document.getElementById('changeRoleDept');
+  if (deptGroup && deptSelect) {
+    deptGroup.style.display = (role === 'department') ? 'block' : 'none';
+    if (dept) deptSelect.value = dept;
+  }
+
+  document.getElementById('changeRoleModal').style.display = 'flex';
+}
+
+function closeRoleModal() {
+  document.getElementById('changeRoleModal').style.display = 'none';
+  currentManagingUserId = null;
+}
+
+function onChangeRoleSelect(role) {
+  const deptGroup = document.getElementById('changeRoleDeptGroup');
+  if (deptGroup) deptGroup.style.display = (role === 'department') ? 'block' : 'none';
+}
+
+async function confirmRoleChange() {
+  if (!currentManagingUserId) return;
+  if (window.CURRENT_ADMIN_ID && currentManagingUserId === window.CURRENT_ADMIN_ID) {
+    showToast('You cannot change your own role.', 'error');
+    closeRoleModal();
+    return;
+  }
+
+  const role = document.getElementById('changeRoleSelect').value;
+  const dept = (role === 'department') ? document.getElementById('changeRoleDept').value : null;
+  const btn = document.getElementById('confirmRoleBtn');
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
+  }
+
+  try {
+    const res = await fetch(`/api/users/${currentManagingUserId}/role`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, department: dept })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(data.message || 'User role updated successfully!', 'success');
+      closeRoleModal();
+      await loadAdminUsers();
+    } else {
+      showToast(data.message || 'Failed to update user role.', 'error');
+    }
+  } catch (err) {
+    showToast('Network error while updating role.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update Role';
+    }
+  }
+}
+
+function openAddUserModal() {
+  const modal = document.getElementById('addUserModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  const roleEl = document.getElementById('newUserRole');
+  if (roleEl) {
+    if (!roleEl.value || roleEl.value === 'citizen') {
+      roleEl.value = 'department';
+    }
+    onNewUserRoleChange(roleEl.value);
+  }
+}
+
+function closeAddUserModal() {
+  const modal = document.getElementById('addUserModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function onNewUserRoleChange(role) {
+  const deptGroup = document.getElementById('newUserDeptGroup');
+  if (deptGroup) {
+    deptGroup.style.display = (role === 'department') ? 'block' : 'none';
+  }
+}
 
 async function saveNewUser() {
   const name = document.getElementById('newUserName').value.trim();
   const email = document.getElementById('newUserEmail').value.trim();
   const role = document.getElementById('newUserRole').value;
   const password = document.getElementById('newUserPass').value.trim();
+  const deptEl = document.getElementById('newUserDept');
+  const department = (role === 'department' && deptEl) ? deptEl.value : null;
 
   if (!name || !email || !password) {
-    showToast('Please fill all fields', 'error');
+    showToast('Please fill all required fields (Name, Email, Password)', 'error');
     return;
   }
 
-  const res = await fetch('/api/users', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, role, password })
-  });
-  const data = await res.json();
-  if (data.success) {
-    showToast('User created!', 'success');
-    closeAddUserModal();
-    loadAdminUsers();
+  if (role !== 'department' && role !== 'admin') {
+    showToast('Admin can only create Department Officer or Administrator accounts.', 'error');
+    return;
+  }
+
+  if (role === 'department' && !department) {
+    showToast('Please select a department for the officer account.', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('createUserSubmitBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+  }
+
+  try {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, role, password, department })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(data.message || 'Account created successfully!', 'success');
+      closeAddUserModal();
+      // Clear form inputs
+      document.getElementById('newUserName').value = '';
+      document.getElementById('newUserEmail').value = '';
+      document.getElementById('newUserPass').value = '';
+      await loadAdminUsers();
+    } else {
+      showToast(data.message || 'Failed to create account.', 'error');
+    }
+  } catch (err) {
+    showToast('Network error while creating account.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Create Account';
+    }
   }
 }
 
@@ -730,8 +1154,8 @@ async function runRecursiveAlgo(algo) {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, m => ({
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, m => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
   }[m]));
 }

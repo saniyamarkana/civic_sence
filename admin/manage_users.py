@@ -192,8 +192,8 @@ class ManageUsersPage(ctk.CTkFrame):
         # Role
         ctk.CTkLabel(modal, text="Account Role", font=("Segoe UI", 11, "bold"),
                      text_color=self.TEXT_DIM).pack(anchor="w", padx=35, pady=(4, 2))
-        role_var = ctk.StringVar(value="citizen")
-        role_opt = ctk.CTkOptionMenu(modal, values=["citizen", "department", "admin"],
+        role_var = ctk.StringVar(value="department")
+        role_opt = ctk.CTkOptionMenu(modal, values=["department", "admin"],
                                      variable=role_var, height=36, fg_color=self.INPUT_BG,
                                      button_color=self.ACCENT, text_color=self.TEXT)
         role_opt.pack(fill="x", padx=35, pady=(0, 10))
@@ -211,6 +211,10 @@ class ManageUsersPage(ctk.CTkFrame):
 
             if not name or not email or not password:
                 err_lbl.configure(text="⚠️ Name, Email, and Password are required.")
+                return
+
+            if role not in ["department", "admin"]:
+                err_lbl.configure(text="⚠️ Only Department Officer and Admin accounts can be created.")
                 return
 
             uid = self.db.add_user(name, email, phone, address, password, role)

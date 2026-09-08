@@ -74,7 +74,23 @@
         <h2 class="page-title" id="adminHeaderTitle">
           <i class="fa-solid fa-chart-pie" style="color: var(--accent-cyan);"></i> Administrative Overview
         </h2>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <!-- Admin Notification Bell -->
+          <div class="notif-bell-wrapper" id="adminBellWrapper">
+            <button class="notif-bell-btn" id="adminBellBtn" onclick="toggleAdminNotifDropdown()" title="Notifications">
+              <i class="fa-solid fa-bell"></i>
+              <span class="notif-badge hidden" id="adminBadge">0</span>
+            </button>
+            <div class="notif-dropdown" id="adminNotifDropdown">
+              <div class="notif-header">
+                <h4><i class="fa-solid fa-bell"></i> Resolution Notifications</h4>
+                <button class="notif-mark-all-btn" onclick="adminMarkAllRead()"><i class="fa-solid fa-check-double"></i> Mark all read</button>
+              </div>
+              <div class="notif-list" id="adminNotifList">
+                <div class="notif-empty">Loading...</div>
+              </div>
+            </div>
+          </div>
           <button class="btn btn-secondary btn-sm" onclick="refreshCurrentAdminTab()">
             <i class="fa-solid fa-rotate"></i> Refresh
           </button>
@@ -131,7 +147,10 @@
           <!-- Chart & Workload Row -->
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px;">
             <div class="glass-card" style="padding: 25px;">
-              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 15px;">📊 Complaints by Category</h3>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="font-size: 16px; font-weight: 700; margin: 0;">📊 Complaints by Category</h3>
+                <span id="chartCategoryBadge" class="badge badge-approved" style="font-size: 11px;">Active Categories</span>
+              </div>
               <div style="height: 250px; position: relative;">
                 <canvas id="categoryChart"></canvas>
               </div>
@@ -146,8 +165,8 @@
           <!-- Recent Activity Table -->
           <div class="glass-card" style="padding: 25px;">
             <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 15px;">🕒 Recent Complaints Activity</h3>
-            <div style="overflow-x: auto;">
-              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+            <div style="overflow-x: hidden; width: 100%;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed;">
                 <thead>
                   <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
                     <th style="padding: 10px;">ID</th>
@@ -168,9 +187,10 @@
              TAB 2: ALL COMPLAINTS MANAGEMENT
              ════════════════════════════════════════════════════════════════ -->
         <section id="adminTab_complaints" style="display: none;">
+
+          <!-- Search & Filter Bar -->
           <div class="glass-card" style="padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
             <input type="text" id="admCompSearch" class="form-control" placeholder="🔍 Search by ID, keyword, location, citizen..." style="flex: 1; min-width: 250px;" oninput="filterAdminComplaints()">
-
             <select id="admCompStatusFilter" class="form-control" style="width: 160px;" onchange="filterAdminComplaints()">
               <option value="All">All Statuses</option>
               <option value="Pending">Pending</option>
@@ -181,8 +201,8 @@
             </select>
           </div>
 
-          <div class="glass-card" style="padding: 20px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+          <div class="glass-card" style="padding: 20px; overflow-x: hidden;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed;">
               <thead>
                 <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
                   <th style="padding: 12px 10px;">ID</th>
@@ -204,24 +224,97 @@
              TAB 3: USER MANAGEMENT
              ════════════════════════════════════════════════════════════════ -->
         <section id="adminTab_users" style="display: none;">
-          <div class="glass-card" style="padding: 16px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <input type="text" id="userSearch" class="form-control" placeholder="🔍 Search users by name, email..." style="width: 320px;" oninput="filterUsers()">
-            <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">
-              <i class="fa-solid fa-user-plus"></i> Add New User
-            </button>
+          <!-- Top Stats Cards for User Accounts -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px;">
+            <div class="glass-card stat-card" style="padding: 18px 22px;">
+              <div class="stat-icon-wrapper" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
+                <i class="fa-solid fa-users"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="userStatTotal" style="color: var(--accent-cyan); font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-label">Total Accounts</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card" style="padding: 18px 22px;">
+              <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                <i class="fa-solid fa-user-group"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="userStatCitizen" style="color: #10b981; font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-label">Citizens</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card" style="padding: 18px 22px;">
+              <div class="stat-icon-wrapper" style="background: rgba(59, 130, 246, 0.15); color: #38bdf8;">
+                <i class="fa-solid fa-building-user"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="userStatDept" style="color: #38bdf8; font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-label">Department Officers</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card" style="padding: 18px 22px;">
+              <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                <i class="fa-solid fa-crown"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="userStatAdmin" style="color: #f59e0b; font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-label">Administrators</div>
+              </div>
+            </div>
           </div>
 
-          <div class="glass-card" style="padding: 20px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+          <!-- Controls Toolbar: Search & Filter Pills & Add User -->
+          <div class="glass-card" style="padding: 18px 22px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px;">
+              <div style="flex: 1; min-width: 280px; position: relative;">
+                <input type="text" id="userSearch" class="form-control" placeholder="🔍 Search users by name, email, role, department..." oninput="filterUsers()">
+              </div>
+              <div>
+                <button class="btn btn-primary" onclick="openAddUserModal()" style="display: flex; align-items: center; gap: 8px; padding: 10px 18px;">
+                  <i class="fa-solid fa-user-plus"></i> Add New User
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Filter Pill Tabs -->
+            <div class="filter-pill-bar">
+              <button class="filter-pill active" data-filter="All" onclick="setUserFilter('All')">
+                All Users <span class="pill-count" id="userPillAll">0</span>
+              </button>
+              <button class="filter-pill" data-filter="citizen" onclick="setUserFilter('citizen')">
+                👤 Citizens <span class="pill-count" id="userPillCitizen">0</span>
+              </button>
+              <button class="filter-pill" data-filter="department" onclick="setUserFilter('department')">
+                🏢 Department <span class="pill-count" id="userPillDept">0</span>
+              </button>
+              <button class="filter-pill" data-filter="admin" onclick="setUserFilter('admin')">
+                👑 Admins <span class="pill-count" id="userPillAdmin">0</span>
+              </button>
+              <button class="filter-pill" data-filter="active" onclick="setUserFilter('active')">
+                ● Active <span class="pill-count" id="userPillActive">0</span>
+              </button>
+              <button class="filter-pill" data-filter="blocked" onclick="setUserFilter('blocked')">
+                ● Blocked <span class="pill-count" id="userPillBlocked">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Attractive Modern User Table View -->
+          <div class="glass-card" style="padding: 0; overflow-x: auto; border-radius: 16px;">
+            <table style="width: 100%; min-width: 950px; border-collapse: collapse; text-align: left; font-size: 13px;">
               <thead>
-                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                  <th style="padding: 12px 10px;">ID</th>
-                  <th style="padding: 12px 10px;">Name</th>
-                  <th style="padding: 12px 10px;">Email</th>
-                  <th style="padding: 12px 10px;">Role</th>
-                  <th style="padding: 12px 10px;">Department</th>
-                  <th style="padding: 12px 10px;">Status</th>
-                  <th style="padding: 12px 10px;">Action</th>
+                <tr style="background: rgba(14, 21, 38, 0.85); border-bottom: 1px solid rgba(6, 182, 212, 0.2); color: var(--text-muted); font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
+                  <th style="padding: 16px 18px; width: 75px;">ID</th>
+                  <th style="padding: 16px 18px; width: 22%;">User</th>
+                  <th style="padding: 16px 18px; width: 24%;">Email Address</th>
+                  <th style="padding: 16px 18px; width: 17%;">Role &amp; Permissions</th>
+                  <th style="padding: 16px 18px; width: 15%;">Department</th>
+                  <th style="padding: 16px 18px; width: 10%;">Status</th>
+                  <th style="padding: 16px 18px; width: 12%; text-align: right;">Action</th>
                 </tr>
               </thead>
               <tbody id="usersTableBody"></tbody>
@@ -234,41 +327,54 @@
 
   <!-- Admin Manage Complaint Modal -->
   <div id="adminManageModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
-    <div class="glass-card" style="width: 100%; max-width: 600px; padding: 30px; max-height: 90vh; overflow-y: auto;">
+    <div class="glass-card" style="width: 100%; max-width: 620px; padding: 30px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
 
       <!-- Header -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
-        <h3 id="admModalTitle" style="font-size: 20px; font-weight: 800; color: var(--text-primary);">🗂️ Manage Complaint</h3>
+        <h3 id="admModalTitle" style="font-size: 19px; font-weight: 800; color: var(--text-primary);">🗂️ Manage Complaint</h3>
         <button class="btn btn-sm btn-secondary" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- Citizen Info Banner -->
-      <div id="admModalCitizenInfo" style="background: rgba(6,182,212,0.08); border: 1px solid var(--accent-cyan); border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 13px;"></div>
+      <!-- Citizen Info Banner (Read-only) -->
+      <div id="admModalCitizenInfo" style="background: rgba(6,182,212,0.08); border: 1px solid var(--accent-cyan); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;"></div>
 
-      <!-- Status & Priority Row -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+      <!-- Description Display (Read-only) -->
+      <div id="admModalDescWrap" style="margin-bottom: 16px; display: none;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">Issue Description</div>
+        <div id="admModalDesc" style="background: var(--bg-input); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; color: var(--text-primary); line-height: 1.5;"></div>
+      </div>
+
+      <!-- Complaint Photo Thumbnail (Read-only) -->
+      <div id="admModalImages" style="display: none; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;"></div>
+
+      <!-- Status & Priority Row (READ-ONLY FOR ADMIN) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
         <div class="form-group" style="margin: 0;">
-          <label class="form-label">🔄 Update Status</label>
-          <select id="admModalStatus" class="form-control">
-            <option value="Pending">⏳ Pending</option>
-            <option value="In Progress">🔧 In Progress</option>
-            <option value="Resolved">✅ Resolved</option>
-            <option value="Rejected">❌ Rejected</option>
-          </select>
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🔄 Current Status</span>
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;"><i class="fa-solid fa-lock"></i> Read-only</span>
+          </label>
+          <div id="admModalStatusDisplay" style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+            <span id="admStatusBadge" class="badge">Pending</span>
+          </div>
+          <input type="hidden" id="admModalStatus">
         </div>
+
         <div class="form-group" style="margin: 0;">
-          <label class="form-label">⚡ Priority Level</label>
-          <select id="admModalPriority" class="form-control">
-            <option value="High">🔴 High</option>
-            <option value="Medium">🟡 Medium</option>
-            <option value="Low">🟢 Low</option>
-          </select>
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>⚡ Priority Level</span>
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;"><i class="fa-solid fa-lock"></i> Read-only</span>
+          </label>
+          <div id="admModalPriorityDisplay" style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+            <span id="admPriorityBadge" class="badge">Medium</span>
+          </div>
+          <input type="hidden" id="admModalPriority">
         </div>
       </div>
 
-      <!-- Department -->
+      <!-- Department (EDITABLE BY ADMIN) -->
       <div class="form-group">
-        <label class="form-label">🏢 Assign Department</label>
+        <label class="form-label" style="color: var(--accent-cyan); font-weight: 700;">🏢 Assign Department *</label>
         <select id="admModalDept" class="form-control" onchange="loadOfficersForDept(this.value)">
           <option value="Sanitation Department">Sanitation Department</option>
           <option value="Road Department">Road Department</option>
@@ -278,19 +384,19 @@
         </select>
       </div>
 
-      <!-- Officer Assignment -->
+      <!-- Officer Assignment (EDITABLE BY ADMIN) -->
       <div class="form-group">
-        <label class="form-label">👷 Assign Field Officer</label>
+        <label class="form-label" style="color: var(--accent-cyan); font-weight: 700;">👷 Assign Field Officer *</label>
         <select id="admModalOfficer" class="form-control">
           <option value="">-- Select an Officer --</option>
         </select>
         <div id="officerLoadStatus" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;"></div>
       </div>
 
-      <!-- Remarks -->
+      <!-- Remarks / Instructions (EDITABLE BY ADMIN) -->
       <div class="form-group">
-        <label class="form-label">📝 Admin Remarks / Instructions</label>
-        <textarea id="admModalRemarks" class="form-control" placeholder="e.g. Please inspect ASAP and report back within 48 hours." style="height: 80px;"></textarea>
+        <label class="form-label" style="color: var(--accent-cyan); font-weight: 700;">📝 Admin Remarks / Instructions *</label>
+        <textarea id="admModalRemarks" class="form-control" placeholder="e.g. Please inspect ASAP, dispatch crew, and upload proof of resolution photo." style="height: 85px;"></textarea>
       </div>
 
       <!-- Action Buttons -->
@@ -299,51 +405,129 @@
           <i class="fa-solid fa-xmark"></i> Cancel
         </button>
         <button id="admSaveBtn" class="btn btn-primary" onclick="saveAdminComplaintChanges()">
-          <i class="fa-solid fa-user-check"></i> Save &amp; Assign
+          <i class="fa-solid fa-user-check"></i> Assign Department &amp; Officer
         </button>
       </div>
     </div>
   </div>
 
   <!-- Add User Modal -->
-  <div id="addUserModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+  <div id="addUserModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
     <div class="glass-card" style="width: 100%; max-width: 480px; padding: 30px;">
-      <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 15px;">Create User Account</h3>
-
-      <div class="form-group">
-        <label class="form-label">Full Name</label>
-        <input type="text" id="newUserName" class="form-control" required>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0;">
+          <i class="fa-solid fa-user-plus" style="color: var(--accent-cyan);"></i> Create User Account
+        </h3>
+        <button class="btn btn-sm btn-secondary" onclick="closeAddUserModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" id="newUserEmail" class="form-control" required>
+        <label class="form-label">Full Name *</label>
+        <input type="text" id="newUserName" class="form-control" placeholder="e.g. Rahul Sharma" required>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Role</label>
-        <select id="newUserRole" class="form-control">
-          <option value="citizen">Citizen</option>
-          <option value="department">Department Officer</option>
-          <option value="admin">Administrator</option>
+        <label class="form-label">Email Address *</label>
+        <input type="email" id="newUserEmail" class="form-control" placeholder="e.g. rahul@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Role *</label>
+        <select id="newUserRole" class="form-control" onchange="onNewUserRoleChange(this.value)">
+          <option value="department" selected>🏢 Department Officer</option>
+          <option value="admin">👑 Administrator</option>
+        </select>
+      </div>
+
+      <!-- Department Selector (Shown when Role is Department Officer) -->
+      <div class="form-group" id="newUserDeptGroup" style="display: block;">
+        <label class="form-label">Assign Department *</label>
+        <select id="newUserDept" class="form-control">
+          <option value="Sanitation Department">Sanitation Department</option>
+          <option value="Road Department">Road Department</option>
+          <option value="Water Department">Water Department</option>
+          <option value="Electricity Department">Electricity Department</option>
+          <option value="Traffic Department">Traffic Department</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="newUserPass" class="form-control" required>
+        <label class="form-label">Password *</label>
+        <input type="password" id="newUserPass" class="form-control" placeholder="Minimum 4 characters" required>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-        <button class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveNewUser()">Create Account</button>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+        <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
+        <button type="button" id="createUserSubmitBtn" class="btn btn-primary" onclick="saveNewUser()">
+          <i class="fa-solid fa-check"></i> Create Account
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Role Change Modal for Admin -->
+  <div id="changeRoleModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 440px; padding: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-primary); margin: 0;">
+          <i class="fa-solid fa-user-shield" style="color: var(--accent-cyan);"></i> Change User Role
+        </h3>
+        <button class="btn btn-sm btn-secondary" onclick="closeRoleModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p id="changeRoleUserInfo" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 18px;"></p>
+
+      <div class="form-group">
+        <label class="form-label">Select New Role *</label>
+        <select id="changeRoleSelect" class="form-control" onchange="onChangeRoleSelect(this.value)">
+          <option value="citizen">👤 Citizen</option>
+          <option value="department">🏢 Department Officer</option>
+          <option value="admin">👑 Administrator</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="changeRoleDeptGroup" style="display: none;">
+        <label class="form-label">Assign Department *</label>
+        <select id="changeRoleDept" class="form-control">
+          <option value="Sanitation Department">Sanitation Department</option>
+          <option value="Road Department">Road Department</option>
+          <option value="Water Department">Water Department</option>
+          <option value="Electricity Department">Electricity Department</option>
+          <option value="Traffic Department">Traffic Department</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+        <button type="button" class="btn btn-secondary" onclick="closeRoleModal()">Cancel</button>
+        <button type="button" id="confirmRoleBtn" class="btn btn-primary" onclick="confirmRoleChange()">
+          <i class="fa-solid fa-floppy-disk"></i> Update Role
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Lightbox -->
+  <div class="img-lightbox" id="imgLightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Full image">
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
+  <script>
+    window.CURRENT_ADMIN_ID = {{ user.id }};
+    window.CURRENT_ADMIN_EMAIL = "{{ user.email }}";
+    window.CURRENT_ADMIN_NAME = "{{ user.name }}";
+  </script>
   <script src="/static/js/main.js"></script>
   <script src="/static/js/admin.js"></script>
+  <script>
+    document.addEventListener('click', function(e) {
+      const wrapper = document.getElementById('adminBellWrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        const dd = document.getElementById('adminNotifDropdown');
+        if (dd) dd.classList.remove('open');
+      }
+    });
+  </script>
 </body>
 </html>

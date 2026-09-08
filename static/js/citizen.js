@@ -6,9 +6,14 @@ let citizenComplaints = [];
 let selectedCategory = 'Garbage';
 let selectedPriority = 'Medium';
 let currentRating = 5;
+let attachedComplaintFile = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   loadCitizenComplaints();
+  loadCitizenNotifications();
+  setupImageDropZone();
+  // Poll for new notifications every 30 seconds
+  setInterval(loadCitizenNotifications, 30000);
 });
 
 // ─────────────────────────── Tab Navigation ───────────────────────────
@@ -39,10 +44,15 @@ function switchTab(tabId) {
 async function loadCitizenComplaints() {
   try {
     const res = await fetch('/api/complaints');
-    citizenComplaints = await res.json();
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const data = await res.json();
+    citizenComplaints = Array.isArray(data) ? data : [];
     renderComplaints(citizenComplaints);
     updateStats(citizenComplaints);
   } catch (e) {
+    console.error('Error loading complaints:', e);
     showToast('Failed to load complaints', 'error');
   }
 }
@@ -101,6 +111,13 @@ function renderComplaints(data) {
 
       ${c.description ? `<p style="font-size: 13px; color: var(--text-primary); margin-bottom: 14px; line-height: 1.5;">${escapeHtml(c.description)}</p>` : ''}
 
+      ${c.complaint_image ? `
+        <div class="complaint-img-box">
+          <div class="complaint-img-label"><i class="fa-solid fa-image"></i> Issue Photo</div>
+          <img src="/static/uploads/complaint_images/${escapeHtml(c.complaint_image)}" alt="Issue photo" onclick="openLightbox(this.src)">
+        </div>
+      ` : ''}
+
       ${c.admin_remarks ? `
         <div style="background: var(--bg-input); padding: 10px 14px; border-radius: 8px; font-size: 12px; color: var(--accent-cyan); margin-bottom: 14px; border-left: 3px solid var(--accent-cyan);">
           <strong><i class="fa-solid fa-comment-dots"></i> Municipal Remarks:</strong> ${escapeHtml(c.admin_remarks)}
@@ -154,36 +171,136 @@ async function submitNewComplaint(e) {
   const title = document.getElementById('reportTitle').value.trim();
   const location = document.getElementById('reportLocation').value.trim();
   const description = document.getElementById('reportDesc').value.trim();
+  const imgInput = document.getElementById('complaintImgInput');
+  const submitBtn = e.target.querySelector('button[type="submit"]');
 
   if (!title || !location) {
     showToast('Please fill in title and location.', 'error');
     return;
   }
 
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+  }
+
   try {
+    // Use FormData so we can include the image file
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('category', selectedCategory);
+    formData.append('location', location);
+    formData.append('priority', selectedPriority);
+    formData.append('description', description);
+
+    // Get image from file input or tracked dropped/pasted file
+    const fileToUpload = (imgInput && imgInput.files && imgInput.files[0]) || attachedComplaintFile;
+    if (fileToUpload) {
+      formData.append('complaint_image', fileToUpload);
+    }
+
     const res = await fetch('/api/complaints', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title,
-        category: selectedCategory,
-        location,
-        priority: selectedPriority,
-        description
-      })
+      body: formData  // No Content-Type header — browser automatically sets boundary
     });
     const data = await res.json();
 
     if (data.success) {
       showToast(data.message || 'Complaint submitted successfully!', 'success');
       document.getElementById('newComplaintForm').reset();
+      removeComplaintImg();
+      await loadCitizenComplaints();
       switchTab('complaints');
     } else {
       showToast(data.message || 'Failed to submit complaint', 'error');
     }
   } catch (err) {
-    showToast('Server communication error', 'error');
+    showToast('Server communication error while submitting complaint.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Complaint';
+    }
   }
+}
+
+// ─────────────────────────── Image Upload Helpers ───────────────────────────
+function previewComplaintImg(input) {
+  const file = input.files ? input.files[0] : input;
+  if (!file) return;
+  attachedComplaintFile = file;
+
+  const previewWrap = document.getElementById('complaintImgPreview');
+  const previewImg = document.getElementById('complaintImgPreviewImg');
+  if (!previewWrap || !previewImg) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    previewImg.src = e.target.result;
+    previewWrap.style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeComplaintImg() {
+  attachedComplaintFile = null;
+  const input = document.getElementById('complaintImgInput');
+  if (input) input.value = '';
+  const previewWrap = document.getElementById('complaintImgPreview');
+  if (previewWrap) previewWrap.style.display = 'none';
+  const previewImg = document.getElementById('complaintImgPreviewImg');
+  if (previewImg) previewImg.src = '';
+}
+
+function setupImageDropZone() {
+  const zone = document.getElementById('complaintImgZone');
+  if (!zone) return;
+
+  ['dragenter', 'dragover'].forEach(name => {
+    zone.addEventListener(name, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zone.classList.add('dragover');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(name => {
+    zone.addEventListener(name, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zone.classList.remove('dragover');
+    }, false);
+  });
+
+  zone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    if (dt && dt.files && dt.files.length > 0) {
+      const file = dt.files[0];
+      const input = document.getElementById('complaintImgInput');
+      try {
+        input.files = dt.files;
+      } catch (_) {
+        // Some older browsers disallow assigning FileList directly
+      }
+      previewComplaintImg(file);
+    }
+  }, false);
+
+  // Also support clipboard paste of screenshots
+  window.addEventListener('paste', (e) => {
+    const reportTab = document.getElementById('tabContent_report');
+    if (reportTab && reportTab.style.display !== 'none') {
+      const items = (e.clipboardData || window.clipboardData).items;
+      for (const item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          const blob = item.getAsFile();
+          previewComplaintImg(blob);
+          showToast('Image pasted from clipboard!', 'info');
+          break;
+        }
+      }
+    }
+  });
 }
 
 // ─────────────────────────── Timeline Modal ───────────────────────────
@@ -263,6 +380,20 @@ async function openComplaintDetails(cid) {
         <div style="margin-bottom: 20px;">
           <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">COMPLAINT DESCRIPTION</div>
           <div style="background: var(--bg-input); padding: 14px; border-radius: 10px; font-size: 13px; line-height: 1.5; color: var(--text-primary);">${escapeHtml(c.description)}</div>
+        </div>
+      ` : ''}
+
+      ${c.complaint_image ? `
+        <div class="complaint-img-box">
+          <div class="complaint-img-label"><i class="fa-solid fa-camera"></i> Submitted Issue Photo</div>
+          <img src="/static/uploads/complaint_images/${escapeHtml(c.complaint_image)}" alt="Complaint photo" onclick="openLightbox(this.src)">
+        </div>
+      ` : ''}
+
+      ${c.solution_image ? `
+        <div class="solution-img-box">
+          <div class="solution-img-label"><i class="fa-solid fa-circle-check"></i> Resolution Proof Photo</div>
+          <img src="/static/uploads/solution_images/${escapeHtml(c.solution_image)}" alt="Solution photo" onclick="openLightbox(this.src)">
         </div>
       ` : ''}
 
@@ -435,8 +566,83 @@ async function saveProfile(e) {
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, m => ({
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, m => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
   }[m]));
+}
+
+// ─────────────────────────── Notifications ───────────────────────────
+async function loadCitizenNotifications() {
+  try {
+    const res = await fetch('/api/notifications');
+    if (!res.ok) return;
+    const notifs = await res.json();
+    if (!Array.isArray(notifs)) return;
+    const unread = notifs.filter(n => !n.is_read);
+
+    // Update badge
+    const badge = document.getElementById('citizenBadge');
+    if (badge) {
+      if (unread.length > 0) {
+        badge.textContent = unread.length > 99 ? '99+' : unread.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    // Render list
+    const list = document.getElementById('citizenNotifList');
+    if (!list) return;
+    if (notifs.length === 0) {
+      list.innerHTML = '<div class="notif-empty"><i class="fa-solid fa-bell-slash"></i><br>No notifications yet</div>';
+      return;
+    }
+    list.innerHTML = notifs.map(n => `
+      <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="handleNotifClick(${n.id}, ${n.complaint_id})">
+        <div class="notif-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="notif-content">
+          <div class="notif-message">${escapeHtml(n.message)}</div>
+          <div class="notif-meta"><i class="fa-regular fa-clock"></i> ${n.created_at}</div>
+        </div>
+        ${!n.is_read ? '<div class="notif-dot"></div>' : ''}
+      </div>
+    `).join('');
+  } catch (e) {}
+}
+
+function toggleNotifDropdown() {
+  const dd = document.getElementById('citizenNotifDropdown');
+  if (dd) {
+    dd.classList.toggle('open');
+    if (dd.classList.contains('open')) loadCitizenNotifications();
+  }
+}
+
+async function handleNotifClick(notifId, complaintId) {
+  // Mark as read
+  await fetch(`/api/notifications/${notifId}/read`, { method: 'PUT' });
+  loadCitizenNotifications();
+  // Open complaint details
+  document.getElementById('citizenNotifDropdown').classList.remove('open');
+  openComplaintDetails(complaintId);
+}
+
+async function markAllNotifRead() {
+  await fetch('/api/notifications/read-all', { method: 'PUT' });
+  loadCitizenNotifications();
+  showToast('All notifications marked as read.', 'success');
+}
+
+// ─────────────────────────── Image Lightbox ───────────────────────────
+function openLightbox(src) {
+  const lb = document.getElementById('imgLightbox');
+  const img = document.getElementById('lightboxImg');
+  if (lb && img) { img.src = src; lb.classList.add('open'); }
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('imgLightbox');
+  if (lb) lb.classList.remove('open');
 }

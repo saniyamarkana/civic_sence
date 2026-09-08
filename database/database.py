@@ -12,6 +12,8 @@ Compatible with XAMPP MySQL defaults:
 import os
 import sqlite3
 import hashlib
+import threading
+import functools
 from datetime import datetime
 
 try:
@@ -24,6 +26,7 @@ except ImportError:
     HAS_MYSQL = False
     MySQLError = Exception
     MySQLIntegrityError = Exception
+
 
 
 class SQLiteCursorWrapper:
@@ -81,7 +84,7 @@ class SQLiteConnectionWrapper:
     def __init__(self, conn):
         self.conn = conn
 
-    def cursor(self, dictionary=True):
+    def cursor(self, dictionary=True, buffered=True, **kwargs):
         return SQLiteCursorWrapper(self.conn.cursor())
 
     def commit(self):
@@ -112,6 +115,7 @@ class Database:
         self.backend = None
         self.conn = None
         self.cursor = None
+        self.lock = threading.RLock()
 
         # Attempt MySQL first if driver is available
         connected_mysql = False
@@ -142,7 +146,7 @@ class Database:
                     port=self.port,
                     connection_timeout=3
                 )
-                self.cursor = self.conn.cursor(dictionary=True)
+                self.cursor = self.conn.cursor(dictionary=True, buffered=True)
                 self.backend = "mysql"
                 connected_mysql = True
             except Exception:
@@ -162,6 +166,48 @@ class Database:
 
         self._create_tables()
         self._seed_defaults()
+        self._ensure_thread_safety()
+
+    def _ensure_connection(self):
+        """Ensure connection is alive and healthy across threads."""
+        if self.backend == "mysql" and self.conn:
+            try:
+                if not self.conn.is_connected():
+                    self.conn.reconnect(attempts=3, delay=0.5)
+                    self.cursor = self.conn.cursor(dictionary=True, buffered=True)
+                else:
+                    self.conn.ping(reconnect=True, attempts=2, delay=0.5)
+            except Exception:
+                try:
+                    self.conn = mysql.connector.connect(
+                        host=self.host,
+                        user=self.user,
+                        password=self.password,
+                        database=self.database,
+                        port=self.port,
+                        connection_timeout=3
+                    )
+                    self.cursor = self.conn.cursor(dictionary=True, buffered=True)
+                except Exception:
+                    pass
+
+    def _ensure_thread_safety(self):
+        """Wrap all public methods so database operations are synchronized across threads."""
+        for attr_name in dir(self):
+            if not attr_name.startswith('_') and callable(getattr(self, attr_name)):
+                val = getattr(self.__class__, attr_name, None)
+                if isinstance(val, staticmethod):
+                    continue
+                orig_fn = getattr(self, attr_name)
+                setattr(self, attr_name, self._create_locked_method(orig_fn))
+
+    def _create_locked_method(self, fn):
+        @functools.wraps(fn)
+        def locked_wrapper(*args, **kwargs):
+            with self.lock:
+                self._ensure_connection()
+                return fn(*args, **kwargs)
+        return locked_wrapper
 
     # ──────────────────────────── Table Creation ────────────────────────────
 
@@ -204,6 +250,8 @@ class Database:
                     status VARCHAR(50) NOT NULL DEFAULT 'Pending',
                     department VARCHAR(255),
                     admin_remarks TEXT,
+                    complaint_image VARCHAR(500) NULL,
+                    solution_image VARCHAR(500) NULL,
                     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     assigned_officer_id INT NULL,
@@ -214,6 +262,22 @@ class Database:
                     CONSTRAINT fk_complaints_officer
                         FOREIGN KEY (assigned_officer_id) REFERENCES users(id)
                         ON DELETE SET NULL ON UPDATE CASCADE
+                ) ENGINE=InnoDB
+                """,
+                """
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    citizen_id INT NOT NULL,
+                    complaint_id INT NOT NULL,
+                    message TEXT NOT NULL,
+                    is_read TINYINT(1) NOT NULL DEFAULT 0,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT fk_notif_citizen
+                        FOREIGN KEY (citizen_id) REFERENCES users(id)
+                        ON DELETE CASCADE ON UPDATE CASCADE,
+                    CONSTRAINT fk_notif_complaint
+                        FOREIGN KEY (complaint_id) REFERENCES complaints(id)
+                        ON DELETE CASCADE ON UPDATE CASCADE
                 ) ENGINE=InnoDB
                 """,
                 """
@@ -287,12 +351,26 @@ class Database:
                     status TEXT NOT NULL DEFAULT 'Pending',
                     department TEXT,
                     admin_remarks TEXT,
+                    complaint_image TEXT NULL,
+                    solution_image TEXT NULL,
                     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     assigned_officer_id INTEGER NULL,
                     assigned_officer_name TEXT NULL,
                     FOREIGN KEY (citizen_id) REFERENCES users(id) ON UPDATE CASCADE,
                     FOREIGN KEY (assigned_officer_id) REFERENCES users(id) ON UPDATE CASCADE
+                )
+                """,
+                """
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    citizen_id INTEGER NOT NULL,
+                    complaint_id INTEGER NOT NULL,
+                    message TEXT NOT NULL,
+                    is_read INTEGER NOT NULL DEFAULT 0,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (citizen_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                    FOREIGN KEY (complaint_id) REFERENCES complaints(id) ON DELETE CASCADE ON UPDATE CASCADE
                 )
                 """,
                 """
@@ -326,6 +404,86 @@ class Database:
             self.cursor.execute(query)
 
         self.conn.commit()
+
+        # Patch existing databases: add new columns if they don't exist
+        self._migrate_columns()
+
+    def _migrate_columns(self):
+        """Add new columns to existing tables if they don't exist (safe migration)."""
+        if self.backend == "sqlite":
+            # SQLite: check columns via PRAGMA
+            try:
+                self.cursor.execute("PRAGMA table_info(complaints)")
+                cols = [row["name"] for row in self.cursor.fetchall()]
+                if "complaint_image" not in cols:
+                    self.cursor.execute("ALTER TABLE complaints ADD COLUMN complaint_image TEXT NULL")
+                if "solution_image" not in cols:
+                    self.cursor.execute("ALTER TABLE complaints ADD COLUMN solution_image TEXT NULL")
+                self.conn.commit()
+            except Exception:
+                pass
+        else:
+            # MySQL: use INFORMATION_SCHEMA
+            try:
+                for col, col_type in [("complaint_image", "VARCHAR(500)"), ("solution_image", "VARCHAR(500)")]:
+                    self.cursor.execute(
+                        """SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA.COLUMNS
+                           WHERE TABLE_SCHEMA = %s AND TABLE_NAME = 'complaints' AND COLUMN_NAME = %s""",
+                        (self.database, col)
+                    )
+                    row = self.cursor.fetchone()
+                    if row and row["cnt"] == 0:
+                        self.cursor.execute(f"ALTER TABLE complaints ADD COLUMN `{col}` {col_type} NULL")
+                self.conn.commit()
+            except Exception:
+                pass
+
+        # Normalize any legacy complaint categories
+        try:
+            self.cursor.execute("UPDATE complaints SET category = 'Garbage' WHERE category IN ('Garbage Collection', 'garbage', 'Trash', 'Waste')")
+            self.cursor.execute("UPDATE complaints SET category = 'Streetlight' WHERE category IN ('Street Light', 'street light', 'Street lights', 'light')")
+            self.cursor.execute("UPDATE complaints SET category = 'Water Leakage' WHERE category IN ('Water Supply', 'Water Leak', 'water supply')")
+            self.cursor.execute("UPDATE complaints SET category = 'Damaged Road' WHERE category IN ('Road Damage', 'road damage')")
+            self.cursor.execute("UPDATE complaints SET category = 'Public Cleanliness' WHERE category IN ('Cleanliness', 'cleanliness')")
+            self.cursor.execute("UPDATE complaints SET category = 'Illegal Parking' WHERE category IN ('Parking', 'parking')")
+            self.conn.commit()
+        except Exception:
+            pass
+
+    @staticmethod
+    def normalize_category(category):
+        """Map any informal category name or synonym to the standard category."""
+        if not category:
+            return "Garbage"
+        clean = str(category).strip()
+        lower = clean.lower()
+        synonyms = {
+            "garbage collection": "Garbage",
+            "garbage": "Garbage",
+            "waste": "Garbage",
+            "trash": "Garbage",
+            "dumping": "Garbage",
+            "street light": "Streetlight",
+            "street lights": "Streetlight",
+            "streetlight": "Streetlight",
+            "light": "Streetlight",
+            "water supply": "Water Leakage",
+            "water leak": "Water Leakage",
+            "water leakage": "Water Leakage",
+            "drainage": "Drainage",
+            "pothole": "Pothole",
+            "potholes": "Pothole",
+            "damaged road": "Damaged Road",
+            "road damage": "Damaged Road",
+            "illegal parking": "Illegal Parking",
+            "parking": "Illegal Parking",
+            "public cleanliness": "Public Cleanliness",
+            "cleanliness": "Public Cleanliness",
+        }
+        for key, val in synonyms.items():
+            if lower == key or lower.startswith(key):
+                return val
+        return clean
 
     def _seed_defaults(self):
         """Insert default admin, departments, and department users on first run."""
@@ -462,7 +620,7 @@ class Database:
     def update_user(self, user_id, **kwargs):
         valid = {
             "name", "email", "phone", "address",
-            "status", "department"
+            "status", "department", "role"
         }
         updates = {k: v for k, v in kwargs.items() if k in valid}
 
@@ -506,15 +664,27 @@ class Database:
     # ──────────────────────────── Complaint CRUD ────────────────────────────
 
     def add_complaint(self, citizen_id, title, description,
-                      category, location, priority="Medium"):
+                      category, location, priority="Medium",
+                      department=None, complaint_image=None):
+        category = self.normalize_category(category)
+
+        # Build dynamic INSERT so we only include non-None optional fields
+        columns = ["citizen_id", "title", "description", "category", "location", "priority"]
+        values  = [citizen_id, title, description, category, location, priority]
+
+        if department is not None:
+            columns.append("department")
+            values.append(department)
+        if complaint_image and str(complaint_image).strip():
+            columns.append("complaint_image")
+            values.append(str(complaint_image).strip())
+
+        col_clause = ", ".join(columns)
+        val_clause = ", ".join(["%s"] * len(values))
+
         self.cursor.execute(
-            """INSERT INTO complaints
-               (citizen_id, title, description, category, location, priority)
-               VALUES (%s, %s, %s, %s, %s, %s)""",
-            (
-                citizen_id, title, description,
-                category, location, priority
-            )
+            f"INSERT INTO complaints ({col_clause}) VALUES ({val_clause})",
+            values
         )
         self.conn.commit()
 
@@ -617,10 +787,12 @@ class Database:
             "title", "description", "category", "location",
             "priority", "status", "department",
             "assigned_officer_id", "assigned_officer_name",
-            "admin_remarks"
+            "admin_remarks", "complaint_image", "solution_image"
         }
 
         updates = {k: v for k, v in kwargs.items() if k in valid}
+        if "category" in updates:
+            updates["category"] = self.normalize_category(updates["category"])
 
         if not updates:
             return False
@@ -823,7 +995,16 @@ class Database:
                GROUP BY category
                ORDER BY cnt DESC"""
         )
-        stats["by_category"] = self.cursor.fetchall()
+        raw_cats = self.cursor.fetchall() or []
+        cat_map = {}
+        for r in raw_cats:
+            c_name = self.normalize_category(r.get("category", ""))
+            cat_map[c_name] = cat_map.get(c_name, 0) + int(r.get("cnt", 0))
+
+        stats["by_category"] = [
+            {"category": c, "cnt": count}
+            for c, count in sorted(cat_map.items(), key=lambda x: x[1], reverse=True)
+        ]
 
         self.cursor.execute(
             """SELECT department, COUNT(*) AS cnt
@@ -867,6 +1048,99 @@ class Database:
             )
 
         return stats
+
+    # ──────────────────────────── Notifications ────────────────────────────
+
+    def add_notification(self, citizen_id, complaint_id, message):
+        """Create a new notification for a citizen."""
+        try:
+            self.cursor.execute(
+                """INSERT INTO notifications (citizen_id, complaint_id, message)
+                   VALUES (%s, %s, %s)""",
+                (citizen_id, complaint_id, message)
+            )
+            self.conn.commit()
+            return self.cursor.lastrowid
+        except Exception:
+            self.conn.rollback()
+            return None
+
+    def get_citizen_notifications(self, citizen_id, unread_only=False):
+        """Return notifications for a specific citizen, newest first."""
+        if unread_only:
+            self.cursor.execute(
+                """SELECT n.*, c.title AS complaint_title, c.category, c.status AS complaint_status
+                   FROM notifications n
+                   JOIN complaints c ON n.complaint_id = c.id
+                   WHERE n.citizen_id = %s AND n.is_read = 0
+                   ORDER BY n.created_at DESC""",
+                (citizen_id,)
+            )
+        else:
+            self.cursor.execute(
+                """SELECT n.*, c.title AS complaint_title, c.category, c.status AS complaint_status
+                   FROM notifications n
+                   JOIN complaints c ON n.complaint_id = c.id
+                   WHERE n.citizen_id = %s
+                   ORDER BY n.created_at DESC
+                   LIMIT 20""",
+                (citizen_id,)
+            )
+        return self.cursor.fetchall()
+
+    def get_all_notifications(self, unread_only=False):
+        """Return all notifications (for admin), newest first."""
+        if unread_only:
+            self.cursor.execute(
+                """SELECT n.*, c.title AS complaint_title, c.category, c.status AS complaint_status,
+                          u.name AS citizen_name
+                   FROM notifications n
+                   JOIN complaints c ON n.complaint_id = c.id
+                   JOIN users u ON n.citizen_id = u.id
+                   WHERE n.is_read = 0
+                   ORDER BY n.created_at DESC"""
+            )
+        else:
+            self.cursor.execute(
+                """SELECT n.*, c.title AS complaint_title, c.category, c.status AS complaint_status,
+                          u.name AS citizen_name
+                   FROM notifications n
+                   JOIN complaints c ON n.complaint_id = c.id
+                   JOIN users u ON n.citizen_id = u.id
+                   ORDER BY n.created_at DESC
+                   LIMIT 30"""
+            )
+        return self.cursor.fetchall()
+
+    def mark_notification_read(self, notif_id):
+        """Mark a single notification as read."""
+        self.cursor.execute(
+            "UPDATE notifications SET is_read = 1 WHERE id = %s",
+            (notif_id,)
+        )
+        self.conn.commit()
+
+    def mark_all_citizen_notifications_read(self, citizen_id):
+        """Mark all notifications for a citizen as read."""
+        self.cursor.execute(
+            "UPDATE notifications SET is_read = 1 WHERE citizen_id = %s",
+            (citizen_id,)
+        )
+        self.conn.commit()
+
+    def get_unread_count(self, citizen_id=None):
+        """Return count of unread notifications. If citizen_id is None returns all."""
+        if citizen_id:
+            self.cursor.execute(
+                "SELECT COUNT(*) AS cnt FROM notifications WHERE citizen_id = %s AND is_read = 0",
+                (citizen_id,)
+            )
+        else:
+            self.cursor.execute(
+                "SELECT COUNT(*) AS cnt FROM notifications WHERE is_read = 0"
+            )
+        row = self.cursor.fetchone()
+        return row["cnt"] if row else 0
 
     # ──────────────────────────── Cleanup ────────────────────────────
 
