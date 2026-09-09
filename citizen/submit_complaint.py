@@ -5,6 +5,13 @@ Features 8 category visual cards, priority selector, live preview card, and step
 
 # pyrefly: ignore [missing-import]
 import customtkinter as ctk
+from database import (
+    ComplaintLinkedList,
+    ActionStack,
+    ComplaintQueue,
+    EmergencyPriorityQueue,
+    MunicipalWardGraph
+)
 
 
 class SubmitComplaintPage(ctk.CTkFrame):
@@ -44,6 +51,13 @@ class SubmitComplaintPage(ctk.CTkFrame):
         
         self.selected_category = ctk.StringVar(value="Garbage")
         self.selected_priority = ctk.StringVar(value="Medium")
+
+        # ── Real Project DSA In-Memory Structures (Phase 1 & Phase 2) ──
+        self.live_queue = ComplaintQueue()               # Phase 1: FIFO Queue
+        self.priority_queue = EmergencyPriorityQueue()   # Phase 1: Emergency Priority Queue
+        self.live_stack = ActionStack(max_size=30)       # Phase 1: Action Stack for audit/undo
+        self.live_ll = ComplaintLinkedList()             # Phase 1: Singly Linked List
+        self.ward_graph = self.db.get_municipal_ward_graph()  # Phase 2: Municipal Ward Graph (Adjacency List)
         
         self._build_ui()
 
@@ -240,6 +254,62 @@ class SubmitComplaintPage(ctk.CTkFrame):
             )
         self._update_preview()
 
+    def _calc_urgency_infix_postfix(self, priority, category):
+        """
+        Phase 1 (CLO1): Infix to Postfix expression conversion and Stack-based evaluation.
+        Formula (Infix): ( priority_weight * 3 + category_weight * 2 ) / 5
+        Converts to Postfix via Shunting-Yard (using operator stack) and evaluates via operand stack.
+        """
+        p_map = {"High": 5, "Medium": 3, "Low": 1}
+        c_map = {
+            "Drainage": 5, "Water Leakage": 4, "Pothole": 4, "Damaged Road": 4,
+            "Garbage": 3, "Streetlight": 3, "Public Cleanliness": 2, "Illegal Parking": 2
+        }
+        p_val = p_map.get(priority, 3)
+        c_val = c_map.get(category, 3)
+
+        # Infix token sequence: ['(', str(p_val), '*', '3', '+', str(c_val), '*', '2', ')', '/', '5']
+        tokens = ['(', str(p_val), '*', '3', '+', str(c_val), '*', '2', ')', '/', '5']
+        ops_stack = []
+        postfix = []
+        precedence = {'+': 1, '-': 1, '*': 2, '/': 2}
+
+        for tok in tokens:
+            if tok.isdigit():
+                postfix.append(float(tok))
+            elif tok == '(':
+                ops_stack.append(tok)
+            elif tok == ')':
+                while ops_stack and ops_stack[-1] != '(':
+                    postfix.append(ops_stack.pop())
+                if ops_stack and ops_stack[-1] == '(':
+                    ops_stack.pop()
+            elif tok in precedence:
+                while (ops_stack and ops_stack[-1] in precedence and
+                       precedence[ops_stack[-1]] >= precedence[tok]):
+                    postfix.append(ops_stack.pop())
+                ops_stack.append(tok)
+
+        while ops_stack:
+            postfix.append(ops_stack.pop())
+
+        # Postfix Evaluation using Stack
+        eval_stack = []
+        for tok in postfix:
+            if isinstance(tok, (int, float)):
+                eval_stack.append(tok)
+            else:
+                b = eval_stack.pop()
+                a = eval_stack.pop()
+                if tok == '+': eval_stack.append(a + b)
+                elif tok == '-': eval_stack.append(a - b)
+                elif tok == '*': eval_stack.append(a * b)
+                elif tok == '/': eval_stack.append(a / b if b != 0 else 0)
+
+        urgency_score = round(eval_stack[-1], 2) if eval_stack else 3.0
+        postfix_expr = " ".join(str(int(x) if isinstance(x, float) and x.is_integer() else x) for x in postfix)
+        return urgency_score, postfix_expr
+
     def _update_preview(self):
         cat = self.selected_category.get()
         meta = self.CATEGORY_METADATA.get(cat, {"icon": "📌", "dept": "Municipal Dept"})
@@ -247,12 +317,20 @@ class SubmitComplaintPage(ctk.CTkFrame):
         title = self.title_entry.get().strip() or "Issue title will appear here..."
         loc = self.location_entry.get().strip() or "Area / Location"
 
+        # Phase 1: Dynamic Urgency calculation via Stack (Infix -> Postfix)
+        urgency_score, postfix_repr = self._calc_urgency_infix_postfix(prio, cat)
+
+        # Phase 2: Municipal Ward Graph (Adjacency List) & BFS Shortest Route
+        target_ward = "Ward 1 - Downtown" if "down" in loc.lower() or "market" in loc.lower() else "Ward 2 - Civil Lines"
+        bfs_route = self.ward_graph.bfs_shortest_path("Central Depot", target_ward)
+        route_str = " ➔ ".join(bfs_route) if bfs_route else "Central Depot ➔ Assigned Ward"
+
         self.prev_title_lbl.configure(text=title)
-        self.prev_meta_lbl.configure(text=f"{meta['icon']} {cat}  |  📍 {loc}")
+        self.prev_meta_lbl.configure(text=f"{meta['icon']} {cat}  |  📍 {loc}\n🎯 Urgency Score (Stack Postfix): {urgency_score}/5.0\n🛣️ BFS Dispatch: {route_str}")
         self.prev_dept_lbl.configure(text=f"🏢 Route: {meta['dept']}")
 
         prio_colors = {"High": self.DANGER, "Medium": self.WARNING, "Low": self.SUCCESS}
-        self.prev_prio_lbl.configure(text=f"● {prio}", text_color=prio_colors.get(prio, self.TEXT))
+        self.prev_prio_lbl.configure(text=f"● {prio} (Score: {urgency_score})", text_color=prio_colors.get(prio, self.TEXT))
 
     def _submit_complaint(self):
         title = self.title_entry.get().strip()
@@ -270,6 +348,9 @@ class SubmitComplaintPage(ctk.CTkFrame):
 
         dept = self.CATEGORY_METADATA.get(category, {}).get("dept", "Sanitation Department")
 
+        # Phase 1: Calculate urgency score via Infix -> Postfix Stack
+        urgency_score, postfix_repr = self._calc_urgency_infix_postfix(priority, category)
+
         cid = self.db.add_complaint(
             citizen_id=self.user["id"],
             title=title,
@@ -281,8 +362,24 @@ class SubmitComplaintPage(ctk.CTkFrame):
         self.db.update_complaint(cid, department=dept)
 
         if cid:
+            comp_record = {
+                "id": cid, "title": title, "category": category,
+                "priority": priority, "urgency_score": urgency_score,
+                "location": location, "department": dept
+            }
+
+            # ── Execute Phase 1 Linear Data Structures ──
+            # 1. Enqueue to FIFO ComplaintQueue
+            self.live_queue.enqueue(comp_record)
+            # 2. Enqueue to EmergencyPriorityQueue (Max-Heap order)
+            self.priority_queue.enqueue(comp_record, priority_score=urgency_score)
+            # 3. Prepend into Singly Linked List (O(1) Head insertion)
+            self.live_ll.prepend(comp_record)
+            # 4. Push submission event to ActionStack (LIFO Audit/Undo)
+            self.live_stack.push({"action": "SUBMIT", "id": cid, "title": title, "priority": priority})
+
             self.status_msg.configure(
-                text=f"✓ Ticket #{cid} submitted! Assigned to {dept}.",
+                text=f"✓ Ticket #{cid} queued! (Urgency Score: {urgency_score}) Assigned to {dept}.",
                 text_color=self.SUCCESS
             )
             self.title_entry.delete(0, "end")
@@ -293,3 +390,4 @@ class SubmitComplaintPage(ctk.CTkFrame):
                 self.after(600, lambda: self.on_complaint_submitted(cid))
         else:
             self.status_msg.configure(text="⚠️ Failed to submit complaint.", text_color=self.DANGER)
+

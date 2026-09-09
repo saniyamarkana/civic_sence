@@ -1,0 +1,436 @@
+{
+  "departments": [
+    {
+      "id": 1,
+      "name": "Sanitation Department",
+      "description": "Responsible for waste collection, trash bins, public hygiene and cleanliness.",
+      "head": "Officer Suresh Verma",
+      "contact": "sanitation@civicsense.com",
+      "phone": "011-23456781"
+    },
+    {
+      "id": 2,
+      "name": "Road Department",
+      "description": "Responsible for road maintenance, pothole repairs, bridges and pavements.",
+      "head": "Officer Anil Kapoor",
+      "contact": "road@civicsense.com",
+      "phone": "011-23456782"
+    },
+    {
+      "id": 3,
+      "name": "Water Department",
+      "description": "Responsible for water supply pipelines, sewage lines and drainage management.",
+      "head": "Officer Ramesh Rao",
+      "contact": "water@civicsense.com",
+      "phone": "011-23456783"
+    },
+    {
+      "id": 4,
+      "name": "Electricity Department",
+      "description": "Responsible for public streetlights, electrical transformers and grid wiring.",
+      "head": "Officer Neha Sharma",
+      "contact": "electric@civicsense.com",
+      "phone": "011-23456784"
+    },
+    {
+      "id": 5,
+      "name": "Traffic Department",
+      "description": "Responsible for traffic congestion, illegal road parking and vehicle obstruction.",
+      "head": "Officer Vikram Singh",
+      "contact": "traffic@civicsense.com",
+      "phone": "011-23456785"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Municipal Administrator",
+      "email": "admin@civicsense.com",
+      "phone": "9999988888",
+      "address": "Municipal Corporation Central HQ, New Delhi",
+      "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "role": "admin",
+      "department": null,
+      "status": "active",
+      "created_at": "2026-01-01 10:00:00"
+    },
+    {
+      "id": 2,
+      "name": "Rahul Sharma",
+      "email": "citizen@civicsense.com",
+      "phone": "9876543210",
+      "address": "Flat 402, Sunshine Heights, Sector 4, Civil Lines",
+      "password": "4b4b4c19fdc4b422ca5a52085c3ba8fd2087c62afb06dae791f8fb9c51c56b4b",
+      "role": "citizen",
+      "department": null,
+      "status": "active",
+      "created_at": "2026-01-10 11:20:00"
+    },
+    {
+      "id": 3,
+      "name": "Priya Patel",
+      "email": "priya@example.com",
+      "phone": "9876543211",
+      "address": "B-12, Green Park Avenue, Market Area",
+      "password": "634c03b415a7747761031c261e40552b75a40a0499d63f9d506722c2a0468307",
+      "role": "citizen",
+      "department": null,
+      "status": "active",
+      "created_at": "2026-01-12 14:15:00"
+    },
+    {
+      "id": 4,
+      "name": "Amit Kumar",
+      "email": "amit@example.com",
+      "phone": "9876543212",
+      "address": "House 55, East Industrial Area",
+      "password": "634c03b415a7747761031c261e40552b75a40a0499d63f9d506722c2a0468307",
+      "role": "citizen",
+      "department": null,
+      "status": "active",
+      "created_at": "2026-01-15 09:30:00"
+    },
+    {
+      "id": 5,
+      "name": "Suresh Verma",
+      "email": "sanitation@civicsense.com",
+      "phone": "9811122233",
+      "address": "Sanitation Zonal Office, North Suburb",
+      "password": "245b342eb00576ef2efc99304125cffdd9bd6c27e0ac63812cd4211915606dd2",
+      "role": "department",
+      "department": "Sanitation Department",
+      "status": "active",
+      "created_at": "2026-01-05 09:00:00"
+    },
+    {
+      "id": 6,
+      "name": "Anil Kapoor",
+      "email": "road@civicsense.com",
+      "phone": "9822233344",
+      "address": "Roads & Infrastructure Depot, Central Hub",
+      "password": "245b342eb00576ef2efc99304125cffdd9bd6c27e0ac63812cd4211915606dd2",
+      "role": "department",
+      "department": "Road Department",
+      "status": "active",
+      "created_at": "2026-01-05 09:15:00"
+    },
+    {
+      "id": 7,
+      "name": "Ramesh Rao",
+      "email": "water@civicsense.com",
+      "phone": "9833344455",
+      "address": "Water Works & Sewage Division, South Suburb",
+      "password": "ef75d31536780c7490072049f579308cc2e1f57e5e3240e4e20794101e4a282f",
+      "role": "department",
+      "department": "Water Department",
+      "status": "active",
+      "created_at": "2026-01-05 09:30:00"
+    },
+    {
+      "id": 8,
+      "name": "Neha Sharma",
+      "email": "electric@civicsense.com",
+      "phone": "9844455566",
+      "address": "Municipal Power & Lighting Office, Downtown",
+      "password": "ef75d31536780c7490072049f579308cc2e1f57e5e3240e4e20794101e4a282f",
+      "role": "department",
+      "department": "Electricity Department",
+      "status": "active",
+      "created_at": "2026-01-05 09:45:00"
+    },
+    {
+      "id": 9,
+      "name": "Vikram Singh",
+      "email": "traffic@civicsense.com",
+      "phone": "9855566677",
+      "address": "Traffic Police Enforcement HQ, Railway Station",
+      "password": "ef75d31536780c7490072049f579308cc2e1f57e5e3240e4e20794101e4a282f",
+      "role": "department",
+      "department": "Traffic Department",
+      "status": "active",
+      "created_at": "2026-01-05 10:00:00"
+    }
+  ],
+  "complaints": [
+    {
+      "id": 1,
+      "citizen_id": 2,
+      "title": "Severe Garbage Overflow Near Sector 4 Market",
+      "description": "Commercial waste bins are overflowing onto the pedestrian pathway creating health hazards and foul odor.",
+      "category": "Garbage",
+      "location": "Sector 4 Market Area, Downtown",
+      "priority": "High",
+      "status": "In Progress",
+      "department": "Sanitation Department",
+      "assigned_officer_id": 5,
+      "assigned_officer_name": "Suresh Verma",
+      "admin_remarks": "",
+      "complaint_image": null,
+      "solution_image": null,
+      "created_at": "2026-02-01 08:30:00",
+      "updated_at": "2026-09-09 22:46:40"
+    },
+    {
+      "id": 2,
+      "citizen_id": 2,
+      "title": "Large Dangerous Pothole on Civil Lines Main Road",
+      "description": "Deep asphalt pit measuring 2 feet wide right in front of Metro Pillar 42. Risk of two-wheeler accidents.",
+      "category": "Pothole",
+      "location": "Metro Pillar 42, Civil Lines",
+      "priority": "High",
+      "status": "In Progress",
+      "department": "Road Department",
+      "assigned_officer_id": 6,
+      "assigned_officer_name": "Anil Kapoor",
+      "admin_remarks": "Road crew dispatched with bitumen repair mix.",
+      "complaint_image": null,
+      "solution_image": null,
+      "created_at": "2026-02-02 09:15:00",
+      "updated_at": "2026-02-03 11:00:00"
+    },
+    {
+      "id": 3,
+      "citizen_id": 3,
+      "title": "Main Water Supply Pipe Leakage Flooding Street",
+      "description": "High pressure clean water pipeline cracked near Sunshine Apartments. Water flooding the street for 24 hours.",
+      "category": "Water Leakage",
+      "location": "Sunshine Apartments, Downtown",
+      "priority": "High",
+      "status": "Approved",
+      "department": "Water Department",
+      "assigned_officer_id": 7,
+      "assigned_officer_name": "Ramesh Rao",
+      "admin_remarks": "Approved by Zonal Inspector for urgent pipeline welding.",
+      "complaint_image": null,
+      "solution_image": null,
+      "created_at": "2026-02-03 14:20:00",
+      "updated_at": "2026-02-03 15:00:00"
+    },
+    {
+      "id": 4,
+      "citizen_id": 4,
+      "title": "Broken Streetlight Causing Dark Zone at 5th Cross",
+      "description": "Twin LED street lamp fixture damaged during storm. The road is completely dark and unsafe at night.",
+      "category": "Streetlight",
+      "location": "5th Cross, North Suburb",
+      "priority": "Medium",
+      "status": "Resolved",
+      "department": "Electricity Department",
+      "assigned_officer_id": 8,
+      "assigned_officer_name": "Neha Sharma",
+      "admin_remarks": "Replaced burned LED drivers and wiring harness.",
+      "complaint_image": null,
+      "solution_image": null,
+      "created_at": "2026-01-28 18:40:00",
+      "updated_at": "2026-01-30 16:30:00"
+    },
+    {
+      "id": 5,
+      "citizen_id": 2,
+      "title": "Drainage Sewage Overflow in Residential Colony",
+      "description": "Monsoon drain clogged with plastic debris. Black wastewater spilling onto sidewalks.",
+      "category": "Drainage",
+      "location": "Block C, South Suburb",
+      "priority": "High",
+      "status": "Pending",
+      "department": "Water Department",
+      "assigned_officer_id": 7,
+      "assigned_officer_name": "Ramesh Rao",
+      "admin_remarks": "Queued for automated vacuum suction truck.",
+      "complaint_image": null,
+      "solution_image": null,
+      "created_at": "2026-02-04 10:05:00",
+      "updated_at": "2026-02-04 10:05:00"
+    },
+    {
+      "id": 6,
+      "citizen_id": 3,
+      "title": "Commercial Trucks Blocking Temple Road Driveway",
+      "description": "Unregistered logistics trucks parked illegally on narrow road causing traffic gridlock.",
+      "category": "Illegal Parking",
+      "location": "Temple Road Junction, Market Area",
+      "priority": "Medium",
+      "status": "In Progress",
+      "department": "Traffic Department",
+      "assigned_officer_id": 9,
+      "assigned_officer_name": "Vikram Singh",
+      "admin_remarks": "Traffic police towing cranes deployed.",
+      "complaint_image": null,
+      "solution_image": null,
+      "created_at": "2026-02-05 11:30:00",
+      "updated_at": "2026-02-05 12:15:00"
+    },
+    {
+      "id": 7,
+      "citizen_id": 4,
+      "title": "Extensive Road Surface Erosion and Cracking",
+      "description": "Asphalt top layer completely eroded exposing rough gravel across a 50 meter stretch.",
+      "category": "Damaged Road",
+      "location": "Industrial Corridor Road, East Industrial",
+      "priority": "Medium",
+      "status": "Pending",
+      "department": "Road Department",
+      "assigned_officer_id": 6,
+      "assigned_officer_name": "Anil Kapoor",
+      "admin_remarks": "Scheduled for road re-carpeting budget.",
+      "complaint_image": null,
+      "solution_image": null,
+      "created_at": "2026-02-06 08:45:00",
+      "updated_at": "2026-02-06 08:45:00"
+    },
+    {
+      "id": 8,
+      "citizen_id": 2,
+      "title": "Public Park Cleanliness and Plastic Debris",
+      "description": "Central Children Park walking track covered in plastic bottles and food packaging.",
+      "category": "Public Cleanliness",
+      "location": "Children Recreation Park, Civil Lines",
+      "priority": "Low",
+      "status": "Resolved",
+      "department": "Sanitation Department",
+      "assigned_officer_id": 5,
+      "assigned_officer_name": "Suresh Verma",
+      "admin_remarks": "Sanitation squad conducted special cleanliness drive.",
+      "complaint_image": null,
+      "solution_image": null,
+      "created_at": "2026-01-25 09:00:00",
+      "updated_at": "2026-01-26 14:00:00"
+    },
+    {
+      "id": 9,
+      "citizen_id": 2,
+      "title": "garbage",
+      "description": "garbage",
+      "category": "Garbage",
+      "location": "Area A, Ward 12, Park Street",
+      "priority": "High",
+      "status": "In Progress",
+      "department": "Sanitation Department",
+      "assigned_officer_id": 5,
+      "assigned_officer_name": "Suresh Verma",
+      "admin_remarks": "",
+      "complaint_image": "1788974096127_garbage_over.webp",
+      "solution_image": null,
+      "created_at": "2026-09-09 22:44:56",
+      "updated_at": "2026-09-09 22:46:38"
+    }
+  ],
+  "complaint_history": [
+    {
+      "id": 1,
+      "complaint_id": 1,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 1,
+      "remarks": "Complaint submitted and automatically routed to Sanitation Department",
+      "created_at": "2026-02-01 08:30:00"
+    },
+    {
+      "id": 2,
+      "complaint_id": 2,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 6,
+      "remarks": "[Road Department] Work crew commenced road repair.",
+      "created_at": "2026-02-03 11:00:00"
+    },
+    {
+      "id": 3,
+      "complaint_id": 4,
+      "old_status": "In Progress",
+      "new_status": "Resolved",
+      "changed_by": 8,
+      "remarks": "[Electricity Department] Replaced streetlight fixture successfully.",
+      "created_at": "2026-01-30 16:30:00"
+    },
+    {
+      "id": 4,
+      "complaint_id": 8,
+      "old_status": "In Progress",
+      "new_status": "Resolved",
+      "changed_by": 5,
+      "remarks": "[Sanitation Department] Park area thoroughly sanitized.",
+      "created_at": "2026-01-26 14:00:00"
+    },
+    {
+      "id": 5,
+      "complaint_id": 9,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Sanitation Department",
+      "created_at": "2026-09-09 22:44:56"
+    },
+    {
+      "id": 6,
+      "complaint_id": 9,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 1,
+      "remarks": "Assigned to Field Officer: Suresh Verma (Sanitation Department)",
+      "created_at": "2026-09-09 22:45:51"
+    },
+    {
+      "id": 7,
+      "complaint_id": 9,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 5,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-09-09 22:46:38"
+    },
+    {
+      "id": 8,
+      "complaint_id": 1,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 5,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-09-09 22:46:40"
+    }
+  ],
+  "feedback": [
+    {
+      "id": 1,
+      "complaint_id": 4,
+      "citizen_id": 4,
+      "rating": 5,
+      "comments": "Prompt resolution by electricity department! The street is well lit now.",
+      "created_at": "2026-01-30 18:00:00"
+    },
+    {
+      "id": 2,
+      "complaint_id": 8,
+      "citizen_id": 2,
+      "rating": 5,
+      "comments": "Park looks wonderful and clean. Thank you municipal team!",
+      "created_at": "2026-01-27 10:30:00"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "citizen_id": 4,
+      "complaint_id": 4,
+      "message": "✅ Your complaint '#4 — Broken Streetlight' has been resolved! Notes: Replaced burned LED drivers.",
+      "is_read": 1,
+      "created_at": "2026-01-30 16:30:00"
+    },
+    {
+      "id": 2,
+      "citizen_id": 2,
+      "complaint_id": 8,
+      "message": "✅ Your complaint '#8 — Public Park Cleanliness' has been resolved!",
+      "is_read": 1,
+      "created_at": "2026-01-26 14:00:00"
+    },
+    {
+      "id": 3,
+      "citizen_id": 2,
+      "complaint_id": 1,
+      "message": "📋 Complaint #1 has been acknowledged and routed to Sanitation Department.",
+      "is_read": 1,
+      "created_at": "2026-02-01 08:35:00"
+    }
+  ]
+}

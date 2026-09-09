@@ -514,9 +514,9 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script>
-    window.CURRENT_ADMIN_ID = {{ user.id }};
-    window.CURRENT_ADMIN_EMAIL = "{{ user.email }}";
-    window.CURRENT_ADMIN_NAME = "{{ user.name }}";
+    window.CURRENT_ADMIN_ID = parseInt("{{ user.id if user else '' }}", 10) || null;
+    window.CURRENT_ADMIN_EMAIL = "{{ user.email if user else '' }}";
+    window.CURRENT_ADMIN_NAME = "{{ user.name if user else '' }}";
   </script>
   <script src="/static/js/main.js"></script>
   <script src="/static/js/admin.js"></script>

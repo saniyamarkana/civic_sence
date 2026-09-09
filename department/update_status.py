@@ -3,7 +3,9 @@ Department Status Update Form.
 Enables officers to log work updates, add field remarks, and transition complaints through resolution phases.
 """
 
+# pyrefly: ignore [missing-import]
 import customtkinter as ctk
+from database import ActionStack
 
 
 class UpdateStatusPage(ctk.CTkFrame):
@@ -27,7 +29,9 @@ class UpdateStatusPage(ctk.CTkFrame):
         self.db = db
         self.user = user
         self.department_name = user.get("department", "Sanitation Department") or "Sanitation Department"
+        self.undo_stack = ActionStack(max_size=20)  # Phase 1: Operational LIFO Undo Stack
         self._build_ui()
+
 
     def _build_ui(self):
         # Header
@@ -95,6 +99,13 @@ class UpdateStatusPage(ctk.CTkFrame):
         btn_row = ctk.CTkFrame(card, fg_color="transparent")
         btn_row.pack(fill="x", padx=25, pady=(0, 20))
 
+        self.undo_btn = ctk.CTkButton(
+            btn_row, text="↩️ Undo Status (Stack: 0)", font=("Segoe UI", 12, "bold"),
+            fg_color="#475569", hover_color="#334155", text_color="#ffffff",
+            height=42, corner_radius=8, command=self._undo_last_status
+        )
+        self.undo_btn.pack(side="left")
+
         ctk.CTkButton(
             btn_row, text="💾 Save Status Update", font=("Segoe UI", 13, "bold"),
             fg_color=self.ACCENT, hover_color="#0891b2", text_color="#ffffff",
@@ -111,6 +122,20 @@ class UpdateStatusPage(ctk.CTkFrame):
         new_status = self.status_var.get()
         remarks = self.remarks_box.get("1.0", "end-1c").strip()
 
+        # Phase 1: Push previous state to LIFO ActionStack before changing
+        old_comp = self.db.get_complaint(cid)
+        if old_comp:
+            self.undo_stack.push({
+                "id": cid,
+                "old_status": old_comp.get("status", "Pending"),
+                "old_remarks": old_comp.get("admin_remarks", "")
+            })
+            self.undo_btn.configure(
+                text=f"↩️ Undo Status (Stack: {self.undo_stack.size()})",
+                fg_color=self.WARNING,
+                text_color="#000000"
+            )
+
         success = self.db.update_complaint(
             cid, changed_by=self.user["id"], status=new_status,
             admin_remarks=remarks,
@@ -122,3 +147,23 @@ class UpdateStatusPage(ctk.CTkFrame):
             self.remarks_box.delete("1.0", "end")
         else:
             self.msg_lbl.configure(text="⚠️ Failed to update complaint status.", text_color=self.DANGER)
+
+    def _undo_last_status(self):
+        """Phase 1: LIFO Stack Undo mechanism to revert status update."""
+        if self.undo_stack.is_empty():
+            return
+        last = self.undo_stack.pop()
+        if last:
+            self.db.update_complaint(
+                last["id"],
+                changed_by=self.user["id"],
+                status=last["old_status"],
+                admin_remarks=last["old_remarks"],
+                remarks=f"[LIFO UNDO] Reverted status back to '{last['old_status']}'"
+            )
+            count = self.undo_stack.size()
+            btn_bg = self.WARNING if count > 0 else "#475569"
+            btn_fg = "#000000" if count > 0 else "#ffffff"
+            self.undo_btn.configure(text=f"↩️ Undo Status (Stack: {count})", fg_color=btn_bg, text_color=btn_fg)
+            self.msg_lbl.configure(text=f"↩️ Reverted Complaint #{last['id']} back to '{last['old_status']}'!", text_color=self.WARNING)
+

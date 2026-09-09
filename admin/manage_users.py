@@ -3,6 +3,7 @@ Admin User Management Module.
 Allows administrators to view, search, filter, add, edit, and manage citizens and department staff.
 """
 
+# pyrefly: ignore [missing-import]
 import customtkinter as ctk
 
 
@@ -69,7 +70,14 @@ class ManageUsersPage(ctk.CTkFrame):
             ctrl, text="🔄 Refresh", font=("Segoe UI", 12, "bold"),
             fg_color=self.INPUT_BG, hover_color="#334155", text_color=self.TEXT,
             height=38, width=90, corner_radius=8, command=self.load_users
-        ).pack(side="left")
+        ).pack(side="left", padx=(0, 10))
+
+        # Phase 1: Iterative Algorithm Badge
+        self.dsa_badge = ctk.CTkLabel(
+            ctrl, text="⚡ Iterative Binary Search: Active", font=("Segoe UI", 11, "bold"),
+            text_color=self.ACCENT, fg_color=self.INPUT_BG, corner_radius=8, padx=10, pady=6
+        )
+        self.dsa_badge.pack(side="right")
 
         # Table container
         table_card = ctk.CTkFrame(self, fg_color=self.CARD_BG, corner_radius=16,
@@ -91,6 +99,33 @@ class ManageUsersPage(ctk.CTkFrame):
 
         self.load_users()
 
+    def _iterative_sort_users(self, users, key="id"):
+        """Phase 1: Iterative Selection Sort to guarantee array ordering for Binary Search."""
+        arr = list(users)
+        n = len(arr)
+        for i in range(n):
+            min_idx = i
+            for j in range(i + 1, n):
+                if int(arr[j].get(key, 0)) < int(arr[min_idx].get(key, 0)):
+                    min_idx = j
+            arr[i], arr[min_idx] = arr[min_idx], arr[i]
+        return arr
+
+    def _iterative_binary_search_users(self, sorted_users, target_id):
+        """Phase 1: Iterative Binary Search (O(log n)) locating user record by ID."""
+        low = 0
+        high = len(sorted_users) - 1
+        while low <= high:
+            mid = (low + high) // 2
+            mid_val = int(sorted_users[mid].get("id", 0))
+            if mid_val == target_id:
+                return sorted_users[mid]
+            elif mid_val < target_id:
+                low = mid + 1
+            else:
+                high = mid - 1
+        return None
+
     def load_users(self):
         for w in self.rows_scroll.winfo_children():
             w.destroy()
@@ -99,13 +134,23 @@ class ManageUsersPage(ctk.CTkFrame):
         users = self.db.get_all_users(role=None if role == "All" else role)
         query = self.search_entry.get().strip().lower()
 
-        filtered = []
-        for u in users:
-            if query:
-                txt = f"{u['id']} {u['name']} {u['email']} {u.get('phone', '')} {u['role']}".lower()
-                if query not in txt:
-                    continue
-            filtered.append(u)
+        # Phase 1: If searching numeric ID, use Iterative Sort + Binary Search
+        if query.isdigit() or (query.startswith("#") and query[1:].isdigit()):
+            target_id = int(query.replace("#", ""))
+            sorted_users = self._iterative_sort_users(users, key="id")
+            found = self._iterative_binary_search_users(sorted_users, target_id)
+            filtered = [found] if found else []
+            self.dsa_badge.configure(text=f"⚡ Binary Search ID #{target_id}: {'Found' if found else 'Not Found'} (O(log n))")
+        else:
+            filtered = []
+            for u in users:
+                if query:
+                    txt = f"{u['id']} {u['name']} {u['email']} {u.get('phone', '')} {u['role']}".lower()
+                    if query not in txt:
+                        continue
+                filtered.append(u)
+            self.dsa_badge.configure(text=f"⚡ Total Records: {len(filtered)} (Iterative Scan)")
+
 
         if not filtered:
             ctk.CTkLabel(self.rows_scroll, text="No users found.", font=("Segoe UI", 13),

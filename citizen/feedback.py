@@ -3,6 +3,7 @@ Citizen Feedback and Rating Module.
 Allows citizens to provide feedback and star ratings on resolved complaints.
 """
 
+# pyrefly: ignore [missing-import]
 import customtkinter as ctk
 
 

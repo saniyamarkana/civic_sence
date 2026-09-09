@@ -3,6 +3,7 @@ Department Dashboard Overview.
 Displays department-specific complaint metrics, workload distributions, and action items.
 """
 
+# pyrefly: ignore [missing-import]
 import customtkinter as ctk
 
 

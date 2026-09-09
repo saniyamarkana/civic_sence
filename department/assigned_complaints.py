@@ -5,6 +5,7 @@ Allows department officers to view, filter, accept, and start work on complaints
 
 # pyrefly: ignore [missing-import]
 import customtkinter as ctk
+from database import EmergencyPriorityQueue, MunicipalWardGraph
 
 
 class AssignedComplaintsPage(ctk.CTkFrame):
@@ -44,6 +45,11 @@ class AssignedComplaintsPage(ctk.CTkFrame):
         self.department_name = user.get("department", "Sanitation Department") or "Sanitation Department"
         self.on_select_update = on_select_update
         self.status_filter = ctk.StringVar(value="All")
+
+        # ── Real DSA Structures (Phase 1 & Phase 2) ──
+        self.p_queue = EmergencyPriorityQueue()              # Phase 1: Emergency Priority Queue
+        self.ward_graph = self.db.get_municipal_ward_graph() # Phase 2: Municipal Ward Graph (Adjacency List)
+
         self._build_ui()
 
     def _build_ui(self):
@@ -55,7 +61,7 @@ class AssignedComplaintsPage(ctk.CTkFrame):
         left.pack(side="left")
         ctk.CTkLabel(left, text=f"📋 {self.department_name} - Assigned Tasks", font=("Segoe UI", 24, "bold"),
                      text_color=self.TEXT).pack(anchor="w")
-        ctk.CTkLabel(left, text="Review civic complaints assigned to your jurisdiction",
+        ctk.CTkLabel(left, text="Review civic complaints assigned to your jurisdiction via Priority Queue & BFS Routing",
                      font=("Segoe UI", 12), text_color=self.TEXT_DIM).pack(anchor="w")
 
         # Controls Row
@@ -81,7 +87,14 @@ class AssignedComplaintsPage(ctk.CTkFrame):
             ctrl, text="🔄 Refresh", font=("Segoe UI", 12, "bold"),
             fg_color=self.INPUT_BG, hover_color="#334155", text_color=self.TEXT,
             height=38, width=90, corner_radius=8, command=self.load_complaints
-        ).pack(side="left")
+        ).pack(side="left", padx=(0, 10))
+
+        # DSA Indicators
+        self.dsa_badge = ctk.CTkLabel(
+            ctrl, text="🚨 Priority Queue + BFS Route: Active", font=("Segoe UI", 11, "bold"),
+            text_color=self.ACCENT, fg_color=self.INPUT_BG, corner_radius=8, padx=10, pady=6
+        )
+        self.dsa_badge.pack(side="right")
 
         # Table Card
         table_card = ctk.CTkFrame(self, fg_color=self.CARD_BG, corner_radius=16,
@@ -93,7 +106,7 @@ class AssignedComplaintsPage(ctk.CTkFrame):
         th.pack(fill="x", padx=15, pady=(15, 8))
         th.grid_columnconfigure((0, 1, 2, 3, 4, 5), weight=1)
 
-        cols = [("ID", 0), ("Title / Issue", 1), ("Location", 2), ("Priority", 3), ("Status", 4), ("Quick Actions", 5)]
+        cols = [("ID", 0), ("Title / Issue", 1), ("Location & BFS Route", 2), ("Priority", 3), ("Status", 4), ("Quick Actions", 5)]
         for name, cidx in cols:
             ctk.CTkLabel(th, text=name, font=("Segoe UI", 11, "bold"), text_color=self.TEXT_DIM).grid(row=0, column=cidx, sticky="w", padx=10, pady=8)
 
@@ -107,19 +120,28 @@ class AssignedComplaintsPage(ctk.CTkFrame):
         for w in self.rows_scroll.winfo_children():
             w.destroy()
 
-        complaints = self.db.get_department_complaints(self.department_name)
+        raw_complaints = self.db.get_department_complaints(self.department_name)
         filt = self.status_filter.get()
         query = self.search_entry.get().strip().lower()
 
-        filtered = []
-        for c in complaints:
+        # Phase 1: Load into EmergencyPriorityQueue (Max-Priority ordering)
+        self.p_queue = EmergencyPriorityQueue()
+        weight_map = {"High": 10, "Medium": 5, "Low": 1}
+
+        for c in raw_complaints:
             if filt != "All" and c["status"] != filt:
                 continue
             if query:
                 txt = f"{c['id']} {c['title']} {c.get('location','')} {c['priority']}".lower()
                 if query not in txt:
                     continue
-            filtered.append(c)
+            p_score = weight_map.get(c["priority"], 3)
+            self.p_queue.enqueue(c, priority_score=p_score)
+
+        # Dequeue complaints in strict Priority order
+        filtered = []
+        while not self.p_queue.is_empty():
+            filtered.append(self.p_queue.dequeue())
 
         if not filtered:
             ctk.CTkLabel(self.rows_scroll, text="No complaints found for this department.",
@@ -136,12 +158,17 @@ class AssignedComplaintsPage(ctk.CTkFrame):
                          text_color=self.ACCENT).grid(row=0, column=0, sticky="w", padx=10, pady=10)
 
             # Title
-            ctk.CTkLabel(row, text=c["title"][:22] + ("..." if len(c["title"]) > 22 else ""),
+            ctk.CTkLabel(row, text=c["title"][:20] + ("..." if len(c["title"]) > 20 else ""),
                          font=("Segoe UI", 12, "bold"), text_color=self.TEXT).grid(row=0, column=1, sticky="w", padx=10)
 
-            # Location
-            ctk.CTkLabel(row, text=c["location"] or "-", font=("Segoe UI", 11),
-                         text_color=self.TEXT_DIM).grid(row=0, column=2, sticky="w", padx=10)
+            # Phase 2: Compute BFS Shortest Path from Depot to Ward
+            loc = c.get("location") or "Civil Lines"
+            target_ward = "Ward 1 - Downtown" if "down" in loc.lower() or "market" in loc.lower() else "Ward 2 - Civil Lines"
+            route = self.ward_graph.bfs_shortest_path("Central Depot", target_ward)
+            route_summary = " ➔ ".join(route) if route else loc
+
+            ctk.CTkLabel(row, text=f"{loc}\n[BFS: {route_summary}]", font=("Segoe UI", 10),
+                         text_color=self.TEXT_DIM, justify="left").grid(row=0, column=2, sticky="w", padx=10)
 
             # Priority
             pr_col = self.PRIORITY_COLORS.get(c["priority"], self.TEXT)

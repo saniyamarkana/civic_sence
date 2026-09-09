@@ -3,6 +3,7 @@ Admin Dashboard Overview.
 Displays key metrics, custom canvas-drawn category charts, department workload, and recent activity.
 """
 
+# pyrefly: ignore [missing-import]
 import customtkinter as ctk
 import tkinter as tk
 
@@ -107,10 +108,14 @@ class AdminDashboard(ctk.CTkFrame):
             ctk.CTkLabel(r, text=label, font=("Segoe UI", 12), text_color=self.TEXT_DIM, padx=10, pady=8).pack(side="left")
             ctk.CTkLabel(r, text=val, font=("Segoe UI", 13, "bold"), text_color=color, padx=10, pady=8).pack(side="right")
 
-        # ── Row 3: Recent Complaints Table ──
+        # ── Row 3: Phase 2 Binary Tree Hierarchy & Traversals Card ──
+        self._render_hierarchy_binary_tree_card()
+
+        # ── Row 4: Recent Complaints Table ──
         table_card = ctk.CTkFrame(self.scroll, fg_color=self.CARD_BG, corner_radius=16,
                                   border_width=1, border_color=self.BORDER)
         table_card.pack(fill="x", pady=(0, 20))
+
 
         top_bar = ctk.CTkFrame(table_card, fg_color="transparent")
         top_bar.pack(fill="x", padx=20, pady=(15, 10))
@@ -217,3 +222,83 @@ class AdminDashboard(ctk.CTkFrame):
                 label_width + fill_w + 12, y + bar_height / 2, text=str(cnt),
                 anchor="w", fill=self.TEXT, font=("Segoe UI", 9, "bold")
             )
+
+    # ─────────────────────────── PHASE 2: BINARY TREE & TRAVERSALS ───────────────────────────
+
+    def _recursive_tree_rollup(self, node):
+        """Phase 1: Recursive algorithm aggregating complaint workload across tree nodes."""
+        if not node:
+            return 0
+        left_cnt = self._recursive_tree_rollup(node.left)
+        right_cnt = self._recursive_tree_rollup(node.right)
+        return left_cnt + right_cnt + node.stats.get("cases", 0)
+
+    def _render_hierarchy_binary_tree_card(self):
+        """Phase 2 (CLO2 Items 1 & 2): Renders the Municipal Governance Binary Tree and Traversals."""
+        tree = self.db.get_department_hierarchy_tree()
+        total_recursive = self._recursive_tree_rollup(tree.root)
+
+        card = ctk.CTkFrame(self.scroll, fg_color=self.CARD_BG, corner_radius=16,
+                            border_width=1, border_color=self.BORDER)
+        card.pack(fill="x", pady=(0, 20))
+
+        # Top Bar
+        top_bar = ctk.CTkFrame(card, fg_color="transparent")
+        top_bar.pack(fill="x", padx=20, pady=(15, 8))
+
+        left = ctk.CTkFrame(top_bar, fg_color="transparent")
+        left.pack(side="left")
+        ctk.CTkLabel(left, text="🏛️ Municipal Administrative Hierarchy (Binary Tree)",
+                     font=("Segoe UI", 16, "bold"), text_color=self.TEXT).pack(anchor="w")
+        ctk.CTkLabel(left, text=f"CLO2: Binary Tree representation · Recursive Workload Rollup: {total_recursive} Cases",
+                     font=("Segoe UI", 11), text_color=self.TEXT_DIM).pack(anchor="w")
+
+        # Traversal Selector Row
+        traversal_row = ctk.CTkFrame(card, fg_color="transparent")
+        traversal_row.pack(fill="x", padx=20, pady=(4, 10))
+
+        display_box = ctk.CTkTextbox(card, height=140, fg_color=self.INPUT_BG,
+                                     border_color=self.BORDER, border_width=1, text_color=self.TEXT,
+                                     font=("Consolas", 11))
+        display_box.pack(fill="x", padx=20, pady=(0, 15))
+
+        def show_traversal(mode):
+            display_box.delete("1.0", "end")
+            if mode == "preorder":
+                items = tree.preorder_traversal()
+                header_txt = "=== PRE-ORDER TRAVERSAL (Root ➔ Left ➔ Right) | Executive Delegation Sequence ===\n"
+            elif mode == "inorder":
+                items = tree.inorder_traversal()
+                header_txt = "=== IN-ORDER TRAVERSAL (Left ➔ Root ➔ Right) | Symmetrical Department Audit ===\n"
+            else:
+                items = tree.postorder_traversal()
+                header_txt = "=== POST-ORDER TRAVERSAL (Left ➔ Right ➔ Root) | Bottom-Up Workload Rollup ===\n"
+
+            display_box.insert("end", header_txt)
+            for idx, item in enumerate(items, 1):
+                cases = item['stats'].get('cases', 0)
+                rollup = item['stats'].get('rollup_total', cases)
+                line = f"{idx}. [{item['key']}] {item['title']} ({item['role']}) ➔ Local: {cases} cases | Rollup: {rollup}\n"
+                display_box.insert("end", line)
+
+        ctk.CTkButton(
+            traversal_row, text="1. Pre-Order (Delegation)", font=("Segoe UI", 11, "bold"),
+            fg_color=self.ACCENT, hover_color="#0891b2", text_color="#ffffff",
+            height=32, corner_radius=6, command=lambda: show_traversal("preorder")
+        ).pack(side="left", padx=(0, 8))
+
+        ctk.CTkButton(
+            traversal_row, text="2. In-Order (Audit)", font=("Segoe UI", 11, "bold"),
+            fg_color=self.ACCENT2, hover_color="#2563eb", text_color="#ffffff",
+            height=32, corner_radius=6, command=lambda: show_traversal("inorder")
+        ).pack(side="left", padx=(0, 8))
+
+        ctk.CTkButton(
+            traversal_row, text="3. Post-Order (Rollup)", font=("Segoe UI", 11, "bold"),
+            fg_color=self.PURPLE, hover_color="#9333ea", text_color="#ffffff",
+            height=32, corner_radius=6, command=lambda: show_traversal("postorder")
+        ).pack(side="left")
+
+        # Initial view: Pre-order
+        show_traversal("preorder")
+

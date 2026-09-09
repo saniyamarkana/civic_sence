@@ -2,6 +2,7 @@
 Citizen Profile View and Edit Page.
 """
 
+# pyrefly: ignore [missing-import]
 import customtkinter as ctk
 
 

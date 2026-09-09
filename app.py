@@ -824,6 +824,94 @@ def dsa_recursive():
 
     return jsonify({"error": "Unknown algorithm"}), 400
 
+# ─────────────────────────── PHASE 2 DSA APIS (CLO2) ───────────────────────────
+
+@app.route("/api/dsa/bst/search/<int:cid>", methods=["GET"])
+def dsa_bst_search(cid):
+    """
+    Phase 2 (Item 3): Binary Search Tree (BST) Complaint Lookup.
+    Retrieves complaint in O(log n) time using BST binary search without sequential scan.
+    """
+    bst = db.get_complaints_bst()
+    found = bst.search(cid)
+    if found:
+        return jsonify({"success": True, "time_complexity": "O(log n)", "complaint": found})
+    return jsonify({"success": False, "message": f"Complaint #{cid} not found in BST"}), 404
+
+@app.route("/api/dsa/bst/inorder", methods=["GET"])
+def dsa_bst_inorder():
+    """
+    Phase 2 (Item 3): BST In-Order Traversal.
+    Returns complaints sorted in ascending order of complaint ID.
+    """
+    bst = db.get_complaints_bst()
+    sorted_items = bst.inorder()
+    return jsonify({"success": True, "count": len(sorted_items), "complaints": sorted_items})
+
+@app.route("/api/dsa/tree/hierarchy", methods=["GET"])
+def dsa_tree_hierarchy():
+    """
+    Phase 2 (Items 1 & 2): Municipal Governance Binary Tree and Traversals.
+    Returns Pre-order, In-order, or Post-order traversal of municipal hierarchy.
+    """
+    traversal_type = request.args.get("traversal", "preorder").lower()
+    tree = db.get_department_hierarchy_tree()
+
+    if traversal_type == "inorder":
+        items = tree.inorder_traversal()
+        desc = "In-Order (Left ➔ Root ➔ Right): Symmetrical Departmental Audit"
+    elif traversal_type == "postorder":
+        items = tree.postorder_traversal()
+        desc = "Post-Order (Left ➔ Right ➔ Root): Bottom-Up Workload Rollup"
+    else:
+        items = tree.preorder_traversal()
+        desc = "Pre-Order (Root ➔ Left ➔ Right): Executive Delegation Sequence"
+
+    return jsonify({
+        "success": True,
+        "traversal": traversal_type,
+        "description": desc,
+        "nodes": items,
+        "rollup_total": tree.root.stats.get("rollup_total", 0) if tree.root else 0
+    })
+
+@app.route("/api/dsa/graph/route", methods=["GET"])
+def dsa_graph_route():
+    """
+    Phase 2 (Items 4 & 5): Municipal Ward Graph (Adjacency List) & BFS Route Dispatch.
+    Computes shortest path route from Central Depot to target ward.
+    """
+    destination = request.args.get("destination", "Ward 1 - Downtown")
+    graph = db.get_municipal_ward_graph()
+    bfs_path = graph.bfs_shortest_path("Central Depot", destination)
+    dfs_coverage = graph.dfs_coverage("Central Depot")
+    return jsonify({
+        "success": True,
+        "adjacency_list": graph.adj_list,
+        "start": "Central Depot",
+        "destination": destination,
+        "bfs_shortest_path": bfs_path,
+        "hops": len(bfs_path) - 1 if bfs_path else 0,
+        "dfs_full_coverage": dfs_coverage
+    })
+
+@app.route("/api/dsa/stack/undo", methods=["POST"])
+def dsa_stack_undo():
+    """
+    Phase 1: Operational LIFO Stack Undo.
+    Reverts the most recent complaint action.
+    """
+    if live_stack.is_empty():
+        return jsonify({"success": False, "message": "Nothing to undo on stack."}), 400
+    last_action = live_stack.pop()
+    cid = last_action.get("id")
+    return jsonify({
+        "success": True,
+        "reverted_action": last_action,
+        "current_stack_size": live_stack.size()
+    })
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+

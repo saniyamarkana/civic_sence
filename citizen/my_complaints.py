@@ -3,7 +3,9 @@ Citizen Complaints List & Tracking Page.
 Features complaint cards, status badges, timeline tracking, and live search/filter.
 """
 
+# pyrefly: ignore [missing-import]
 import customtkinter as ctk
+from database import ComplaintLinkedList
 
 
 class MyComplaintsPage(ctk.CTkFrame):
@@ -42,6 +44,7 @@ class MyComplaintsPage(ctk.CTkFrame):
         self.db = db
         self.user = user
         self.status_filter = ctk.StringVar(value="All")
+        self.complaints_ll = ComplaintLinkedList()  # Phase 1: Singly Linked List
         self._build_ui()
 
     def _build_ui(self):
@@ -79,7 +82,14 @@ class MyComplaintsPage(ctk.CTkFrame):
             ctrl_frame, text="🔄 Refresh", font=("Segoe UI", 12, "bold"),
             fg_color=self.INPUT_BG, hover_color="#334155", text_color=self.TEXT,
             height=38, width=100, corner_radius=8, command=self.load_complaints
-        ).pack(side="left")
+        ).pack(side="left", padx=(0, 10))
+
+        # Phase 1 DSA Indicator: Linked List Chain
+        self.dsa_badge = ctk.CTkLabel(
+            ctrl_frame, text="🔗 Linked List: 0 Nodes", font=("Segoe UI", 11, "bold"),
+            text_color=self.ACCENT, fg_color=self.INPUT_BG, corner_radius=8, padx=10, pady=6
+        )
+        self.dsa_badge.pack(side="right")
 
         # Scrollable Cards Container
         self.cards_scroll = ctk.CTkScrollableFrame(self, fg_color="transparent")
@@ -92,19 +102,26 @@ class MyComplaintsPage(ctk.CTkFrame):
         for w in self.cards_scroll.winfo_children():
             w.destroy()
 
-        complaints = self.db.get_citizen_complaints(self.user["id"])
+        # Phase 1: Retrieve and traverse via ComplaintLinkedList (Node by Node)
+        self.complaints_ll = self.db.get_complaint_linked_list(self.user["id"])
         query = self.search_entry.get().strip().lower()
         filt = self.status_filter.get()
 
         filtered = []
-        for c in complaints:
-            if filt != "All" and c["status"] != filt:
-                continue
+        curr_node = self.complaints_ll.head
+        while curr_node:
+            c = curr_node.data
+            match_status = (filt == "All" or c["status"] == filt)
+            match_query = True
             if query:
-                txt = f"{c['id']} {c['title']} {c['category']} {c['location']} {c['description']} {c['status']}".lower()
-                if query not in txt:
-                    continue
-            filtered.append(c)
+                txt = f"{c['id']} {c['title']} {c['category']} {c.get('location', '')} {c.get('description', '')} {c['status']}".lower()
+                match_query = query in txt
+            if match_status and match_query:
+                filtered.append(c)
+            curr_node = curr_node.next
+
+        self.dsa_badge.configure(text=f"🔗 Linked List Chain: {self.complaints_ll.size()} Nodes (O(1) Head Tracking)")
+
 
         if not filtered:
             empty = ctk.CTkFrame(self.cards_scroll, fg_color=self.CARD_BG, corner_radius=16,
