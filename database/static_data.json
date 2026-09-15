@@ -144,7 +144,7 @@
       "email": "traffic@civicsense.com",
       "phone": "9855566677",
       "address": "Traffic Police Enforcement HQ, Railway Station",
-      "password": "ef75d31536780c7490072049f579308cc2e1f57e5e3240e4e20794101e4a282f",
+      "password": "245b342eb00576ef2efc99304125cffdd9bd6c27e0ac63812cd4211915606dd2",
       "role": "department",
       "department": "Traffic Department",
       "status": "active",
@@ -349,6 +349,24 @@
       "solution_image": null,
       "created_at": "2026-09-15 09:42:52",
       "updated_at": "2026-09-15 09:44:22"
+    },
+    {
+      "id": 12,
+      "citizen_id": 2,
+      "title": "Drain blocked and overflowing",
+      "description": "The roadside drainage is blocked and dirty water is overflowing onto the road. There is a bad smell and the area needs immediate cleaning.",
+      "category": "Drainage",
+      "location": "Area D, Ward 6, Station Road",
+      "priority": "High",
+      "status": "In Progress",
+      "department": "Water Department",
+      "assigned_officer_id": 7,
+      "assigned_officer_name": "Ramesh Rao",
+      "admin_remarks": "",
+      "complaint_image": "1789447054885_Drainage_overflow.webp",
+      "solution_image": null,
+      "created_at": "2026-09-15 10:07:34",
+      "updated_at": "2026-09-15 10:08:23"
     }
   ],
   "complaint_history": [
@@ -495,6 +513,33 @@
       "changed_by": 8,
       "remarks": "Field officer started work (In Progress)",
       "created_at": "2026-09-15 09:44:22"
+    },
+    {
+      "id": 17,
+      "complaint_id": 12,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Water Department",
+      "created_at": "2026-09-15 10:07:34"
+    },
+    {
+      "id": 18,
+      "complaint_id": 12,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 1,
+      "remarks": "Assigned to Field Officer: Ramesh Rao (Water Department)",
+      "created_at": "2026-09-15 10:08:07"
+    },
+    {
+      "id": 19,
+      "complaint_id": 12,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 7,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-09-15 10:08:23"
     }
   ],
   "feedback": [
