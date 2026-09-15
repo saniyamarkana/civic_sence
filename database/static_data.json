@@ -132,7 +132,7 @@
       "email": "electric@civicsense.com",
       "phone": "9844455566",
       "address": "Municipal Power & Lighting Office, Downtown",
-      "password": "ef75d31536780c7490072049f579308cc2e1f57e5e3240e4e20794101e4a282f",
+      "password": "245b342eb00576ef2efc99304125cffdd9bd6c27e0ac63812cd4211915606dd2",
       "role": "department",
       "department": "Electricity Department",
       "status": "active",
@@ -331,6 +331,24 @@
       "solution_image": null,
       "created_at": "2026-09-15 09:15:04",
       "updated_at": "2026-09-15 09:16:22"
+    },
+    {
+      "id": 11,
+      "citizen_id": 2,
+      "title": "Streetlight not working near main road",
+      "description": "The streetlight near Park Street has not been working for the last three days. The road becomes very dark at night and may create a safety problem for pedestrians and vehicles.",
+      "category": "Streetlight",
+      "location": "Ward 12, Park Street",
+      "priority": "Low",
+      "status": "In Progress",
+      "department": "Electricity Department",
+      "assigned_officer_id": 8,
+      "assigned_officer_name": "Neha Sharma",
+      "admin_remarks": "",
+      "complaint_image": "1789445572476_Streetlight_not_working.avif",
+      "solution_image": null,
+      "created_at": "2026-09-15 09:42:52",
+      "updated_at": "2026-09-15 09:44:22"
     }
   ],
   "complaint_history": [
@@ -450,6 +468,33 @@
       "changed_by": 5,
       "remarks": "Field officer started work (In Progress)",
       "created_at": "2026-09-15 09:16:22"
+    },
+    {
+      "id": 14,
+      "complaint_id": 11,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Electricity Department",
+      "created_at": "2026-09-15 09:42:52"
+    },
+    {
+      "id": 15,
+      "complaint_id": 11,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 1,
+      "remarks": "Assigned to Field Officer: Neha Sharma (Electricity Department)",
+      "created_at": "2026-09-15 09:43:33"
+    },
+    {
+      "id": 16,
+      "complaint_id": 11,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 8,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-09-15 09:44:22"
     }
   ],
   "feedback": [

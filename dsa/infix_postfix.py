@@ -1,173 +1,73 @@
-"""
-Infix to Postfix conversion and evaluation for Civic Sense Management System.
-Used for complaint filter/search expression handling and priority score calculation.
+# Infix to Postfix using Stack
 
-Phase 1 requirement: Applying the project's own Stack class for expression handling.
-The Stack (from stack.py) is used as the operator/operand stack during conversion and
-evaluation, demonstrating a real-world application of the Stack data structure.
-
-Example expressions:
-  Priority Score: ( complaints * 3 + urgency * 2 ) / total
-  Filter: ( category == Garbage AND priority == High ) OR status == Pending
-"""
-
-# Use the project's own Stack class for expression handling (Phase 1 requirement)
 from dsa.stack import Stack
+from dsa.simple_infix_postfix import (
+    evaluate_postfix as evaluate_postfix_with_steps,
+    infix_to_postfix as infix_to_postfix_with_steps,
+)
 
 
 class InfixPostfix:
-    """Handles infix-to-postfix conversion and postfix evaluation using a stack."""
-
-    PRECEDENCE = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
-    RIGHT_ASSOC = {'^'}
+    """Class-based API used by the expression visualizer endpoint."""
 
     @staticmethod
-    def is_operand(ch):
-        """Check if character is an operand (number or variable)."""
-        return ch.isalnum() or ch == '.'
-
-    @classmethod
-    def infix_to_postfix(cls, expression):
-        """
-        Convert infix expression to postfix using the project's Stack class.
-        Returns (postfix_string, step_log) where step_log shows stack state at each step.
-        """
-        output = []
-        op_stack = Stack(max_size=200)  # Uses project's own Stack DSA class
-        steps = []  # Log of (token, stack_state, output_state, action)
-        tokens = cls._tokenize(expression)
-
-        for token in tokens:
-            action = ""
-            if cls._is_number(token) or (token.isalpha() and token not in ('(', ')')):
-                output.append(token)
-                action = f"Operand '{token}' → Output"
-            elif token == '(':
-                op_stack.push(token)
-                action = "Push '(' to stack"
-            elif token == ')':
-                while not op_stack.is_empty() and op_stack.peek() != '(':
-                    output.append(op_stack.pop())
-                if not op_stack.is_empty():
-                    op_stack.pop()  # Remove '('
-                action = "Pop until '(' found"
-            elif token in cls.PRECEDENCE:
-                while (not op_stack.is_empty() and
-                       op_stack.peek() != '(' and
-                       op_stack.peek() in cls.PRECEDENCE and
-                       (cls.PRECEDENCE[op_stack.peek()] > cls.PRECEDENCE[token] or
-                        (cls.PRECEDENCE[op_stack.peek()] == cls.PRECEDENCE[token] and
-                         token not in cls.RIGHT_ASSOC))):
-                    output.append(op_stack.pop())
-                op_stack.push(token)
-                action = f"Operator '{token}' → Stack"
-
-            steps.append({
-                "token": token,
-                "stack": op_stack.to_list(),
-                "output": output.copy(),
-                "action": action,
-            })
-
-        # Drain remaining operators from the Stack
-        while not op_stack.is_empty():
-            op = op_stack.pop()
-            output.append(op)
-            steps.append({
-                "token": "-",
-                "stack": op_stack.to_list(),
-                "output": output.copy(),
-                "action": f"Pop remaining '{op}' → Output",
-            })
-
-        return " ".join(output), steps
-
-    @classmethod
-    def evaluate_postfix(cls, expression):
-        """
-        Evaluate a postfix expression with numeric values using the project's Stack class.
-        Returns (result, step_log).
-        """
-        operand_stack = Stack(max_size=200)  # Uses project's own Stack DSA class
-        steps = []
-        tokens = expression.split()
-
-        for token in tokens:
-            if cls._is_number(token):
-                operand_stack.push(float(token))
-                steps.append({
-                    "token": token,
-                    "stack": operand_stack.to_list(),
-                    "action": f"Push {token}",
-                })
-            elif token in cls.PRECEDENCE:
-                if operand_stack.size() < 2:
-                    return None, steps
-                b = operand_stack.pop()
-                a = operand_stack.pop()
-                result = cls._apply_operator(token, a, b)
-                if result is None:
-                    return None, steps
-                operand_stack.push(result)
-                steps.append({
-                    "token": token,
-                    "stack": operand_stack.to_list(),
-                    "action": f"{a} {token} {b} = {result}",
-                })
-
-        return operand_stack.pop() if not operand_stack.is_empty() else None, steps
+    def infix_to_postfix(expression):
+        return infix_to_postfix_with_steps(expression)
 
     @staticmethod
-    def _apply_operator(op, a, b):
-        if op == '+':
-            return a + b
-        elif op == '-':
-            return a - b
-        elif op == '*':
-            return a * b
-        elif op == '/':
-            return a / b if b != 0 else None
-        elif op == '^':
-            return a ** b
-        return None
+    def evaluate_postfix(expression):
+        return evaluate_postfix_with_steps(expression)
 
-    @staticmethod
-    def _tokenize(expression):
-        """Split expression into tokens."""
-        tokens = []
-        current = ""
-        for ch in expression:
-            if ch == ' ':
-                if current:
-                    tokens.append(current)
-                    current = ""
-            elif ch in '()+-*/^':
-                if current:
-                    tokens.append(current)
-                    current = ""
-                tokens.append(ch)
-            else:
-                current += ch
-        if current:
-            tokens.append(current)
-        return tokens
 
-    @staticmethod
-    def _is_number(s):
-        """Check if string is a valid number."""
-        try:
-            float(s)
-            return True
-        except (ValueError, TypeError):
-            return False
+def precedence(operator):
+    if operator == '+' or operator == '-':
+        return 1
+    elif operator == '*' or operator == '/':
+        return 2
+    elif operator == '^':
+        return 3
+    return 0
 
-    @classmethod
-    def get_sample_expressions(cls):
-        """Return sample expressions for demonstration."""
-        return [
-            "( 3 + 5 ) * 2",
-            "10 + 2 * 3 - 1",
-            "( 8 - 2 ) * ( 3 + 4 )",
-            "5 ^ 2 + 3 * 4",
-            "( ( 2 + 3 ) * 4 ) / 5",
-        ]
+
+def infix_to_postfix(expression):
+
+    stack = Stack(max_size=100)
+    result = ""
+
+    for ch in expression:
+
+        # If character is a number or letter
+        if ch.isalnum():
+            result = result + ch
+
+        # If opening bracket
+        elif ch == '(':
+            stack.push(ch)
+
+        # If closing bracket
+        elif ch == ')':
+            while not stack.is_empty() and stack.peek() != '(':
+                result = result + stack.pop()
+
+            stack.pop()
+
+        # If operator
+        else:
+            while (not stack.is_empty() and
+                   precedence(stack.peek()) >= precedence(ch)):
+                result = result + stack.pop()
+
+            stack.push(ch)
+
+    # Remove remaining operators
+    while not stack.is_empty():
+        result = result + stack.pop()
+
+    return result
+
+
+if __name__ == "__main__":
+    expression = "A+B*C"
+    postfix = infix_to_postfix(expression)
+    print("Infix:", expression)
+    print("Postfix:", postfix)
