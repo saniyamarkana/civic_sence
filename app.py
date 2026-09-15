@@ -530,6 +530,11 @@ def mark_all_notifications_read():
     role = session.get("role")
     if role != "admin":
         db.mark_all_citizen_notifications_read(session["user_id"])
+    else:
+        with db.lock:
+            for n in db.data.get("notifications", []):
+                n["is_read"] = 1
+            db._save_data()
     return jsonify({"success": True})
 
 # ─────────────────────────── Feedback & Profile ───────────────────────────

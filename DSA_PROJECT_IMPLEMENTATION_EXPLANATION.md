@@ -134,8 +134,31 @@ This document provides a comprehensive, file-by-file and line-by-line explanatio
 
 ---
 
+### 9. Dedicated Basic Reference Implementations in `dsa/` Folder
+For modular study, standalone execution, and curriculum submission, clean standalone Python reference files are also provided inside the [`dsa/`](file:///c:/xampp/htdocs/KJU/civic_sence/dsa) directory:
+
+1. **[`dsa/binary_tree.py`](file:///c:/xampp/htdocs/KJU/civic_sence/dsa/binary_tree.py)**:
+   - `TreeNode` & `BinaryTree` classes for hierarchical data representation.
+   - Basic Tree Traversals: `preorder()`, `inorder()`, `postorder()`, and `level_order()` (BFS).
+   - Tree metrics: `height()`, `count_nodes()`, and `total_caseload()`.
+   - `build_sample_hierarchy()` with complete executable test script (`__main__`).
+2. **[`dsa/binary_search_tree.py`](file:///c:/xampp/htdocs/KJU/civic_sence/dsa/binary_search_tree.py)**:
+   - `BSTNode` & `BinarySearchTree` classes for efficient $O(\log n)$ data storage and retrieval.
+   - Operations: `insert()`, `search()`, `inorder()` (sorted output), `find_min()`, `find_max()`, and `delete()`.
+   - `build_sample_bst()` with complete executable test script (`__main__`).
+3. **[`dsa/graph.py`](file:///c:/xampp/htdocs/KJU/civic_sence/dsa/graph.py)**:
+   - `Graph` class with Adjacency List representation (`self.adj_list`).
+   - Traversal methods: `bfs()` (queue-based) and `dfs()` (recursive/stack-based).
+   - Application: `bfs_shortest_path()` for vehicle and dispatch routing.
+   - `build_sample_ward_graph()` with complete executable test script (`__main__`).
+
+---
+
 ## Conclusion & Verification
-All Phase 1 linear structures and Phase 2 structured representations are fully integrated into real application workflows:
-- **No separate unused files** were created for Phase 2.
-- Everything lives within the existing project architecture (`database/`, `admin/`, `department/`, `citizen/`, and `app.py`).
-- Every algorithm solves a tangible problem in the civic complaint management lifecycle (undoing errors, priority dispatching, organizational delegation, $O(\log n)$ indexing, and vehicle dispatch routing).
+All Phase 1 linear structures and Phase 2 structured representations are fully provided both as standalone modules in `dsa/` and directly integrated into real application workflows (`database/`, `admin/`, `department/`, `citizen/`, and `app.py`). Every algorithm solves a tangible problem in the civic complaint management lifecycle:
+- Hierarchical administrative delegation (Binary Tree)
+- Dynamic auditing & aggregation (Tree Traversals)
+- High-efficiency ticket indexing & $O(\log n)$ retrieval (Binary Search Tree)
+- Municipal ward connectivity (Graph Adjacency List)
+- Service vehicle dispatch routing (Breadth-First Search)
+

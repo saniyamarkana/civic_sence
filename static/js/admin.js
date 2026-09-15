@@ -12,6 +12,8 @@ let iterArray = [45, 12, 85, 32, 89, 21, 67, 10, 53, 38];
 
 document.addEventListener('DOMContentLoaded', () => {
   loadAdminDashboard();
+  loadAdminNotifications();
+  setInterval(loadAdminNotifications, 30000);
 });
 
 // ─────────────────────────── Navigation Switcher ───────────────────────────
@@ -1164,3 +1166,68 @@ function escapeQuotes(str) {
   if (!str) return '';
   return str.replace(/'/g, "\\'");
 }
+
+// ─────────────────────────── Notifications ───────────────────────────
+async function loadAdminNotifications() {
+  try {
+    const res = await fetch('/api/notifications');
+    if (!res.ok) return;
+    const notifs = await res.json();
+    if (!Array.isArray(notifs)) return;
+    const unread = notifs.filter(n => !n.is_read);
+
+    const badge = document.getElementById('adminBadge');
+    if (badge) {
+      if (unread.length > 0) {
+        badge.textContent = unread.length > 99 ? '99+' : unread.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    const list = document.getElementById('adminNotifList');
+    if (!list) return;
+    if (notifs.length === 0) {
+      list.innerHTML = '<div class="notif-empty"><i class="fa-solid fa-bell-slash"></i><br>No notifications yet</div>';
+      return;
+    }
+    list.innerHTML = notifs.map(n => `
+      <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="handleAdminNotifClick(${n.id}, ${n.complaint_id})">
+        <div class="notif-icon"><i class="fa-solid fa-bell"></i></div>
+        <div class="notif-content">
+          <div class="notif-message">${escapeHtml(n.message)}</div>
+          <div class="notif-meta"><i class="fa-regular fa-clock"></i> ${n.created_at}</div>
+        </div>
+        ${!n.is_read ? '<div class="notif-dot"></div>' : ''}
+      </div>
+    `).join('');
+  } catch (e) {}
+}
+
+function toggleAdminNotifDropdown() {
+  const dd = document.getElementById('adminNotifDropdown');
+  if (dd) {
+    dd.classList.toggle('open');
+    if (dd.classList.contains('open')) loadAdminNotifications();
+  }
+}
+
+async function handleAdminNotifClick(notifId, complaintId) {
+  await fetch(`/api/notifications/${notifId}/read`, { method: 'PUT' });
+  loadAdminNotifications();
+  const dd = document.getElementById('adminNotifDropdown');
+  if (dd) dd.classList.remove('open');
+  if (complaintId && typeof openManageComplaintModal === 'function') {
+    openManageComplaintModal(complaintId);
+  }
+}
+
+async function adminMarkAllRead() {
+  await fetch('/api/notifications/read-all', { method: 'PUT' });
+  loadAdminNotifications();
+  if (typeof showToast === 'function') {
+    showToast('All notifications marked as read.', 'success');
+  }
+}
+

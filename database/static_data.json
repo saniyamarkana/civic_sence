@@ -120,7 +120,7 @@
       "email": "water@civicsense.com",
       "phone": "9833344455",
       "address": "Water Works & Sewage Division, South Suburb",
-      "password": "ef75d31536780c7490072049f579308cc2e1f57e5e3240e4e20794101e4a282f",
+      "password": "245b342eb00576ef2efc99304125cffdd9bd6c27e0ac63812cd4211915606dd2",
       "role": "department",
       "department": "Water Department",
       "status": "active",
@@ -196,15 +196,15 @@
       "category": "Water Leakage",
       "location": "Sunshine Apartments, Downtown",
       "priority": "High",
-      "status": "Approved",
+      "status": "In Progress",
       "department": "Water Department",
       "assigned_officer_id": 7,
       "assigned_officer_name": "Ramesh Rao",
-      "admin_remarks": "Approved by Zonal Inspector for urgent pipeline welding.",
+      "admin_remarks": "",
       "complaint_image": null,
       "solution_image": null,
       "created_at": "2026-02-03 14:20:00",
-      "updated_at": "2026-02-03 15:00:00"
+      "updated_at": "2026-09-10 10:10:02"
     },
     {
       "id": 4,
@@ -232,15 +232,15 @@
       "category": "Drainage",
       "location": "Block C, South Suburb",
       "priority": "High",
-      "status": "Pending",
+      "status": "In Progress",
       "department": "Water Department",
       "assigned_officer_id": 7,
       "assigned_officer_name": "Ramesh Rao",
-      "admin_remarks": "Queued for automated vacuum suction truck.",
+      "admin_remarks": "",
       "complaint_image": null,
       "solution_image": null,
       "created_at": "2026-02-04 10:05:00",
-      "updated_at": "2026-02-04 10:05:00"
+      "updated_at": "2026-09-10 10:09:56"
     },
     {
       "id": 6,
@@ -313,6 +313,24 @@
       "solution_image": null,
       "created_at": "2026-09-09 22:44:56",
       "updated_at": "2026-09-09 22:46:38"
+    },
+    {
+      "id": 10,
+      "citizen_id": 2,
+      "title": "cleaning",
+      "description": "Road cleaning problems involve dust accumulation, drainage clogging, and heavy debris that damage surfaces and pose health hazards.",
+      "category": "Public Cleanliness",
+      "location": "ward12",
+      "priority": "Medium",
+      "status": "In Progress",
+      "department": "Sanitation Department",
+      "assigned_officer_id": 5,
+      "assigned_officer_name": "Suresh Verma",
+      "admin_remarks": "",
+      "complaint_image": "1789443904256_cleaning_problem.webp",
+      "solution_image": null,
+      "created_at": "2026-09-15 09:15:04",
+      "updated_at": "2026-09-15 09:16:22"
     }
   ],
   "complaint_history": [
@@ -387,6 +405,51 @@
       "changed_by": 5,
       "remarks": "Field officer started work (In Progress)",
       "created_at": "2026-09-09 22:46:40"
+    },
+    {
+      "id": 9,
+      "complaint_id": 5,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 7,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-09-10 10:09:56"
+    },
+    {
+      "id": 10,
+      "complaint_id": 3,
+      "old_status": "Approved",
+      "new_status": "In Progress",
+      "changed_by": 7,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-09-10 10:10:02"
+    },
+    {
+      "id": 11,
+      "complaint_id": 10,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Sanitation Department",
+      "created_at": "2026-09-15 09:15:04"
+    },
+    {
+      "id": 12,
+      "complaint_id": 10,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 1,
+      "remarks": "Assigned to Field Officer: Suresh Verma (Sanitation Department)",
+      "created_at": "2026-09-15 09:15:44"
+    },
+    {
+      "id": 13,
+      "complaint_id": 10,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 5,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-09-15 09:16:22"
     }
   ],
   "feedback": [

@@ -13,11 +13,6 @@ class Node:
         self.data = data  # Dictionary holding complaint data
         self.next = None
 
-    def __repr__(self):
-        if isinstance(self.data, dict) and "id" in self.data:
-            return f"Node(ID:{self.data['id']})"
-        return f"Node({self.data})"
-
 
 class LinkedList:
     """Singly linked list for complaint management."""
