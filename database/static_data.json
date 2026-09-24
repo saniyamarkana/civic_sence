@@ -158,17 +158,17 @@
       "title": "Severe Garbage Overflow Near Sector 4 Market",
       "description": "Commercial waste bins are overflowing onto the pedestrian pathway creating health hazards and foul odor.",
       "category": "Garbage",
-      "location": "Sector 4 Market Area, Downtown",
+      "location": "Central Zone (Chowk)",
       "priority": "High",
       "status": "In Progress",
       "department": "Sanitation Department",
       "assigned_officer_id": 5,
       "assigned_officer_name": "Suresh Verma",
       "admin_remarks": "",
-      "complaint_image": null,
+      "complaint_image": "1790054203966_garbage_over.webp",
       "solution_image": null,
       "created_at": "2026-02-01 08:30:00",
-      "updated_at": "2026-09-09 22:46:40"
+      "updated_at": "2026-09-22 10:46:43"
     },
     {
       "id": 2,
@@ -176,17 +176,17 @@
       "title": "Large Dangerous Pothole on Civil Lines Main Road",
       "description": "Deep asphalt pit measuring 2 feet wide right in front of Metro Pillar 42. Risk of two-wheeler accidents.",
       "category": "Pothole",
-      "location": "Metro Pillar 42, Civil Lines",
+      "location": "West Zone (Adajan)",
       "priority": "High",
       "status": "In Progress",
       "department": "Road Department",
       "assigned_officer_id": 6,
       "assigned_officer_name": "Anil Kapoor",
       "admin_remarks": "Road crew dispatched with bitumen repair mix.",
-      "complaint_image": null,
+      "complaint_image": "1790054184151_Pothole_issue.jpg",
       "solution_image": null,
       "created_at": "2026-02-02 09:15:00",
-      "updated_at": "2026-02-03 11:00:00"
+      "updated_at": "2026-09-22 10:46:24"
     },
     {
       "id": 3,
@@ -194,7 +194,7 @@
       "title": "Main Water Supply Pipe Leakage Flooding Street",
       "description": "High pressure clean water pipeline cracked near Sunshine Apartments. Water flooding the street for 24 hours.",
       "category": "Water Leakage",
-      "location": "Sunshine Apartments, Downtown",
+      "location": "South West (Athwa)",
       "priority": "High",
       "status": "In Progress",
       "department": "Water Department",
@@ -212,7 +212,7 @@
       "title": "Broken Streetlight Causing Dark Zone at 5th Cross",
       "description": "Twin LED street lamp fixture damaged during storm. The road is completely dark and unsafe at night.",
       "category": "Streetlight",
-      "location": "5th Cross, North Suburb",
+      "location": "North Zone (Katargam)",
       "priority": "Medium",
       "status": "Resolved",
       "department": "Electricity Department",
@@ -230,17 +230,17 @@
       "title": "Drainage Sewage Overflow in Residential Colony",
       "description": "Monsoon drain clogged with plastic debris. Black wastewater spilling onto sidewalks.",
       "category": "Drainage",
-      "location": "Block C, South Suburb",
+      "location": "South Zone (Udhana)",
       "priority": "High",
       "status": "In Progress",
       "department": "Water Department",
       "assigned_officer_id": 7,
       "assigned_officer_name": "Ramesh Rao",
       "admin_remarks": "",
-      "complaint_image": null,
+      "complaint_image": "1790054169313_Drainage_overflow.webp",
       "solution_image": null,
       "created_at": "2026-02-04 10:05:00",
-      "updated_at": "2026-09-10 10:09:56"
+      "updated_at": "2026-09-22 10:46:09"
     },
     {
       "id": 6,
@@ -248,7 +248,7 @@
       "title": "Commercial Trucks Blocking Temple Road Driveway",
       "description": "Unregistered logistics trucks parked illegally on narrow road causing traffic gridlock.",
       "category": "Illegal Parking",
-      "location": "Temple Road Junction, Market Area",
+      "location": "South East (Dindoli)",
       "priority": "Medium",
       "status": "In Progress",
       "department": "Traffic Department",
@@ -266,7 +266,7 @@
       "title": "Extensive Road Surface Erosion and Cracking",
       "description": "Asphalt top layer completely eroded exposing rough gravel across a 50 meter stretch.",
       "category": "Damaged Road",
-      "location": "Industrial Corridor Road, East Industrial",
+      "location": "Varachha Zone B",
       "priority": "Medium",
       "status": "Pending",
       "department": "Road Department",
@@ -284,17 +284,17 @@
       "title": "Public Park Cleanliness and Plastic Debris",
       "description": "Central Children Park walking track covered in plastic bottles and food packaging.",
       "category": "Public Cleanliness",
-      "location": "Children Recreation Park, Civil Lines",
+      "location": "South West (Athwa)",
       "priority": "Low",
       "status": "Resolved",
       "department": "Sanitation Department",
       "assigned_officer_id": 5,
       "assigned_officer_name": "Suresh Verma",
       "admin_remarks": "Sanitation squad conducted special cleanliness drive.",
-      "complaint_image": null,
+      "complaint_image": "1790054230031_cleaning_problem.webp",
       "solution_image": null,
       "created_at": "2026-01-25 09:00:00",
-      "updated_at": "2026-01-26 14:00:00"
+      "updated_at": "2026-09-22 10:47:10"
     },
     {
       "id": 9,
@@ -302,7 +302,7 @@
       "title": "garbage",
       "description": "garbage",
       "category": "Garbage",
-      "location": "Area A, Ward 12, Park Street",
+      "location": "West Zone (Adajan)",
       "priority": "High",
       "status": "In Progress",
       "department": "Sanitation Department",
@@ -320,7 +320,7 @@
       "title": "cleaning",
       "description": "Road cleaning problems involve dust accumulation, drainage clogging, and heavy debris that damage surfaces and pose health hazards.",
       "category": "Public Cleanliness",
-      "location": "ward12",
+      "location": "Varachha Zone A",
       "priority": "Medium",
       "status": "In Progress",
       "department": "Sanitation Department",
@@ -330,15 +330,15 @@
       "complaint_image": "1789443904256_cleaning_problem.webp",
       "solution_image": null,
       "created_at": "2026-09-15 09:15:04",
-      "updated_at": "2026-09-15 09:16:22"
+      "updated_at": "2026-09-22 09:59:57"
     },
     {
       "id": 11,
       "citizen_id": 2,
       "title": "Streetlight not working near main road",
-      "description": "The streetlight near Park Street has not been working for the last three days. The road becomes very dark at night and may create a safety problem for pedestrians and vehicles.",
+      "description": "The streetlight ner Park Street has not been working for the last three days. The road becomes very dark at night and may create a safety problem for pedestrians and vehicles.",
       "category": "Streetlight",
-      "location": "Ward 12, Park Street",
+      "location": "North Zone (Katargam)",
       "priority": "Low",
       "status": "In Progress",
       "department": "Electricity Department",
@@ -348,7 +348,7 @@
       "complaint_image": "1789445572476_Streetlight_not_working.avif",
       "solution_image": null,
       "created_at": "2026-09-15 09:42:52",
-      "updated_at": "2026-09-15 09:44:22"
+      "updated_at": "2026-09-22 10:05:37"
     },
     {
       "id": 12,
@@ -356,7 +356,7 @@
       "title": "Drain blocked and overflowing",
       "description": "The roadside drainage is blocked and dirty water is overflowing onto the road. There is a bad smell and the area needs immediate cleaning.",
       "category": "Drainage",
-      "location": "Area D, Ward 6, Station Road",
+      "location": "Central Zone (Chowk)",
       "priority": "High",
       "status": "In Progress",
       "department": "Water Department",
@@ -366,7 +366,43 @@
       "complaint_image": "1789447054885_Drainage_overflow.webp",
       "solution_image": null,
       "created_at": "2026-09-15 10:07:34",
-      "updated_at": "2026-09-15 10:08:23"
+      "updated_at": "2026-09-22 10:05:10"
+    },
+    {
+      "id": 13,
+      "citizen_id": 2,
+      "title": "Test Waste Overflow",
+      "description": "please solve this issue",
+      "category": "Garbage",
+      "location": "Varachha Zone A",
+      "priority": "Medium",
+      "status": "Pending",
+      "department": "Sanitation Department",
+      "assigned_officer_id": null,
+      "assigned_officer_name": null,
+      "admin_remarks": null,
+      "complaint_image": "1790054150927_garbage_over.webp",
+      "solution_image": null,
+      "created_at": "2026-09-22 10:26:21",
+      "updated_at": "2026-09-22 10:45:50"
+    },
+    {
+      "id": 14,
+      "citizen_id": 2,
+      "title": "water issue",
+      "description": "please solve issue",
+      "category": "Water Leakage",
+      "location": "Varachha Zone B",
+      "priority": "Low",
+      "status": "In Progress",
+      "department": "Water Department",
+      "assigned_officer_id": 7,
+      "assigned_officer_name": "Ramesh Rao",
+      "admin_remarks": "",
+      "complaint_image": "1790219900418_water_leak.webp",
+      "solution_image": null,
+      "created_at": "2026-09-24 08:48:20",
+      "updated_at": "2026-09-24 08:48:59"
     }
   ],
   "complaint_history": [
@@ -540,6 +576,42 @@
       "changed_by": 7,
       "remarks": "Field officer started work (In Progress)",
       "created_at": "2026-09-15 10:08:23"
+    },
+    {
+      "id": 20,
+      "complaint_id": 13,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Sanitation Department",
+      "created_at": "2026-09-22 10:26:21"
+    },
+    {
+      "id": 21,
+      "complaint_id": 14,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Water Department",
+      "created_at": "2026-09-24 08:48:20"
+    },
+    {
+      "id": 22,
+      "complaint_id": 14,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 7,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-09-24 08:48:36"
+    },
+    {
+      "id": 23,
+      "complaint_id": 14,
+      "old_status": "In Progress",
+      "new_status": "In Progress",
+      "changed_by": 1,
+      "remarks": "Assigned to Field Officer: Ramesh Rao (Water Department)",
+      "created_at": "2026-09-24 08:48:59"
     }
   ],
   "feedback": [

@@ -6,7 +6,49 @@
   <title>Admin Portal & DSA Lab — CivicSense</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    /* Leaflet dark styling to match CivicSense design */
+    .leaflet-control-layers {
+      background: rgba(15, 23, 42, 0.92) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.45) !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+    }
+    .leaflet-control-layers-expanded {
+      padding: 10px 14px !important;
+    }
+    .leaflet-control-layers label {
+      cursor: pointer !important;
+      margin-bottom: 6px !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      color: #e2e8f0 !important;
+    }
+    .leaflet-control-zoom {
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+    }
+    .leaflet-control-zoom a {
+      background: rgba(15, 23, 42, 0.85) !important;
+      color: #f1f5f9 !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    .leaflet-control-zoom a:hover {
+      background: rgba(6, 182, 212, 0.85) !important;
+      color: #fff !important;
+    }
+  </style>
 </head>
 <body>
   <div class="app-layout">
@@ -38,6 +80,9 @@
         </a>
         <a class="nav-link" data-tab="users" onclick="switchAdminTab('users')">
           <i class="fa-solid fa-users-gear"></i> Manage Users
+        </a>
+        <a class="nav-link" data-tab="map" onclick="switchAdminTab('map')">
+          <i class="fa-solid fa-map-location-dot"></i> Area Map
         </a>
 
         <!-- <div class="nav-section-title">PHASE 1 DSA VISUAL LAB</div>
@@ -321,6 +366,96 @@
             </table>
           </div>
         </section>
+        <!-- ════════════════════════════════════════════════════════════════
+             TAB 4: AREA MAP & ACTIVE ZONES
+             ════════════════════════════════════════════════════════════════ -->
+        <section id="adminTab_map" style="display: none;">
+
+          <!-- Top Layout: Full Background Map with Floating Zone Cards Overlay -->
+          <div class="glass-card" style="padding: 0; position: relative; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--border-color); border-radius: 14px; height: 560px; background: #0f172a;">
+
+            <!-- 1. FULL BACKGROUND MAP -->
+            <div id="suratLeafletMap" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;"></div>
+
+            <!-- 2. FLOATING ACTIVE ZONES SIDE PANEL OVER BACKGROUND MAP -->
+            <div id="suratZonesFloatingPanel" style="position: absolute; top: 16px; left: 16px; z-index: 500; width: 290px; max-height: calc(100% - 32px); background: rgba(11, 19, 36, 0.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; transition: all 0.25s ease;">
+              
+              <!-- Panel Header -->
+              <div style="padding: 13px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">
+                    Total Active Zones
+                  </div>
+                  <div style="font-size: 16px; font-weight: 800; color: var(--accent-cyan); margin-top: 2px;">
+                    8 (Surat Municipal Corp)
+                  </div>
+                </div>
+                <button type="button" onclick="toggleZonesFloatingPanel()" id="zonesPanelToggleBtn" title="Toggle zones list" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); color: #cbd5e1; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                  <i class="fa-solid fa-chevron-left" id="zonesPanelToggleIcon"></i>
+                </button>
+              </div>
+
+              <!-- Scrollable Zones List -->
+              <div id="suratZonesList" style="overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 7px; max-height: 460px;">
+                <!-- Zones populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Floating Reset / View All Pill on Map -->
+            <div style="position: absolute; bottom: 18px; left: 16px; z-index: 500;">
+              <button onclick="resetZoneFilter()" id="resetZoneMapPill" style="display: none; padding: 8px 16px; border-radius: 25px; background: rgba(6, 182, 212, 0.95); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 12px; font-weight: 700; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); cursor: pointer; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-rotate-left"></i> Show All Zones
+              </button>
+            </div>
+
+          </div>
+
+          <!-- 2. Complaints Section -->
+          <div class="glass-card" style="padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <h3 style="font-size: 18px; font-weight: 800; margin: 0; color: var(--text-primary);" id="mapComplaintsTitle">
+                  📋 All Civic Complaints
+                </h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0;" id="mapComplaintsSubtitle">
+                  Showing all registered complaints across Surat municipal zones
+                </p>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn btn-sm btn-secondary" onclick="resetZoneFilter()" id="resetZoneFilterBtn" style="display: none;">
+                  <i class="fa-solid fa-rotate-left"></i> Show All Zones
+                </button>
+                <span id="mapComplaintsCountBadge" style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); background: var(--bg-input); padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border-color);">
+                  Loading...
+                </span>
+              </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px;">
+                    <th style="padding: 12px; text-align: left; width: 60px;">ID</th>
+                    <th style="padding: 12px; text-align: left;">Title</th>
+                    <th style="padding: 12px; text-align: left; width: 140px;">Category</th>
+                    <th style="padding: 12px; text-align: left; width: 180px;">Location</th>
+                    <th style="padding: 12px; text-align: center; width: 90px;">Priority</th>
+                    <th style="padding: 12px; text-align: center; width: 110px;">Status</th>
+                    <th style="padding: 12px; text-align: left; width: 140px;">Date</th>
+                  </tr>
+                </thead>
+                <tbody id="mapComplaintsBody"></tbody>
+              </table>
+            </div>
+
+            <div id="mapComplaintsEmpty" style="display: none; text-align: center; padding: 40px; color: var(--text-muted);">
+              <i class="fa-solid fa-folder-open fa-2x" style="margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+              No complaints found for this area.
+            </div>
+          </div>
+
+        </section>
+
       </div>
     </main>
   </div>
@@ -529,5 +664,334 @@
       }
     });
   </script>
+
+  <!-- ── Area Map Tab Script with Leaflet Interactive Points ── -->
+  <script>
+    let _suratMap = null;
+    let _suratMarkers = {};
+    let _allComplaintsData = [];
+    let _mapNodesData = [];
+    let _selectedZoneName = null;
+
+    // Helper to match complaint location to one of the 8 Surat zones
+    function matchComplaintToZone(c, nodes) {
+      const loc = (c.location || '').toLowerCase();
+      for (const n of nodes) {
+        const a = n.area.toLowerCase();
+        if (loc.includes(a)) return n.area;
+        if (n.sublabel && loc.includes(n.sublabel.toLowerCase())) return n.area;
+      }
+      if (loc.includes('adajan') || loc.includes('area a') || loc.includes('park street')) return 'West Zone (Adajan)';
+      if (loc.includes('varachha') || loc.includes('area b') || loc.includes('hirabag')) return 'Varachha Zone A';
+      if (loc.includes('sarthana') || loc.includes('simada')) return 'Varachha Zone B';
+      if (loc.includes('katargam') || loc.includes('area c') || loc.includes('amroli') || loc.includes('north suburb')) return 'North Zone (Katargam)';
+      if (loc.includes('vesu') || loc.includes('area d') || loc.includes('athwa') || loc.includes('civil lines') || loc.includes('sunshine')) return 'South West (Athwa)';
+      if (loc.includes('udhana') || loc.includes('udhna') || loc.includes('pandesara') || loc.includes('south suburb') || loc.includes('industrial')) return 'South Zone (Udhana)';
+      if (loc.includes('dindoli') || loc.includes('limbayat')) return 'South East (Dindoli)';
+      if (loc.includes('market') || loc.includes('chowk') || loc.includes('downtown') || loc.includes('depot') || loc.includes('sector 4')) return 'Central Zone (Chowk)';
+      return 'Central Zone (Chowk)';
+    }
+
+    function loadAreaMap() {
+      Promise.all([
+        fetch('/api/graph/map-data').then(r => r.json()),
+        fetch('/api/complaints').then(r => r.json())
+      ]).then(([mapData, complaints]) => {
+        _mapNodesData = mapData.nodes || [];
+        _allComplaintsData = complaints || [];
+
+        // Count complaints for each zone
+        const zoneCounts = {};
+        _mapNodesData.forEach(n => { zoneCounts[n.area] = 0; });
+        _allComplaintsData.forEach(c => {
+          const matched = matchComplaintToZone(c, _mapNodesData);
+          zoneCounts[matched] = (zoneCounts[matched] || 0) + 1;
+        });
+
+        _mapNodesData.forEach(n => {
+          n.complaint_count = zoneCounts[n.area] || 0;
+        });
+
+        renderSuratSidebar(_mapNodesData);
+        initSuratLeafletMap(mapData.center || { lat: 21.1989, lng: 72.8223 }, _mapNodesData);
+        renderFilteredComplaints(_allComplaintsData);
+      }).catch(err => console.error('Map init error:', err));
+    }
+
+    function renderSuratSidebar(nodes) {
+      const container = document.getElementById('suratZonesList');
+      if (!container) return;
+
+      container.innerHTML = nodes.map(node => {
+        const count = node.complaint_count || 0;
+        let badgeText = 'Normal';
+        let badgeBg = 'rgba(16, 185, 129, 0.15)';
+        let badgeColor = '#10b981';
+        let badgeBorder = 'rgba(16, 185, 129, 0.3)';
+
+        if (count >= 3) {
+          badgeText = 'High Alert';
+          badgeBg = 'rgba(239, 68, 68, 0.18)';
+          badgeColor = '#ef4444';
+          badgeBorder = 'rgba(239, 68, 68, 0.3)';
+        } else if (count >= 1) {
+          badgeText = 'Moderate';
+          badgeBg = 'rgba(245, 158, 11, 0.18)';
+          badgeColor = '#f59e0b';
+          badgeBorder = 'rgba(245, 158, 11, 0.3)';
+        }
+
+        const isSelected = _selectedZoneName === node.area;
+        const activeStyle = isSelected 
+          ? 'background: rgba(6, 182, 212, 0.18); border-left: 3px solid var(--accent-cyan);' 
+          : 'background: rgba(30, 41, 59, 0.45); border-left: 3px solid transparent;';
+
+        return `
+          <div class="zone-card-item" onclick="selectZone('${escapeHtml(node.area)}')"
+               style="padding: 11px 13px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; ${activeStyle} display: flex; justify-content: space-between; align-items: center; gap: 8px; border: 1px solid rgba(148, 163, 184, 0.1);">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 13px; font-weight: 700; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${escapeHtml(node.label)}
+              </div>
+              <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                ${count} issues reported
+              </div>
+            </div>
+            <span style="font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; white-space: nowrap;">
+              ${badgeText}
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    let _zonesPanelCollapsed = false;
+    function toggleZonesFloatingPanel() {
+      const panel = document.getElementById('suratZonesFloatingPanel');
+      const list = document.getElementById('suratZonesList');
+      const icon = document.getElementById('zonesPanelToggleIcon');
+      _zonesPanelCollapsed = !_zonesPanelCollapsed;
+      if (_zonesPanelCollapsed) {
+        if (list) list.style.display = 'none';
+        if (panel) panel.style.width = '180px';
+        if (icon) icon.className = 'fa-solid fa-chevron-right';
+      } else {
+        if (list) list.style.display = 'flex';
+        if (panel) panel.style.width = '290px';
+        if (icon) icon.className = 'fa-solid fa-chevron-left';
+      }
+    }
+
+    function initSuratLeafletMap(center, nodes) {
+      const mapEl = document.getElementById('suratLeafletMap');
+      if (!mapEl) return;
+
+      if (!_suratMap) {
+        _suratMap = L.map('suratLeafletMap', {
+          center: [center.lat, center.lng],
+          zoom: 12,
+          zoomControl: true
+        });
+
+        // 1. Detailed Colorful Street Map (Vivid blue river Tapi, yellow/orange roads, green parks - NOT white only!)
+        const osmStreetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        });
+
+        // 2. Real Aerial Satellite Imagery
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics',
+          maxZoom: 19
+        });
+
+        // 3. Vibrant Voyager City Streets
+        const voyagerLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 19
+        });
+
+        // 4. Night / Dark Matter Theme
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 19
+        });
+
+        // Set OSM detailed color street map as active default
+        osmStreetLayer.addTo(_suratMap);
+
+        // Layer Switcher in top right so user can choose full colorful street map, satellite, or dark mode
+        const baseMaps = {
+          "🗺️ Vibrant Street Map": osmStreetLayer,
+          "🛰️ Real Satellite Imagery": satelliteLayer,
+          "🏙️ City Voyager View": voyagerLayer,
+          "🌙 Night / Dark Map": darkLayer
+        };
+        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(_suratMap);
+
+      } else {
+        _suratMap.setView([center.lat, center.lng], 12);
+        Object.values(_suratMarkers).forEach(m => _suratMap.removeLayer(m));
+        _suratMarkers = {};
+      }
+
+      // Add orange circular point markers matching screenshot
+      nodes.forEach(node => {
+        const count = node.complaint_count || 0;
+        const marker = L.circleMarker([node.lat, node.lng], {
+          radius: 10,
+          fillColor: '#f97316',      // Vibrant orange point
+          color: '#c2410c',          // Dark orange border
+          weight: 2.5,
+          opacity: 1,
+          fillOpacity: 0.95
+        }).addTo(_suratMap);
+
+        marker.bindTooltip(`<strong>${escapeHtml(node.label)}</strong><br>${count} Complaints`, {
+          direction: 'top',
+          offset: [0, -9]
+        });
+
+        let badgeCol = count >= 3 ? '#ef4444' : count >= 1 ? '#f59e0b' : '#10b981';
+        let badgeBg = count >= 3 ? 'rgba(239, 68, 68, 0.15)' : count >= 1 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+        let statusTxt = count >= 3 ? 'High Alert' : count >= 1 ? 'Moderate' : 'Normal';
+
+        // Clean popup WITHOUT any 'Filter Complaints' button
+        const popupHtml = `
+          <div style="font-family: inherit; color: #0f172a; padding: 4px 6px; min-width: 175px;">
+            <div style="font-weight: 800; font-size: 13px; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+              <span style="color: #f97316;">📍</span> ${escapeHtml(node.label)}
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${escapeHtml(node.sublabel || '')}</div>
+            <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+              <span style="font-size: 11px; font-weight: 700; background: ${badgeBg}; color: ${badgeCol}; padding: 3px 8px; border-radius: 6px;">
+                ${statusTxt}
+              </span>
+              <strong style="font-size: 12px; color: #0f172a;">${count} Complaints</strong>
+            </div>
+          </div>
+        `;
+        marker.bindPopup(popupHtml);
+
+        // Clicking point directly selects zone and filters table
+        marker.on('click', () => {
+          selectZone(node.area, false);
+        });
+
+        _suratMarkers[node.area] = marker;
+      });
+
+      setTimeout(() => {
+        if (_suratMap) _suratMap.invalidateSize();
+      }, 200);
+    }
+
+    function selectZone(zoneName, panMap = true) {
+      _selectedZoneName = zoneName;
+      renderSuratSidebar(_mapNodesData);
+
+      const targetNode = _mapNodesData.find(n => n.area === zoneName);
+      if (targetNode && panMap && _suratMap) {
+        _suratMap.flyTo([targetNode.lat, targetNode.lng], 13.5, { duration: 0.8 });
+        const marker = _suratMarkers[zoneName];
+        if (marker) marker.openPopup();
+      }
+
+      // Show floating reset pill on map
+      const pill = document.getElementById('resetZoneMapPill');
+      if (pill) pill.style.display = 'inline-flex';
+
+      // Filter complaints table
+      const filtered = _allComplaintsData.filter(c => matchComplaintToZone(c, _mapNodesData) === zoneName);
+      renderFilteredComplaints(filtered, zoneName);
+    }
+
+    function resetZoneFilter() {
+      _selectedZoneName = null;
+      renderSuratSidebar(_mapNodesData);
+      if (_suratMap) {
+        _suratMap.flyTo([21.1989, 72.8223], 12, { duration: 0.8 });
+        _suratMap.closePopup();
+      }
+
+      // Hide floating reset pill on map
+      const pill = document.getElementById('resetZoneMapPill');
+      if (pill) pill.style.display = 'none';
+
+      renderFilteredComplaints(_allComplaintsData);
+    }
+
+    function renderFilteredComplaints(complaints, zoneName = null) {
+      const cb = document.getElementById('mapComplaintsBody');
+      const badge = document.getElementById('mapComplaintsCountBadge');
+      const emptyState = document.getElementById('mapComplaintsEmpty');
+      const title = document.getElementById('mapComplaintsTitle');
+      const sub = document.getElementById('mapComplaintsSubtitle');
+      const resetBtn = document.getElementById('resetZoneFilterBtn');
+
+      if (badge) {
+        badge.textContent = `${complaints.length} Complaints`;
+      }
+
+      if (zoneName) {
+        if (title) title.textContent = `📋 Complaints in ${zoneName}`;
+        if (sub) sub.textContent = `Showing active issues reported within ${zoneName}`;
+        if (resetBtn) resetBtn.style.display = 'inline-block';
+      } else {
+        if (title) title.textContent = `📋 All Civic Complaints`;
+        if (sub) sub.textContent = `Showing all registered complaints across Surat municipal zones`;
+        if (resetBtn) resetBtn.style.display = 'none';
+      }
+
+      if (!cb) return;
+      cb.innerHTML = '';
+
+      if (!complaints || !complaints.length) {
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+      }
+
+      if (emptyState) emptyState.style.display = 'none';
+
+      const sorted = [...complaints].sort((a, b) => b.id - a.id);
+      cb.innerHTML = sorted.map(c => {
+        const prCol = c.priority === 'High' ? '#ef4444' : c.priority === 'Medium' ? '#f59e0b' : '#10b981';
+        const stCol = c.status === 'Resolved' ? '#10b981' : c.status === 'Pending' ? '#f59e0b' : '#3b82f6';
+        const dateStr = (c.created_at || '').substring(0, 10) || '-';
+
+        return `
+          <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 12px; font-weight: 700; color: var(--accent-cyan); font-family: var(--font-mono);">#${c.id}</td>
+            <td style="padding: 12px; font-weight: 600; color: var(--text-primary); max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(c.title)}">
+              ${escapeHtml(c.title)}
+            </td>
+            <td style="padding: 12px; color: var(--text-muted); font-size: 12px;">${escapeHtml(c.category || 'General')}</td>
+            <td style="padding: 12px; color: var(--text-secondary); font-size: 12px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(c.location || '')}">
+              📍 ${escapeHtml(c.location || 'Surat')}
+            </td>
+            <td style="padding: 12px; text-align: center;">
+              <span style="background: ${prCol}22; color: ${prCol}; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+                ${c.priority || 'Medium'}
+              </span>
+            </td>
+            <td style="padding: 12px; text-align: center;">
+              <span style="background: ${stCol}22; color: ${stCol}; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+                ${c.status || 'Pending'}
+              </span>
+            </td>
+            <td style="padding: 12px; color: var(--text-muted); font-size: 12px;">${dateStr}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Ensure map tiles redraw properly when resized or toggled
+    window.addEventListener('resize', () => {
+      if (_suratMap) _suratMap.invalidateSize();
+    });
+  </script>
+
 </body>
 </html>

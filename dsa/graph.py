@@ -1,20 +1,16 @@
-# Simple Graph for Civic Sense
+# Graph – Complaint Area Network
 
+# 1. Graph Representation using Adjacency List
 graph = {
-    "Depot": ["Ward 1", "Ward 2"],
-    "Ward 1": ["Depot", "Ward 3"],
-    "Ward 2": ["Depot", "Ward 4"],
-    "Ward 3": ["Ward 1", "Ward 4"],
-    "Ward 4": ["Ward 2", "Ward 3"]
+    "Central Chowk": ["Main Highway", "Market Area", "Bus Station"],
+    "Main Highway": ["Central Chowk", "Hospital Zone"],
+    "Market Area": ["Central Chowk", "Hospital Zone"],
+    "Bus Station": ["Central Chowk", "Hospital Zone"],
+    "Hospital Zone": ["Main Highway", "Market Area", "Bus Station"]
 }
 
-# Display Graph
-print("Adjacency List:")
-for node in graph:
-    print(node, "->", graph[node])
 
-
-# BFS
+# 2. BFS Traversal
 def bfs(start):
     visited = []
     queue = [start]
@@ -25,31 +21,36 @@ def bfs(start):
         if node not in visited:
             visited.append(node)
 
-            for neighbour in graph[node]:
-                if neighbour not in visited:
-                    queue.append(neighbour)
+            for neighbor in graph[node]:
+                if neighbor not in visited:
+                    queue.append(neighbor)
 
     return visited
 
 
-# DFS
+# 3. DFS Traversal
 def dfs(node, visited=None):
     if visited is None:
         visited = []
 
-    visited.append(node)
+    if node not in visited:
+        visited.append(node)
 
-    for neighbour in graph[node]:
-        if neighbour not in visited:
-            dfs(neighbour, visited)
+        for neighbor in graph[node]:
+            dfs(neighbor, visited)
 
     return visited
 
 
-# BFS
-print("\nBFS:")
-print(bfs("Depot"))
+# 4. Test the Graph
+print("Graph:")
+for area, neighbors in graph.items():
+    print(area, "->", neighbors)
 
-# DFS
-print("\nDFS:")
-print(dfs("Depot"))
+
+print("\nBFS Traversal:")
+print(" -> ".join(bfs("Central Chowk")))
+
+
+print("\nDFS Traversal:")
+print(" -> ".join(dfs("Central Chowk")))

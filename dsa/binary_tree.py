@@ -1,60 +1,56 @@
-# Simple Binary Tree for Civic Sense
+# Binary Tree – Department Hierarchy
 
 class Node:
     def __init__(self, data):
-        self.data = data
-        self.left = None
+        self.data  = data
+        self.left  = None
         self.right = None
 
 
-class BinaryTree:
+# Pre-order: Root -> Left -> Right
+def preorder(node):
+    if node:
+        print(node.data)
+        preorder(node.left)
+        preorder(node.right)
 
-    # Pre-order: Root -> Left -> Right
-    def preorder(self, node):
-        if node:
-            print(node.data)
-            self.preorder(node.left)
-            self.preorder(node.right)
+# In-order: Left -> Root -> Right
+def inorder(node):
+    if node:
+        inorder(node.left)
+        print(node.data)
+        inorder(node.right)
 
-    # In-order: Left -> Root -> Right
-    def inorder(self, node):
-        if node:
-            self.inorder(node.left)
-            print(node.data)
-            self.inorder(node.right)
-
-    # Post-order: Left -> Right -> Root
-    def postorder(self, node):
-        if node:
-            self.postorder(node.left)
-            self.postorder(node.right)
-            print(node.data)
+# Post-order: Left -> Right -> Root
+def postorder(node):
+    if node:
+        postorder(node.left)
+        postorder(node.right)
+        print(node.data)
 
 
-# Create tree
-root = Node("Municipal Commissioner")
+#        Municipal Commissioner
+#        /                    \
+#   Infrastructure        Health
+#    /         \          /       \
+# Roads   Electricity  Sanitation  Water
 
-root.left = Node("Infrastructure")
-root.right = Node("Health")
+if __name__ == "__main__":
+    root = Node("Municipal Commissioner")
 
-root.left.left = Node("Road Department")
-root.left.right = Node("Electricity Department")
+    root.left  = Node("Infrastructure")
+    root.right = Node("Health")
 
-root.right.left = Node("Sanitation Department")
-root.right.right = Node("Water Department")
+    root.left.left   = Node("Roads Department")
+    root.left.right  = Node("Electricity Department")
+    root.right.left  = Node("Sanitation Department")
+    root.right.right = Node("Water Department")
 
+    print("Pre-order:")
+    preorder(root)
 
-# Create Binary Tree
-tree = BinaryTree()
+    print("\nIn-order:")
+    inorder(root)
 
-# Pre-order
-print("Pre-order:")
-tree.preorder(root)
-
-# In-order
-print("\nIn-order:")
-tree.inorder(root)
-
-# Post-order
-print("\nPost-order:")
-tree.postorder(root)
+    print("\nPost-order:")
+    postorder(root)

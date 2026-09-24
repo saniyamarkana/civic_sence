@@ -23,7 +23,7 @@ function switchAdminTab(tabId) {
   const activeLink = document.querySelector(`.nav-link[data-tab="${tabId}"]`);
   if (activeLink) activeLink.classList.add('active');
 
-  const tabs = ['dashboard', 'complaints', 'users', 'dsa_queue', 'dsa_stack', 'dsa_ll', 'dsa_expr', 'dsa_iter', 'dsa_rec'];
+  const tabs = ['dashboard', 'complaints', 'users', 'dsa_queue', 'dsa_stack', 'dsa_ll', 'dsa_expr', 'dsa_iter', 'dsa_rec', 'map'];
   tabs.forEach(t => {
     const el = document.getElementById(`adminTab_${t}`);
     if (el) el.style.display = (t === tabId) ? 'block' : 'none';
@@ -38,7 +38,8 @@ function switchAdminTab(tabId) {
     dsa_ll: '<i class="fa-solid fa-link" style="color: var(--accent-purple);"></i> Linked List Node Chain Visualizer',
     dsa_expr: '<i class="fa-solid fa-calculator" style="color: var(--accent-cyan);"></i> Shunting-Yard Expression Parser',
     dsa_iter: '<i class="fa-solid fa-bolt" style="color: var(--status-resolved);"></i> Iterative Sorting & Search Lab',
-    dsa_rec: '<i class="fa-solid fa-sitemap" style="color: var(--accent-purple);"></i> Recursive Call Tree Visualizer'
+    dsa_rec: '<i class="fa-solid fa-sitemap" style="color: var(--accent-purple);"></i> Recursive Call Tree Visualizer',
+    map: '<i class="fa-solid fa-map-location-dot" style="color: var(--accent-cyan);"></i> Civic Area Coverage Map'
   };
   document.getElementById('adminHeaderTitle').innerHTML = titles[tabId] || 'Admin Portal';
 
@@ -51,6 +52,7 @@ function switchAdminTab(tabId) {
   else if (tabId === 'dsa_ll') renderDSALL();
   else if (tabId === 'dsa_expr') runExpression();
   else if (tabId === 'dsa_iter') renderIterArray();
+  else if (tabId === 'map') loadAreaMap();
 }
 
 function refreshCurrentAdminTab() {

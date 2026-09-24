@@ -1,6 +1,6 @@
 """
 Flask Web Application for CivicSense — Civic Complaint Management & DSA Platform.
-Provides both Web UI (HTML/CSS/JS with glassmorphism & animations) and REST APIs connecting to SQLite & Python DSA modules.
+Provides Web UI and REST APIs connecting to static JSON database & Python DSA modules.
 """
 
 # pyrefly: ignore [missing-import]
@@ -13,13 +13,15 @@ from database.database import Database
 from dsa.linked_list import LinkedList
 from dsa.stack import Stack
 from dsa.queue import Queue, PriorityQueue
-from dsa.infix_postfix import InfixPostfix
+from dsa.simple_infix_postfix import calc_priority_score, infix_to_postfix, evaluate_postfix
 from dsa.iterative import IterativeAlgorithms
 from dsa.recursive import RecursiveAlgorithms
-from dsa.simple_infix_postfix import calc_priority_score as simple_calc_priority_score
+from dsa.graph import get_map_data
 
 app = Flask(__name__)
 app.secret_key = "civicsense_super_secret_phase1_key"
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 # Upload configuration
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -101,7 +103,7 @@ def backend_calc_priority_score(priority, status="Pending"):
     or their status changes.
     """
     try:
-        return simple_calc_priority_score(priority, status)
+        return calc_priority_score(priority, status)
     except Exception as err:
         app.logger.error(f"[Backend DSA Error] Infix-Postfix calculation failed: {err}")
         return {
@@ -198,6 +200,12 @@ def api_login():
 def get_departments():
     depts = db.get_all_departments()
     return jsonify([dict(d) for d in depts])
+
+# ─── Graph Map API (Admin Panel) ───
+@app.route("/api/graph/map-data", methods=["GET"])
+def graph_map_data():
+    """Returns area graph nodes with coordinates for the admin static map."""
+    return jsonify(get_map_data())
 
 @app.route("/api/register", methods=["POST"])
 def api_register():
@@ -380,39 +388,96 @@ def get_officers_list():
     officers = db.get_officers(department=dept)
     return jsonify([dict(o) for o in officers])
 
-@app.route("/api/complaints/<int:cid>", methods=["PUT"])
+@app.route("/api/complaints/<int:cid>", methods=["PUT", "POST"])
 def update_complaint(cid):
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-    data = request.json or {}
-    status       = data.get("status")
-    priority     = data.get("priority")
-    department   = data.get("department")
-    officer_id   = data.get("assigned_officer_id")
-    officer_name = data.get("assigned_officer_name")
-    remarks      = data.get("remarks", "")
-    admin_remarks = data.get("admin_remarks", "")
+    old_complaint = db.get_complaint(cid)
+    if not old_complaint:
+        return jsonify({"success": False, "message": "Complaint not found."}), 404
+
+    user_role = session.get("role", "")
+    current_uid = session.get("user_id")
+
+    # If citizen is updating, ensure they own the complaint
+    if user_role == "citizen":
+        if int(old_complaint.get("citizen_id", 0)) != int(current_uid):
+            return jsonify({"success": False, "message": "You can only update your own complaints."}), 403
+
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+    else:
+        data = request.form.to_dict() if request.form else {}
 
     updates = {}
-    if status:                       updates["status"]               = status
-    if priority:                     updates["priority"]             = priority
-    if department is not None:       updates["department"]           = department
-    if officer_id is not None:       updates["assigned_officer_id"]  = officer_id
-    if officer_name is not None:     updates["assigned_officer_name"]= officer_name
-    if admin_remarks is not None:    updates["admin_remarks"]        = admin_remarks
-    if "complaint_image" in data:    updates["complaint_image"]      = data.get("complaint_image")
+
+    # Citizen and Admin editable fields
+    if "title" in data and str(data["title"]).strip():
+        updates["title"] = str(data["title"]).strip()
+    if "description" in data:
+        updates["description"] = str(data["description"]).strip()
+    if "category" in data and str(data["category"]).strip():
+        norm_cat = db.normalize_category(str(data["category"]).strip())
+        updates["category"] = norm_cat
+        if user_role == "citizen":
+            dept_map = {
+                "Garbage": "Sanitation Department",
+                "Pothole": "Road Department",
+                "Water Leakage": "Water Department",
+                "Streetlight": "Electricity Department",
+                "Drainage": "Water Department",
+                "Illegal Parking": "Traffic Department",
+                "Public Cleanliness": "Sanitation Department",
+                "Damaged Road": "Road Department",
+            }
+            updates["department"] = dept_map.get(norm_cat, old_complaint.get("department") or "Municipal Dept")
+    if "location" in data and str(data["location"]).strip():
+        updates["location"] = str(data["location"]).strip()
+    if "priority" in data and str(data["priority"]).strip():
+        updates["priority"] = str(data["priority"]).strip()
+
+    # Image upload support
+    img_file = (
+        request.files.get("complaint_image")
+        or request.files.get("image")
+        or request.files.get("photo")
+    )
+    if img_file and getattr(img_file, "filename", None):
+        saved_img = save_upload(img_file, UPLOAD_FOLDER_COMPLAINT)
+        if saved_img:
+            updates["complaint_image"] = saved_img
+    elif "complaint_image" in data and data["complaint_image"]:
+        updates["complaint_image"] = data["complaint_image"]
+
+    # Admin / Officer specific fields (only non-citizens can change status/officer directly)
+    if user_role != "citizen":
+        if "status" in data and data["status"]:
+            updates["status"] = data["status"]
+        if "department" in data and data["department"] is not None:
+            updates["department"] = data["department"]
+        if "assigned_officer_id" in data and data["assigned_officer_id"] is not None:
+            updates["assigned_officer_id"] = data["assigned_officer_id"]
+        if "assigned_officer_name" in data and data["assigned_officer_name"] is not None:
+            updates["assigned_officer_name"] = data["assigned_officer_name"]
+        if "admin_remarks" in data and data["admin_remarks"] is not None:
+            updates["admin_remarks"] = data["admin_remarks"]
 
     if not updates:
         return jsonify({"success": False, "message": "Nothing to update."}), 400
 
-    auto_remark = remarks or (
-        f"Assigned to {officer_name} | Status: {status}" if officer_name
-        else f"Status updated to {status or 'unchanged'}"
-    )
+    status = updates.get("status") or old_complaint.get("status")
+    priority = updates.get("priority") or old_complaint.get("priority")
+    officer_name = updates.get("assigned_officer_name") or old_complaint.get("assigned_officer_name")
+    remarks = data.get("remarks", "")
 
-    # Fetch complaint BEFORE updating so we can compare old status
-    old_complaint = db.get_complaint(cid)
+    if user_role == "citizen":
+        auto_remark = remarks or f"Citizen updated complaint details (#{cid})"
+    else:
+        auto_remark = remarks or (
+            f"Assigned to {officer_name} | Status: {status}" if officer_name
+            else f"Status updated to {status or 'unchanged'}"
+        )
 
     success = db.update_complaint(
         cid,

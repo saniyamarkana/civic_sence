@@ -207,10 +207,20 @@
                 <input type="text" id="reportTitle" class="form-control" placeholder="e.g. Overflowing garbage bin near main sector gate" required>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+              <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 18px;">
                 <div class="form-group">
-                  <label class="form-label">3. Location / Landmark / Ward *</label>
-                  <input type="text" id="reportLocation" class="form-control" placeholder="e.g. Area A, Ward 12, Park Street" required>
+                  <label class="form-label"><i class="fa-solid fa-location-dot" style="color: var(--accent-cyan);"></i> 3. Select Static Area / Zone *</label>
+                  <select id="reportLocation" class="form-control" required style="cursor: pointer;">
+                    <option value="" disabled selected>-- Select Particular Static Area --</option>
+                    <option value="Central Zone (Chowk)">📍 Central Zone (Chowk)</option>
+                    <option value="West Zone (Adajan)">📍 Area A — West Zone (Adajan)</option>
+                    <option value="Varachha Zone A">📍 Area B — Varachha Zone A</option>
+                    <option value="North Zone (Katargam)">📍 Area C — North Zone (Katargam)</option>
+                    <option value="South West (Athwa)">📍 Area D — South West (Athwa)</option>
+                    <option value="Varachha Zone B">📍 Varachha Zone B (Sarthana)</option>
+                    <option value="South Zone (Udhana)">📍 South Zone (Udhana / Pandesara)</option>
+                    <option value="South East (Dindoli)">📍 South East (Dindoli / Limbayat)</option>
+                  </select>
                 </div>
 
                 <div class="form-group">
@@ -346,6 +356,97 @@
   <div id="complaintDetailModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
     <div class="glass-card" style="width: 100%; max-width: 680px; padding: 30px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
       <div id="complaintDetailContent"></div>
+    </div>
+  </div>
+
+  <!-- Edit / Update Complaint Modal for Citizen -->
+  <div id="editComplaintModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 640px; padding: 28px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(6, 182, 212, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan); font-size: 18px;">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 800; margin: 0; color: var(--text-primary);">Update Complaint</h3>
+            <span id="editModalComplaintSub" style="font-size: 12px; color: var(--text-muted);">Complaint #</span>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="closeEditModal()" type="button"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="editComplaintForm" onsubmit="submitEditComplaint(event)" enctype="multipart/form-data">
+        <input type="hidden" id="editComplaintId">
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label">Issue Title *</label>
+          <input type="text" id="editTitle" class="form-control" placeholder="Brief summary of issue" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select id="editCategory" class="form-control">
+              <option value="Garbage">🗑️ Garbage</option>
+              <option value="Pothole">🕳️ Pothole</option>
+              <option value="Water Leakage">💧 Water Leak</option>
+              <option value="Streetlight">💡 Streetlight</option>
+              <option value="Drainage">🌊 Drainage</option>
+              <option value="Illegal Parking">🚗 Parking</option>
+              <option value="Public Cleanliness">🧹 Cleanliness</option>
+              <option value="Damaged Road">🚧 Damaged Road</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Urgency / Priority</label>
+            <select id="editPriority" class="form-control">
+              <option value="Low">🟢 Low</option>
+              <option value="Medium">🟡 Medium</option>
+              <option value="High">🔴 High / Critical</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label"><i class="fa-solid fa-location-dot" style="color: var(--accent-cyan);"></i> Select Static Area / Zone *</label>
+          <select id="editLocation" class="form-control" required style="cursor: pointer;">
+            <option value="" disabled>-- Select Particular Static Area --</option>
+            <option value="Central Zone (Chowk)">📍 Central Zone (Chowk)</option>
+            <option value="West Zone (Adajan)">📍 Area A — West Zone (Adajan)</option>
+            <option value="Varachha Zone A">📍 Area B — Varachha Zone A</option>
+            <option value="North Zone (Katargam)">📍 Area C — North Zone (Katargam)</option>
+            <option value="South West (Athwa)">📍 Area D — South West (Athwa)</option>
+            <option value="Varachha Zone B">📍 Varachha Zone B (Sarthana)</option>
+            <option value="South Zone (Udhana)">📍 South Zone (Udhana / Pandesara)</option>
+            <option value="South East (Dindoli)">📍 South East (Dindoli / Limbayat)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label">Detailed Description</label>
+          <textarea id="editDescription" class="form-control" rows="3" placeholder="Provide extra details, updates, or current condition..."></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 22px;">
+          <label class="form-label">Update Photo (Optional)</label>
+          <div id="editCurrentPhotoWrap" style="display: none; margin-bottom: 10px; align-items: center; gap: 12px; background: var(--bg-input); padding: 10px; border-radius: 8px;">
+            <img id="editCurrentPhotoImg" src="" alt="Current photo" style="width: 55px; height: 55px; object-fit: cover; border-radius: 6px;">
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              <span>Current photo attached.</span><br>
+              <span style="font-size: 11px; color: var(--text-muted);">Choose a new image file to replace it.</span>
+            </div>
+          </div>
+          <input type="file" id="editPhotoInput" accept="image/*" class="form-control">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" id="editSubmitBtn" class="btn btn-primary" style="padding: 10px 22px;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

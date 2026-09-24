@@ -125,9 +125,12 @@ function renderComplaints(data) {
       ` : ''}
 
       <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px; flex-wrap: wrap; gap: 10px;">
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button class="btn btn-sm btn-primary" onclick="openComplaintDetails(${c.id})">
-            <i class="fa-solid fa-eye"></i> View Full Details
+            <i class="fa-solid fa-eye"></i> Details
+          </button>
+          <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); font-weight: 600;" onclick="openEditComplaintModal(${c.id})">
+            <i class="fa-solid fa-pen-to-square"></i> Update
           </button>
           <button class="btn btn-sm btn-secondary" onclick="openTimeline(${c.id})">
             <i class="fa-solid fa-timeline"></i> Timeline
@@ -405,8 +408,13 @@ async function openComplaintDetails(cid) {
       ` : ''}
 
       <!-- Bottom Action Row -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 16px;">
-        <button class="btn btn-sm btn-secondary" onclick="openTimeline(${c.id})"><i class="fa-solid fa-timeline"></i> View Full Timeline</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 16px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); font-weight: 600;" onclick="closeDetailsModal(); openEditComplaintModal(${c.id})">
+            <i class="fa-solid fa-pen-to-square"></i> Update Complaint
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="openTimeline(${c.id})"><i class="fa-solid fa-timeline"></i> Timeline</button>
+        </div>
         ${c.status === 'Resolved' ? `<button class="btn btn-sm btn-primary" onclick="closeDetailsModal(); switchTab('feedback');"><i class="fa-solid fa-star"></i> Rate Resolution Quality</button>` : ''}
       </div>
     `;
@@ -645,4 +653,127 @@ function openLightbox(src) {
 function closeLightbox() {
   const lb = document.getElementById('imgLightbox');
   if (lb) lb.classList.remove('open');
+}
+
+// ─────────────────────────── Edit / Update Complaint Modal ───────────────────────────
+async function openEditComplaintModal(cid) {
+  let c = citizenComplaints.find(item => item.id == cid);
+  if (!c) {
+    try {
+      const res = await fetch(`/api/complaints/${cid}`);
+      const data = await res.json();
+      if (data && data.complaint) {
+        c = data.complaint;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (!c) {
+    showToast('Unable to load complaint for editing.', 'error');
+    return;
+  }
+
+  populateEditModal(c);
+}
+
+function populateEditModal(c) {
+  document.getElementById('editComplaintId').value = c.id;
+  document.getElementById('editModalComplaintSub').textContent = `Complaint #${c.id} • Current Status: ${c.status || 'Pending'}`;
+  document.getElementById('editTitle').value = c.title || '';
+  document.getElementById('editCategory').value = c.category || 'Garbage';
+  document.getElementById('editPriority').value = c.priority || 'Medium';
+  const editLoc = document.getElementById('editLocation');
+  if (editLoc) {
+    editLoc.value = c.location || '';
+    if (!editLoc.value && c.location) {
+      const locLower = c.location.toLowerCase();
+      for (let i = 0; i < editLoc.options.length; i++) {
+        const optVal = editLoc.options[i].value.toLowerCase();
+        if (optVal && (locLower.includes(optVal) || optVal.includes(locLower))) {
+          editLoc.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  }
+  document.getElementById('editDescription').value = c.description || '';
+
+  const photoWrap = document.getElementById('editCurrentPhotoWrap');
+  const photoImg = document.getElementById('editCurrentPhotoImg');
+  if (c.complaint_image) {
+    photoImg.src = `/static/uploads/complaint_images/${c.complaint_image}`;
+    photoWrap.style.display = 'flex';
+  } else {
+    photoWrap.style.display = 'none';
+    photoImg.src = '';
+  }
+
+  const fileInput = document.getElementById('editPhotoInput');
+  if (fileInput) fileInput.value = '';
+
+  document.getElementById('editComplaintModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+  const modal = document.getElementById('editComplaintModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitEditComplaint(e) {
+  e.preventDefault();
+  const cid = document.getElementById('editComplaintId').value;
+  const submitBtn = document.getElementById('editSubmitBtn');
+
+  const title = document.getElementById('editTitle').value.trim();
+  const category = document.getElementById('editCategory').value;
+  const priority = document.getElementById('editPriority').value;
+  const location = document.getElementById('editLocation').value.trim();
+  const description = document.getElementById('editDescription').value.trim();
+  const photoInput = document.getElementById('editPhotoInput');
+
+  if (!title || !location) {
+    showToast('Please provide both title and location.', 'error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('category', category);
+  formData.append('priority', priority);
+  formData.append('location', location);
+  formData.append('description', description);
+
+  if (photoInput && photoInput.files && photoInput.files.length > 0) {
+    formData.append('complaint_image', photoInput.files[0]);
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+  }
+
+  try {
+    const res = await fetch(`/api/complaints/${cid}`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(data.message || 'Complaint updated successfully!', 'success');
+      closeEditModal();
+      await loadCitizenComplaints();
+    } else {
+      showToast(data.message || 'Failed to update complaint.', 'error');
+    }
+  } catch (err) {
+    showToast('Server communication error while updating complaint.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+    }
+  }
 }
