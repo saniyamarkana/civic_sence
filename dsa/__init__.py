@@ -6,7 +6,7 @@ from .iterative import IterativeAlgorithms
 from .recursive import RecursiveAlgorithms
 from .dataset import SampleDataset
 from .binary_search_tree import BST
-from .graph import graph, bfs, dfs
+from .graph import graph, bfs, bfs_shortest_path, bfs_with_steps, dfs, dfs_with_steps, get_map_data, ZONE_ALIASES
 
 __all__ = [
     # Phase 1
@@ -27,6 +27,11 @@ __all__ = [
     "BST",
     "graph",
     "bfs",
+    "bfs_shortest_path",
+    "bfs_with_steps",
     "dfs",
+    "dfs_with_steps",
+    "get_map_data",
+    "ZONE_ALIASES",
 ]
 
