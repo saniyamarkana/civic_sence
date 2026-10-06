@@ -1,92 +1,223 @@
-# Graph - Complaint Area Location Network & BFS / DFS Traversal
-# Uses exact complaint form location areas mapped to Zone A, Zone B, Zone C, Zone D, etc.
+# =============================================================================
+# CivicSense DSA: Binary Tree Graph & BFS (Breadth-First Search) Engine
+# =============================================================================
+#
+# Tree-Structured Graph Representation:
+#
+#                     [ Central Zone (Chowk) ]   <--- ROOT NODE (Level 0)
+#                             /          \
+#                            /            \
+#          [ West Zone (Adajan) ]      [ Varachha Zone A ]   <--- CHILDREN (Level 1)
+#              /            \              /            \
+#       [ North Zone ]  [ South West ] [ South Zone ]  [ Varachha B ] <--- LEVEL 2
+#         (Katargam)       (Athwa)        (Udhana)
+#            /                              /
+#      [ Shakti Nagar ]              [ South East ]  <--- LEAF NODES (Level 3)
+#                                       (Dindoli)
+#
+# Level-Order BFS Traversal Sequence (Starting from Root):
+#   Level 0: Central Zone (Chowk)
+#   Level 1: West Zone (Adajan) -> Varachha Zone A
+#   Level 2: North Zone (Katargam) -> South West (Athwa) -> South Zone (Udhana) -> Varachha Zone B
+#   Level 3: Shakti Nagar -> South East (Dindoli)
+#
+# =============================================================================
 
 import re as _re
 import json as _json
 
-# 1. Graph Representation using Adjacency List
-# Matching the city complaint areas network (including core diamond & peripheral zones)
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Binary Tree Node & Hierarchy Definition
+# ─────────────────────────────────────────────────────────────────────────────
+
+ROOT_NODE = "Central Zone (Chowk)"
+
+BINARY_TREE_STRUCTURE = {
+    "Central Zone (Chowk)": {
+        "id": "root",
+        "role": "Root Node",
+        "level": 0,
+        "parent": None,
+        "left": "West Zone (Adajan)",
+        "right": "Varachha Zone A",
+        "zone": "Zone A",
+        "code": "Zone A",
+        "short": "Central Chowk",
+        "description": "City Core Civic Headquarters (Root of the Administrative Network)",
+        "icon": "fa-solid fa-crown",
+        "color": {"fill": "#0f2b48", "stroke": "#38bdf8", "text": "#f0f9ff", "badge": "#0284c7"}
+    },
+    "West Zone (Adajan)": {
+        "id": "child_left",
+        "role": "Left Child",
+        "level": 1,
+        "parent": "Central Zone (Chowk)",
+        "left": "North Zone (Katargam)",
+        "right": "South West (Athwa)",
+        "zone": "Zone B",
+        "code": "Zone B",
+        "short": "Adajan (West)",
+        "description": "Western Sector Hub (Infrastructure & Residential Sector)",
+        "icon": "fa-solid fa-diagram-nested",
+        "color": {"fill": "#1e293b", "stroke": "#f59e0b", "text": "#fef3c7", "badge": "#d97706"}
+    },
+    "Varachha Zone A": {
+        "id": "child_right",
+        "role": "Right Child",
+        "level": 1,
+        "parent": "Central Zone (Chowk)",
+        "left": "South Zone (Udhana)",
+        "right": "Varachha Zone B",
+        "zone": "Zone C",
+        "code": "Zone C",
+        "short": "Varachha A",
+        "description": "Eastern Commercial Hub (Diamond & Textile Commercial District)",
+        "icon": "fa-solid fa-diagram-nested",
+        "color": {"fill": "#1e293b", "stroke": "#10b981", "text": "#dcfce7", "badge": "#059669"}
+    },
+    "North Zone (Katargam)": {
+        "id": "child_ll",
+        "role": "Child (Left.Left)",
+        "level": 2,
+        "parent": "West Zone (Adajan)",
+        "left": "Shakti Nagar",
+        "right": None,
+        "zone": "Zone E",
+        "code": "Zone E",
+        "short": "Katargam",
+        "description": "Northern Industrial Corridor & Diamond Polishing Cluster",
+        "icon": "fa-solid fa-code-fork",
+        "color": {"fill": "#1e293b", "stroke": "#a855f7", "text": "#f3e8ff", "badge": "#9333ea"}
+    },
+    "South West (Athwa)": {
+        "id": "child_lr",
+        "role": "Child (Left.Right)",
+        "level": 2,
+        "parent": "West Zone (Adajan)",
+        "left": None,
+        "right": None,
+        "zone": "Zone F",
+        "code": "Zone F",
+        "short": "Athwa",
+        "description": "South-Western Waterfront & Institutional Educational District",
+        "icon": "fa-solid fa-leaf",
+        "color": {"fill": "#1e293b", "stroke": "#ec4899", "text": "#fce7f3", "badge": "#db2777"}
+    },
+    "South Zone (Udhana)": {
+        "id": "child_rl",
+        "role": "Child (Right.Left)",
+        "level": 2,
+        "parent": "Varachha Zone A",
+        "left": "South East (Dindoli)",
+        "right": None,
+        "zone": "Zone D",
+        "code": "Zone D",
+        "short": "Udhana",
+        "description": "Heavy Industrial & Railway Logistics Corridor",
+        "icon": "fa-solid fa-code-fork",
+        "color": {"fill": "#1e293b", "stroke": "#06b6d4", "text": "#cffafe", "badge": "#0891b2"}
+    },
+    "Varachha Zone B": {
+        "id": "child_rr",
+        "role": "Child (Right.Right)",
+        "level": 2,
+        "parent": "Varachha Zone A",
+        "left": None,
+        "right": None,
+        "zone": "Zone G",
+        "code": "Zone G",
+        "short": "Varachha B",
+        "description": "North-Eastern Residential Extension & Green Belt",
+        "icon": "fa-solid fa-leaf",
+        "color": {"fill": "#1e293b", "stroke": "#84cc16", "text": "#ecfccb", "badge": "#65a30d"}
+    },
+    "Shakti Nagar": {
+        "id": "leaf_l",
+        "role": "Leaf Node",
+        "level": 3,
+        "parent": "North Zone (Katargam)",
+        "left": None,
+        "right": None,
+        "zone": "Zone I",
+        "code": "Zone I",
+        "short": "Shakti Nagar",
+        "description": "Northern Peripheral Civic Community Ward",
+        "icon": "fa-solid fa-seedling",
+        "color": {"fill": "#1e293b", "stroke": "#64748b", "text": "#f1f5f9", "badge": "#475569"}
+    },
+    "South East (Dindoli)": {
+        "id": "leaf_r",
+        "role": "Leaf Node",
+        "level": 3,
+        "parent": "South Zone (Udhana)",
+        "left": None,
+        "right": None,
+        "zone": "Zone H",
+        "code": "Zone H",
+        "short": "Dindoli",
+        "description": "South-Eastern High-Density Civic Housing Expansion",
+        "icon": "fa-solid fa-seedling",
+        "color": {"fill": "#1e293b", "stroke": "#64748b", "text": "#f1f5f9", "badge": "#475569"}
+    },
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Graph Adjacency List (Binary Tree Edges)
+# ─────────────────────────────────────────────────────────────────────────────
+
 graph = {
     "Central Zone (Chowk)": [
         "West Zone (Adajan)",
         "Varachha Zone A",
-        "North Zone (Katargam)",
-        "Shakti Nagar",
-        "South Zone (Udhana)",
-        "South West (Athwa)",
     ],
     "West Zone (Adajan)": [
         "Central Zone (Chowk)",
-        "South Zone (Udhana)",
-        "South West (Athwa)",
         "North Zone (Katargam)",
+        "South West (Athwa)",
     ],
     "Varachha Zone A": [
         "Central Zone (Chowk)",
         "South Zone (Udhana)",
         "Varachha Zone B",
-        "South East (Dindoli)",
-        "North Zone (Katargam)",
-    ],
-    "South Zone (Udhana)": [
-        "West Zone (Adajan)",
-        "Varachha Zone A",
-        "South West (Athwa)",
-        "South East (Dindoli)",
-        "Central Zone (Chowk)",
     ],
     "North Zone (Katargam)": [
-        "Central Zone (Chowk)",
         "West Zone (Adajan)",
+        "Shakti Nagar",
     ],
     "South West (Athwa)": [
         "West Zone (Adajan)",
-        "South Zone (Udhana)",
-        "Central Zone (Chowk)",
     ],
-    "Varachha Zone B": [
+    "South Zone (Udhana)": [
         "Varachha Zone A",
         "South East (Dindoli)",
     ],
-    "South East (Dindoli)": [
+    "Varachha Zone B": [
         "Varachha Zone A",
-        "South Zone (Udhana)",
-        "Varachha Zone B",
     ],
     "Shakti Nagar": [
-        "Central Zone (Chowk)",
+        "North Zone (Katargam)",
+    ],
+    "South East (Dindoli)": [
+        "South Zone (Udhana)",
     ],
 }
 
-# The specific 11 edges depicted in the reference screenshot:
-SCREENSHOT_EDGES = [
-    ("North Zone (Katargam)", "Central Zone (Chowk)"),
-    ("Central Zone (Chowk)",  "Shakti Nagar"),
-    ("Central Zone (Chowk)",  "West Zone (Adajan)"),
-    ("Central Zone (Chowk)",  "Varachha Zone A"),
-    ("West Zone (Adajan)",    "South West (Athwa)"),
-    ("West Zone (Adajan)",    "South Zone (Udhana)"),
-    ("South West (Athwa)",    "South Zone (Udhana)"),
-    ("Varachha Zone A",       "South Zone (Udhana)"),
-    ("Varachha Zone A",       "Varachha Zone B"),
-    ("Varachha Zone A",       "South East (Dindoli)"),
-    ("South Zone (Udhana)",   "South East (Dindoli)"),
+# Directed tree edges (Parent -> Child)
+TREE_EDGES = [
+    ("Central Zone (Chowk)", "West Zone (Adajan)", "Left Child"),
+    ("Central Zone (Chowk)", "Varachha Zone A", "Right Child"),
+    ("West Zone (Adajan)", "North Zone (Katargam)", "Left Child"),
+    ("West Zone (Adajan)", "South West (Athwa)", "Right Child"),
+    ("Varachha Zone A", "South Zone (Udhana)", "Left Child"),
+    ("Varachha Zone A", "Varachha Zone B", "Right Child"),
+    ("North Zone (Katargam)", "Shakti Nagar", "Left Child"),
+    ("South Zone (Udhana)", "South East (Dindoli)", "Left Child"),
 ]
 
-# Project Zone Aliases (Zone A, Zone B, Zone C, Zone D...)
-ZONE_ALIASES = {
-    "Central Zone (Chowk)":  "Zone A",
-    "West Zone (Adajan)":    "Zone B",
-    "Varachha Zone A":       "Zone C",
-    "South Zone (Udhana)":   "Zone D",
-    "North Zone (Katargam)": "Zone E",
-    "South West (Athwa)":    "Zone F",
-    "Varachha Zone B":       "Zone G",
-    "South East (Dindoli)":  "Zone H",
-    "Shakti Nagar":          "Zone I",
-}
+SCREENSHOT_EDGES = [(u, v) for u, v, _ in TREE_EDGES]
 
-# Real-world Surat GPS Coordinates
+ZONE_ALIASES = {k: v["zone"] for k, v in BINARY_TREE_STRUCTURE.items()}
+
 MAP_COORDINATES = {
     "Central Zone (Chowk)":  (21.1989, 72.8223),
     "West Zone (Adajan)":    (21.1950, 72.7950),
@@ -99,142 +230,164 @@ MAP_COORDINATES = {
     "Shakti Nagar":          (21.2200, 72.8700),
 }
 
-# 2D Point Coordinates for SVG Map Layout
+# SVG layout coordinates (symmetrical binary tree, canvas 900x440)
 POINT_LAYOUT_COORDINATES = {
-    "Central Zone (Chowk)":  {"x": 410, "y": 110, "short": "Central\nChowk"},
-    "West Zone (Adajan)":    {"x": 215, "y": 245, "short": "Adajan\n(West)"},
-    "Varachha Zone A":       {"x": 600, "y": 245, "short": "Varachha A"},
-    "South Zone (Udhana)":   {"x": 430, "y": 400, "short": "Udhana\n(South)"},
-    "North Zone (Katargam)": {"x": 95,  "y": 125, "short": "Kataragam"},
-    "South West (Athwa)":    {"x": 82,  "y": 390, "short": "Athwa"},
-    "Varachha Zone B":       {"x": 855, "y": 255, "short": "Varachha B"},
-    "South East (Dindoli)":  {"x": 790, "y": 400, "short": "Dindoli"},
-    "Shakti Nagar":          {"x": 720, "y": 125, "short": "Shakti Nagar"},
+    "Central Zone (Chowk)":  {"x": 450, "y": 55,  "r": 34, "short": "Central Chowk", "level": 0},
+    "West Zone (Adajan)":    {"x": 230, "y": 160, "r": 30, "short": "Adajan (West)", "level": 1},
+    "Varachha Zone A":       {"x": 670, "y": 160, "r": 30, "short": "Varachha A",    "level": 1},
+    "North Zone (Katargam)": {"x": 120, "y": 265, "r": 27, "short": "Katargam",      "level": 2},
+    "South West (Athwa)":    {"x": 340, "y": 265, "r": 27, "short": "Athwa",         "level": 2},
+    "South Zone (Udhana)":   {"x": 560, "y": 265, "r": 27, "short": "Udhana",        "level": 2},
+    "Varachha Zone B":       {"x": 780, "y": 265, "r": 27, "short": "Varachha B",    "level": 2},
+    "Shakti Nagar":          {"x": 120, "y": 370, "r": 25, "short": "Shakti Nagar",  "level": 3},
+    "South East (Dindoli)":  {"x": 560, "y": 370, "r": 25, "short": "Dindoli",       "level": 3},
 }
 
 
 def get_map_data():
-    """
-    Returns full network data (nodes with coordinates, aliases, and edges)
-    for rendering in Admin frontend.
-    """
+    """Returns complete Location Graph data (nodes, edges, tree levels) for the frontend."""
     nodes = []
-    for area, coords in MAP_COORDINATES.items():
-        layout = POINT_LAYOUT_COORDINATES.get(area, {"x": 400, "y": 200, "short": area})
+    for area, meta in BINARY_TREE_STRUCTURE.items():
+        coords = MAP_COORDINATES.get(area, (21.1989, 72.8223))
+        layout = POINT_LAYOUT_COORDINATES.get(area, {"x": 450, "y": 200, "r": 28, "short": area, "level": meta["level"]})
         nodes.append({
             "area": area,
-            "code": ZONE_ALIASES.get(area, "Zone"),
-            "zone": ZONE_ALIASES.get(area, "Zone"),
+            "code": meta["zone"],
+            "zone": meta["zone"],
+            "role": meta["role"],
+            "level": meta["level"],
+            "parent": meta["parent"],
+            "left": meta["left"],
+            "right": meta["right"],
             "lat": coords[0],
             "lng": coords[1],
             "x": layout["x"],
             "y": layout["y"],
-            "short_label": layout["short"].replace("\n", " "),
+            "r": layout.get("r", 28),
+            "short_label": layout["short"],
+            "description": meta["description"],
+            "color": meta["color"],
         })
 
     edges = []
-    seen = set()
-    for u, v in SCREENSHOT_EDGES:
-        pair = tuple(sorted([u, v]))
-        if pair not in seen:
-            seen.add(pair)
-            edges.append({"from": u, "to": v})
+    for u, v, branch in TREE_EDGES:
+        edges.append({"from": u, "to": v, "branch": branch})
 
     return {
+        "root": ROOT_NODE,
         "nodes": nodes,
         "edges": edges,
-        "zone_aliases": ZONE_ALIASES
+        "zone_aliases": ZONE_ALIASES,
     }
 
 
-# 2. BFS Traversal (Breadth-First Search) using Queue (FIFO)
-def bfs(start, target=None):
-    if start not in graph:
-        return []
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. BFS Traversal (Breadth-First Search / Level-Order)
+# ─────────────────────────────────────────────────────────────────────────────
 
+def bfs(start=ROOT_NODE, target=None):
+    """BFS Level-Order traversal using a FIFO Queue."""
+    if start not in graph:
+        start = ROOT_NODE
     visited = []
     queue = [start]
     visited.append(start)
-
     while queue:
         current = queue.pop(0)
-
         if target and current == target:
             break
-
         for neighbor in graph.get(current, []):
             if neighbor not in visited:
                 visited.append(neighbor)
                 queue.append(neighbor)
-
     return visited
 
 
-# 3. BFS Shortest Path
 def bfs_shortest_path(start, target):
+    """Shortest path between two nodes using BFS."""
     if start not in graph or target not in graph:
         return []
-
     if start == target:
         return [start]
-
     visited = {start}
     queue = [[start]]
-
     while queue:
         path = queue.pop(0)
         node = path[-1]
-
         for neighbor in graph.get(node, []):
             if neighbor == target:
                 return path + [neighbor]
-
             if neighbor not in visited:
                 visited.add(neighbor)
                 queue.append(path + [neighbor])
-
     return []
 
 
-# 4. BFS Traversal with Step-by-Step State Recording
-def bfs_with_steps(start, target=None):
+def bfs_with_steps(start=ROOT_NODE, target=None):
+    """BFS with step-by-step state logging for interactive visualizers."""
     if start not in graph:
-        return {"start": start, "target": target, "visited": [], "steps": [], "shortest_path": []}
-
+        start = ROOT_NODE
     visited = []
     queue = [start]
-    visited.append(start)
+    in_queue = {start}
     steps = []
     step_num = 1
 
+    start_meta = BINARY_TREE_STRUCTURE.get(start, {})
     steps.append({
         "step": step_num,
+        "action": "enqueue_root",
         "visiting": start,
+        "visiting_role": start_meta.get("role", "Root Node"),
+        "visiting_level": start_meta.get("level", 0),
         "queue_state": list(queue),
         "visited_state": list(visited),
-        "discovered": []
+        "discovered": [start],
+        "message": f"Initialized BFS. Enqueued Root Node <strong>{start}</strong> (Level {start_meta.get('level', 0)}) into FIFO Queue."
     })
 
     while queue:
         current = queue.pop(0)
+        visited.append(current)
+        curr_meta = BINARY_TREE_STRUCTURE.get(current, {})
 
         if target and current == target:
+            step_num += 1
+            steps.append({
+                "step": step_num,
+                "action": "target_reached",
+                "visiting": current,
+                "visiting_role": curr_meta.get("role", "Node"),
+                "visiting_level": curr_meta.get("level", 0),
+                "queue_state": list(queue),
+                "visited_state": list(visited),
+                "discovered": [],
+                "message": f"Target <strong>{current}</strong> found! BFS complete."
+            })
             break
 
         discovered_now = []
         for neighbor in graph.get(current, []):
-            if neighbor not in visited:
-                visited.append(neighbor)
+            if neighbor not in visited and neighbor not in in_queue:
+                in_queue.add(neighbor)
                 queue.append(neighbor)
                 discovered_now.append(neighbor)
 
         step_num += 1
+        disc_names = ", ".join([f"{n} ({BINARY_TREE_STRUCTURE.get(n, {}).get('role', 'Child')})" for n in discovered_now])
         steps.append({
             "step": step_num,
+            "action": "visit_node",
             "visiting": current,
+            "visiting_role": curr_meta.get("role", "Node"),
+            "visiting_level": curr_meta.get("level", 0),
             "queue_state": list(queue),
             "visited_state": list(visited),
-            "discovered": discovered_now
+            "discovered": discovered_now,
+            "message": (
+                f"Visited <strong>{current}</strong> ({curr_meta.get('role','Node')}, Level {curr_meta.get('level',0)}). " +
+                (f"Enqueued children: {disc_names}." if discovered_now else "Leaf node — no further branches.")
+            )
         })
 
     shortest_path = []
@@ -246,686 +399,418 @@ def bfs_with_steps(start, target=None):
         "target": target,
         "visited": visited,
         "steps": steps,
-        "shortest_path": shortest_path
+        "shortest_path": shortest_path,
+        "total_steps": len(steps)
     }
 
 
-# 5. DFS Traversal (Depth-First Search)
-def dfs(node, visited=None):
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. DFS Traversal
+# ─────────────────────────────────────────────────────────────────────────────
+
+def dfs(node=ROOT_NODE, visited=None):
+    """Depth-First Search traversal."""
     if visited is None:
         visited = []
-
     if node not in visited:
         visited.append(node)
         for neighbor in graph.get(node, []):
-            dfs(neighbor, visited)
-
+            if neighbor not in visited:
+                dfs(neighbor, visited)
     return visited
 
 
-def dfs_with_steps(start):
+def dfs_with_steps(start=ROOT_NODE):
+    """DFS with step-by-step state recording using a Stack (LIFO)."""
     if start not in graph:
-        return {"start": start, "visited": [], "steps": []}
-
+        start = ROOT_NODE
     visited = []
     stack = [start]
     steps = []
     step_num = 1
-
     while stack:
         current = stack.pop()
         if current not in visited:
             visited.append(current)
-
             neighbors = graph.get(current, [])
             for neighbor in reversed(neighbors):
                 if neighbor not in visited and neighbor not in stack:
                     stack.append(neighbor)
-
+            meta = BINARY_TREE_STRUCTURE.get(current, {})
             steps.append({
                 "step": step_num,
                 "visiting": current,
+                "visiting_role": meta.get("role", "Node"),
+                "visiting_level": meta.get("level", 0),
                 "stack_state": list(stack),
                 "visited_state": list(visited)
             })
             step_num += 1
-
-    return {
-        "start": start,
-        "visited": visited,
-        "steps": steps
-    }
+    return {"start": start, "visited": visited, "steps": steps}
 
 
-# =============================================================================
-# 6. BFS Graph HTML Visualizer
-#    Exact match for reference screenshot:
-#      - Pale banner: "This graph shows the connected complaint areas in the city..."
-#      - 9 pastel nodes: Katargam (green), Central Chowk (blue + red ring + badge 1),
-#        Shakti Nagar (purple), Adajan West (orange + badge 2), Varachha A (teal + badge 3),
-#        Varachha B (purple), Athwa (pink), Udhana South (blue + badge 4), Dindoli (green)
-#      - 11 dark grey connection edges
-#      - Interactive BFS traversal: Play, Step, Pause, Reset, Speed Control
-#      - Live FIFO Queue visualizer + step explanation + adjacency list
-# =============================================================================
-
-# Exact colors from reference screenshot
-_NODE_COLORS = {
-    "Central Zone (Chowk)":  {"fill": "#bbdefb", "stroke": "#1976d2", "text": "#0d47a1", "badge": "#ef4444", "badge_pos": "top-left"},
-    "West Zone (Adajan)":    {"fill": "#ffe082", "stroke": "#f57c00", "text": "#b26a00", "badge": "#f59e0b", "badge_pos": "top-right"},
-    "Varachha Zone A":       {"fill": "#80cbc4", "stroke": "#00695c", "text": "#004d40", "badge": "#f59e0b", "badge_pos": "top-right"},
-    "South Zone (Udhana)":   {"fill": "#90caf9", "stroke": "#1565c0", "text": "#0d47a1", "badge": "#f59e0b", "badge_pos": "top-right"},
-    "North Zone (Katargam)": {"fill": "#c8e6c9", "stroke": "#2e7d32", "text": "#1b5e20", "badge": "#10b981", "badge_pos": "top-right"},
-    "South West (Athwa)":    {"fill": "#f8bbd0", "stroke": "#c2185b", "text": "#880e4f", "badge": "#ec4899", "badge_pos": "top-right"},
-    "Varachha Zone B":       {"fill": "#e1bee7", "stroke": "#6a1b9a", "text": "#4a148c", "badge": "#8b5cf6", "badge_pos": "top-right"},
-    "South East (Dindoli)":  {"fill": "#c8e6c9", "stroke": "#2e7d32", "text": "#1b5e20", "badge": "#10b981", "badge_pos": "top-right"},
-    "Shakti Nagar":          {"fill": "#e1bee7", "stroke": "#6a1b9a", "text": "#4a148c", "badge": "#8b5cf6", "badge_pos": "top-right"},
-}
-
-# Layout on 940 x 480 canvas
-_BFS_LAYOUT = {
-    "Central Zone (Chowk)":  {"x": 410, "y": 110, "r": 50, "short": "Central\nChowk"},
-    "West Zone (Adajan)":    {"x": 215, "y": 245, "r": 48, "short": "Adajan\n(West)"},
-    "Varachha Zone A":       {"x": 600, "y": 245, "r": 48, "short": "Varachha A"},
-    "South Zone (Udhana)":   {"x": 430, "y": 400, "r": 48, "short": "Udhana\n(South)"},
-    "North Zone (Katargam)": {"x": 95,  "y": 125, "r": 44, "short": "Kataragam"},
-    "South West (Athwa)":    {"x": 82,  "y": 390, "r": 44, "short": "Athwa"},
-    "Varachha Zone B":       {"x": 855, "y": 255, "r": 44, "short": "Varachha B"},
-    "South East (Dindoli)":  {"x": 790, "y": 400, "r": 44, "short": "Dindoli"},
-    "Shakti Nagar":          {"x": 720, "y": 125, "r": 44, "short": "Shakti Nagar"},
-}
-
-# The 11 screenshot edges
-_BFS_EDGES = [
-    ("North Zone (Katargam)", "Central Zone (Chowk)"),
-    ("Central Zone (Chowk)",  "Shakti Nagar"),
-    ("Central Zone (Chowk)",  "West Zone (Adajan)"),
-    ("Central Zone (Chowk)",  "Varachha Zone A"),
-    ("West Zone (Adajan)",    "South West (Athwa)"),
-    ("West Zone (Adajan)",    "South Zone (Udhana)"),
-    ("South West (Athwa)",    "South Zone (Udhana)"),
-    ("Varachha Zone A",       "South Zone (Udhana)"),
-    ("Varachha Zone A",       "Varachha Zone B"),
-    ("Varachha Zone A",       "South East (Dindoli)"),
-    ("South Zone (Udhana)",   "South East (Dindoli)"),
-]
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Interactive HTML Component Generator
+# ─────────────────────────────────────────────────────────────────────────────
 
 def _safe(name: str) -> str:
     return _re.sub(r"[^a-zA-Z0-9]", "_", name)
 
 
-def get_bfs_graph_html(start_node: str = "Central Zone (Chowk)") -> str:
+def get_bfs_graph_html(start_node: str = ROOT_NODE) -> str:
     """
-    Generate an interactive, self-contained HTML+CSS+JS component that renders
-    the exact graph visualization from the reference screenshot with BFS operation.
+    Generates a self-contained HTML component showing the Location Graph
+    (Binary Tree) with interactive BFS Level-Order Traversal animation.
     """
-    if start_node not in _BFS_LAYOUT:
-        start_node = "Central Zone (Chowk)"
+    if start_node not in POINT_LAYOUT_COORDINATES:
+        start_node = ROOT_NODE
 
-    # Static default badges (1, 2, 3, 4 for the screenshot state)
-    default_badges = {
-        "Central Zone (Chowk)": "1",
-        "West Zone (Adajan)":   "2",
-        "Varachha Zone A":      "3",
-        "South Zone (Udhana)":  "4",
-    }
-
-    # 1. SVG Edges
+    # 1. Tree Branch Lines
     svg_edges = ""
-    for u, v in _BFS_EDGES:
-        pos_u = _BFS_LAYOUT.get(u)
-        pos_v = _BFS_LAYOUT.get(v)
+    for u, v, branch in TREE_EDGES:
+        pos_u = POINT_LAYOUT_COORDINATES.get(u)
+        pos_v = POINT_LAYOUT_COORDINATES.get(v)
         if not pos_u or not pos_v:
             continue
-        edge_id = "bfse_" + _safe(u) + "_" + _safe(v)
-        svg_edges += (
-            f'<line id="{edge_id}" data-u="{u}" data-v="{v}" '
-            f'x1="{pos_u["x"]}" y1="{pos_u["y"]}" x2="{pos_v["x"]}" y2="{pos_v["y"]}" '
-            f'stroke="#576574" stroke-width="2.6" stroke-linecap="round" '
-            f'style="transition: stroke 0.3s ease, stroke-width 0.3s ease;" />\n'
-        )
+        edge_id = f"bfse_{_safe(u)}_{_safe(v)}"
+        branch_label = "L" if "Left" in branch else "R"
+        mid_x = (pos_u["x"] + pos_v["x"]) / 2
+        mid_y = (pos_u["y"] + pos_v["y"]) / 2
+        svg_edges += f"""
+        <g>
+          <line id="{edge_id}" x1="{pos_u['x']}" y1="{pos_u['y']}" x2="{pos_v['x']}" y2="{pos_v['y']}"
+                stroke="#475569" stroke-width="2.8" stroke-linecap="round"
+                style="transition: stroke 0.35s ease, stroke-width 0.35s ease;" />
+          <circle cx="{mid_x}" cy="{mid_y}" r="8" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+          <text x="{mid_x}" y="{mid_y + 3.5}" text-anchor="middle" font-size="9" font-weight="800"
+                fill="#94a3b8" font-family="system-ui,sans-serif">{branch_label}</text>
+        </g>
+"""
 
-    # 2. SVG Nodes
+    # 2. Tree Nodes
     svg_nodes = ""
-    for area, pos in _BFS_LAYOUT.items():
+    for area, meta in BINARY_TREE_STRUCTURE.items():
         sid = _safe(area)
-        col = _NODE_COLORS.get(area, {"fill": "#e2e8f0", "stroke": "#64748b", "text": "#1e293b", "badge": "#f59e0b", "badge_pos": "top-right"})
-        cx = pos["x"]
-        cy = pos["y"]
-        r = pos["r"]
-        short_lines = pos["short"].split("\n")
-        badge_val = default_badges.get(area, "")
-        badge_visible = "inline" if badge_val else "none"
+        pos = POINT_LAYOUT_COORDINATES[area]
+        cx, cy, r = pos["x"], pos["y"], pos["r"]
+        is_root = (area == ROOT_NODE)
+        col = meta["color"]
+        badge_x = cx + int(r * 0.75)
+        badge_y = cy - int(r * 0.75)
+        crown = f'<text x="{cx}" y="{cy - r - 6}" text-anchor="middle" font-size="14">👑</text>' if is_root else ""
 
-        if col.get("badge_pos") == "top-left":
-            bx = cx - int(r * 0.72)
-            by = cy - int(r * 0.72)
-        else:
-            bx = cx + int(r * 0.72)
-            by = cy - int(r * 0.72)
-
-        if len(short_lines) == 1:
-            label_svg = f'<text x="{cx}" y="{cy + 5}" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b" font-family="Segoe UI,system-ui,sans-serif" style="pointer-events:none;">{short_lines[0]}</text>'
-        else:
-            label_svg = (
-                f'<text x="{cx}" y="{cy - 5}" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b" font-family="Segoe UI,system-ui,sans-serif" style="pointer-events:none;">{short_lines[0]}</text>'
-                f'<text x="{cx}" y="{cy + 13}" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b" font-family="Segoe UI,system-ui,sans-serif" style="pointer-events:none;">{short_lines[1]}</text>'
-            )
-
-        ring_stroke = "#ef4444" if area == "Central Zone (Chowk)" else "transparent"
-        ring_svg = f'<circle id="bfsActiveRing_{sid}" cx="{cx}" cy="{cy}" r="{r + 7}" fill="none" stroke="{ring_stroke}" stroke-width="2.6" style="transition: all 0.3s ease;" />'
-
-        svg_nodes += f'''
-        <g id="bfsn_{sid}" data-area="{area}" onclick="window.bfsSelectNode('{area}')" style="cursor: pointer;">
-          {ring_svg}
-          <circle id="bfsh_{sid}" cx="{cx}" cy="{cy}" r="{r + 14}" fill="transparent" style="transition: fill 0.3s ease;" />
+        svg_nodes += f"""
+        <g id="bfsn_{sid}" data-area="{area}" onclick="window.bfsSelectNode('{area}')" style="cursor:pointer;">
+          {crown}
+          <circle id="bfsActiveRing_{sid}" cx="{cx}" cy="{cy}" r="{r + 7}" fill="none"
+                  stroke="{col['stroke'] if is_root else 'transparent'}" stroke-width="2.5"
+                  style="transition: all 0.3s ease;" />
+          <circle id="bfsh_{sid}" cx="{cx}" cy="{cy}" r="{r + 14}" fill="transparent"
+                  style="transition: fill 0.3s ease;" />
           <circle id="bfsc_{sid}" cx="{cx}" cy="{cy}" r="{r}"
-                  fill="{col["fill"]}" stroke="{col["stroke"]}" stroke-width="3"
-                  style="transition: all 0.3s ease; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));" />
-          {label_svg}
-          <g id="bfsbg_{sid}" style="display: {badge_visible}; pointer-events: none;">
-            <circle id="bfsbc_{sid}" cx="{bx}" cy="{by}" r="12.5" fill="{col["badge"]}" stroke="#ffffff" stroke-width="2" />
-            <text id="bfsbt_{sid}" x="{bx}" y="{by + 4}" text-anchor="middle" font-size="11" font-weight="900" fill="#ffffff" font-family="Segoe UI,system-ui,sans-serif">{badge_val}</text>
+                  fill="{col['fill']}" stroke="{col['stroke']}" stroke-width="{3.5 if is_root else 2.6}"
+                  style="transition: all 0.3s ease; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));" />
+          <text x="{cx}" y="{cy - 2}" text-anchor="middle" font-size="{10 if is_root else 9}" font-weight="800"
+                fill="{col['text']}" font-family="system-ui,sans-serif" style="pointer-events:none;">{meta['zone']}</text>
+          <text x="{cx}" y="{cy + 10}" text-anchor="middle" font-size="8" font-weight="700"
+                fill="#94a3b8" font-family="system-ui,sans-serif" style="pointer-events:none;">L{meta['level']}</text>
+          <text x="{cx}" y="{cy + r + 15}" text-anchor="middle" font-size="11" font-weight="700"
+                fill="#e2e8f0" font-family="system-ui,sans-serif" style="pointer-events:none; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">{pos['short']}</text>
+          <g id="bfsbg_{sid}" style="display: {'inline' if is_root else 'none'}; pointer-events:none;">
+            <circle id="bfsbc_{sid}" cx="{badge_x}" cy="{badge_y}" r="11" fill="{col['badge']}" stroke="#ffffff" stroke-width="1.8" />
+            <text id="bfsbt_{sid}" x="{badge_x}" y="{badge_y + 3.5}" text-anchor="middle" font-size="10" font-weight="900" fill="#ffffff" font-family="system-ui,sans-serif">{'1' if is_root else ''}</text>
           </g>
         </g>
-'''
+"""
 
-    # 3. Selector Options
+    # 3. Options for start-node selector
     options_html = ""
-    for a in _BFS_LAYOUT.keys():
+    for a, meta in BINARY_TREE_STRUCTURE.items():
         sel = 'selected="selected"' if a == start_node else ''
-        clean_lbl = _BFS_LAYOUT[a]["short"].replace("\n", " ")
-        options_html += f'<option value="{a}" {sel}>{clean_lbl} ({ZONE_ALIASES.get(a, "Zone")})</option>\n'
+        options_html += f'<option value="{a}" {sel}>{meta["short"]} — {meta["role"]} ({meta["zone"]})</option>\n'
 
-    # 4. Adjacency Table
+    # 4. Adjacency table rows
     adj_rows = ""
-    for a, neighbors in graph.items():
-        col = _NODE_COLORS.get(a, {}).get("stroke", "#475569")
-        clean_a = _BFS_LAYOUT.get(a, {}).get("short", a).replace("\n", " ")
-        nb_clean = " &bull; ".join(_BFS_LAYOUT.get(n, {}).get("short", n).replace("\n", " ") for n in neighbors)
-        adj_rows += f'''
-        <tr style="border-bottom: 1px solid #e2e8f0;">
-          <td style="padding: 8px 12px; font-weight: 700; color: {col}; white-space: nowrap;">{clean_a}</td>
-          <td style="padding: 8px 12px; color: #475569; font-size: 12px;">{nb_clean}</td>
+    for a, meta in BINARY_TREE_STRUCTURE.items():
+        p = meta["parent"] or "None (Root)"
+        l = meta["left"] or "—"
+        r = meta["right"] or "—"
+        adj_rows += f"""
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+          <td style="padding: 9px 12px; font-weight:800; color:#f8fafc;">{meta['short']}</td>
+          <td style="padding: 9px 12px;"><span style="background:rgba(6,182,212,0.15);color:#06b6d4;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">Level {meta['level']}</span></td>
+          <td style="padding: 9px 12px; color:#38bdf8; font-weight:700;">{meta['role']}</td>
+          <td style="padding: 9px 12px; color:#94a3b8;">{p}</td>
+          <td style="padding: 9px 12px; color:#10b981;">{l}</td>
+          <td style="padding: 9px 12px; color:#f59e0b;">{r}</td>
         </tr>
-'''
+"""
 
     js_layout = _json.dumps({
         k: {
-            "x": v["x"], "y": v["y"], "r": v["r"],
-            "short": v["short"].replace("\n", " "),
-            "fill": _NODE_COLORS.get(k, {}).get("fill", "#e2e8f0"),
-            "stroke": _NODE_COLORS.get(k, {}).get("stroke", "#64748b"),
-            "badge": _NODE_COLORS.get(k, {}).get("badge", "#f59e0b"),
-            "badge_pos": _NODE_COLORS.get(k, {}).get("badge_pos", "top-right"),
-            "sid": _safe(k)
-        } for k, v in _BFS_LAYOUT.items()
+            "x": v["x"], "y": v["y"], "r": v["r"], "short": v["short"],
+            "fill": BINARY_TREE_STRUCTURE[k]["color"]["fill"],
+            "stroke": BINARY_TREE_STRUCTURE[k]["color"]["stroke"],
+            "badge": BINARY_TREE_STRUCTURE[k]["color"]["badge"],
+            "sid": _safe(k),
+            "role": BINARY_TREE_STRUCTURE[k]["role"],
+            "level": BINARY_TREE_STRUCTURE[k]["level"],
+        } for k, v in POINT_LAYOUT_COORDINATES.items()
     })
-    js_edges = _json.dumps(_BFS_EDGES)
+    js_edges = _json.dumps([(u, v) for u, v, _ in TREE_EDGES])
     js_graph = _json.dumps(graph)
+    js_meta  = _json.dumps(BINARY_TREE_STRUCTURE)
 
-    # Return pure HTML string assembled cleanly with placeholders
-    template = """<!-- ════════════════════════════════════════════════════════════════
-     REFERENCE BFS GRAPH VISUALIZER (Generated by dsa/graph.py)
-     ════════════════════════════════════════════════════════════════ -->
-<div id="civicBfsVisualizerCard" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; margin-bottom: 24px;">
+    template = """<!-- Location Graph – Binary Tree & BFS Visualizer (dsa/graph.py) -->
+<div id="civicBfsVisualizerCard" style="background:linear-gradient(135deg,#0a1120 0%,#0e172a 100%);border:1px solid rgba(56,189,248,0.25);border-radius:18px;box-shadow:0 15px 45px rgba(0,0,0,0.5);overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;margin-bottom:24px;">
 
-  <!-- 1. Top Reference Banner (Matches Screenshot Header) -->
-  <div style="background: #f0f7ff; border-bottom: 1px solid #dbeafe; padding: 14px 22px; color: #334155; font-size: 14px; font-weight: 500; line-height: 1.55; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <i class="fa-solid fa-circle-info" style="color: #3b82f6; font-size: 16px;"></i>
-      <span>This graph shows the connected complaint areas in the city. Each area is a node and the connections represent nearby or related areas.</span>
+  <!-- Header Banner -->
+  <div style="background:rgba(14,23,42,0.9);border-bottom:1px solid rgba(255,255,255,0.08);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.4);display:flex;align-items:center;justify-content:center;color:#06b6d4;font-size:16px;">
+        <i class="fa-solid fa-sitemap"></i>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:800;color:#f8fafc;">Location Graph — Binary Tree &amp; BFS Level-Order</div>
+        <div style="font-size:12px;color:#94a3b8;">Root Node (Level 0) &bull; Child Nodes (Levels 1–3) &bull; FIFO Queue Traversal</div>
+      </div>
     </div>
-    <span style="font-size: 11px; font-weight: 800; background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; text-transform: uppercase;">
-      BFS &bull; O(V + E)
-    </span>
+    <span style="font-size:11px;font-weight:800;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);padding:4px 10px;border-radius:12px;letter-spacing:0.5px;">BFS &bull; O(V + E)</span>
   </div>
 
-  <!-- 2. Interactive Control Bar -->
-  <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-    <!-- Start Node Selector -->
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Start Node:</span>
+  <!-- Control Bar -->
+  <div style="background:rgba(15,23,42,0.95);border-bottom:1px solid rgba(255,255,255,0.06);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Start Node:</span>
       <select id="bfsStartSelectCtrl" onchange="window.bfsChangeStart(this.value)"
-              style="padding: 7px 12px; font-size: 13px; font-weight: 600; color: #1e293b; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; outline: none; cursor: pointer;">
+              style="padding:7px 12px;font-size:12px;font-weight:700;color:#f8fafc;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;outline:none;cursor:pointer;">
         __OPTIONS_HTML__
       </select>
     </div>
-
-    <!-- Playback Buttons -->
-    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <button id="bfsBtnPlay" onclick="window.bfsTogglePlay()"
-              style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; color: #ffffff; background: #2563eb; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">
-        <i class="fa-solid fa-play"></i> <span>Run BFS Animation</span>
+              style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;font-size:12px;font-weight:800;color:#fff;background:linear-gradient(135deg,#0284c7,#2563eb);border:none;border-radius:8px;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,0.3);">
+        <i class="fa-solid fa-play"></i> <span>Run BFS</span>
       </button>
-
       <button onclick="window.bfsStepForward()"
-              style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; color: #334155; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+              style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#cbd5e1;background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:8px;cursor:pointer;">
         <i class="fa-solid fa-forward-step"></i> Next Step
       </button>
-
       <button onclick="window.bfsReset()"
-              style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; color: #64748b; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+              style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:700;color:#94a3b8;background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:8px;cursor:pointer;">
         <i class="fa-solid fa-rotate-left"></i> Reset
       </button>
-
-      <!-- Speed Control -->
-      <div style="display: flex; align-items: center; gap: 5px; margin-left: 8px;">
-        <span style="font-size: 11px; font-weight: 700; color: #64748b;">Speed:</span>
+      <div style="display:flex;align-items:center;gap:5px;margin-left:6px;">
+        <span style="font-size:11px;font-weight:700;color:#94a3b8;">Speed:</span>
         <select id="bfsSpeedSelect" onchange="window.bfsSetSpeed(this.value)"
-                style="padding: 5px 8px; font-size: 12px; font-weight: 600; color: #334155; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px;">
+                style="padding:5px 8px;font-size:11px;font-weight:700;color:#f8fafc;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:6px;">
           <option value="1200">Slow (1.2s)</option>
           <option value="750" selected>Normal (0.75s)</option>
-          <option value="400">Fast (0.4s)</option>
+          <option value="350">Fast (0.35s)</option>
         </select>
       </div>
     </div>
   </div>
 
-  <!-- 3. SVG Canvas (Matches Reference Image) -->
-  <div style="background: #ffffff; padding: 14px 10px; position: relative; overflow-x: auto;">
-    <svg id="civicBfsSvg" viewBox="0 0 940 480" width="100%" height="auto" style="display: block; min-width: 680px; max-height: 480px; margin: 0 auto;">
-      <g id="bfsEdgesGroup">
-        __SVG_EDGES__
-      </g>
-      <g id="bfsNodesGroup">
-        __SVG_NODES__
-      </g>
+  <!-- SVG Canvas -->
+  <div style="background:radial-gradient(ellipse at 50% 15%,rgba(6,182,212,0.08) 0%,rgba(10,17,32,0.98) 75%);padding:18px 12px;position:relative;overflow-x:auto;">
+    <div style="position:absolute;left:18px;top:50px;font-size:10px;font-weight:800;color:rgba(255,255,255,0.2);letter-spacing:1px;text-transform:uppercase;">Level 0 &bull; Root Node</div>
+    <div style="position:absolute;left:18px;top:155px;font-size:10px;font-weight:800;color:rgba(255,255,255,0.2);letter-spacing:1px;text-transform:uppercase;">Level 1 &bull; Children</div>
+    <div style="position:absolute;left:18px;top:260px;font-size:10px;font-weight:800;color:rgba(255,255,255,0.2);letter-spacing:1px;text-transform:uppercase;">Level 2 &bull; Grandchildren</div>
+    <div style="position:absolute;left:18px;top:365px;font-size:10px;font-weight:800;color:rgba(255,255,255,0.2);letter-spacing:1px;text-transform:uppercase;">Level 3 &bull; Leaf Nodes</div>
+    <svg id="civicBfsSvg" viewBox="0 0 900 440" width="100%" height="auto" style="display:block;min-width:700px;max-height:440px;margin:0 auto;">
+      <line x1="80" y1="105" x2="840" y2="105" stroke="rgba(255,255,255,0.04)" stroke-dasharray="4 4"/>
+      <line x1="80" y1="210" x2="840" y2="210" stroke="rgba(255,255,255,0.04)" stroke-dasharray="4 4"/>
+      <line x1="80" y1="315" x2="840" y2="315" stroke="rgba(255,255,255,0.04)" stroke-dasharray="4 4"/>
+      <g id="bfsEdgesGroup">__SVG_EDGES__</g>
+      <g id="bfsNodesGroup">__SVG_NODES__</g>
     </svg>
   </div>
 
-  <!-- 4. Live BFS Status, Queue & Explanation Dashboard -->
-  <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 18px 22px;">
-    <!-- Step Explanation Card -->
-    <div id="bfsExplainCard" style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; border-radius: 10px; padding: 12px 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-        <span id="bfsStepBadge" style="font-size: 11px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.5px;">Ready to Traverse</span>
-        <span id="bfsProgressText" style="font-size: 11px; color: #64748b; font-weight: 600;">Central Chowk</span>
+  <!-- Status Dashboard -->
+  <div style="background:rgba(11,19,36,0.95);border-top:1px solid rgba(255,255,255,0.07);padding:18px 22px;">
+    <div id="bfsExplainCard" style="background:rgba(15,23,42,0.8);border:1px solid rgba(56,189,248,0.2);border-left:4px solid #38bdf8;border-radius:10px;padding:12px 18px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span id="bfsStepBadge" style="font-size:11px;font-weight:800;color:#38bdf8;text-transform:uppercase;letter-spacing:0.5px;">Ready to Traverse</span>
+        <span id="bfsProgressText" style="font-size:11px;color:#94a3b8;font-weight:600;">Start: Central Chowk [Root Node]</span>
       </div>
-      <div id="bfsExplainText" style="font-size: 13px; color: #1e293b; font-weight: 500; line-height: 1.5;">
-        Click <strong>Run BFS Animation</strong> or any node on the graph to start breadth-first search traversal from that location.
+      <div id="bfsExplainText" style="font-size:13px;color:#f1f5f9;font-weight:500;line-height:1.5;">
+        Click <strong>Run BFS</strong> to observe level-order traversal: Root (Level 0) &rarr; Children (Level 1) &rarr; Grandchildren (Level 2) &rarr; Leaf Nodes (Level 3).
       </div>
     </div>
-
-    <!-- Two-Column Queue & Visited Status -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-      <!-- FIFO Queue Display -->
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
-        <div style="font-size: 11px; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-arrows-turn-to-dots"></i> BFS Queue (FIFO &bull; First-In, First-Out)
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div style="background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 16px;">
+        <div style="font-size:11px;font-weight:800;color:#38bdf8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-arrows-turn-to-dots"></i> BFS Queue (FIFO)
         </div>
-        <div id="bfsQueueDisplay" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 32px;">
-          <span style="font-size: 12px; color: #94a3b8; font-style: italic;">Queue empty (idle)</span>
+        <div id="bfsQueueDisplay" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:32px;">
+          <span style="font-size:12px;color:#64748b;font-style:italic;">Queue empty (idle)</span>
         </div>
       </div>
-
-      <!-- Visited Order Display -->
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
-        <div style="font-size: 11px; font-weight: 800; color: #16a34a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+      <div style="background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 16px;">
+        <div style="font-size:11px;font-weight:800;color:#10b981;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
           <i class="fa-solid fa-list-ol"></i> Visited Order (BFS Sequence)
         </div>
-        <div id="bfsVisitedDisplay" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 32px;">
-          <span style="font-size: 12px; color: #94a3b8; font-style: italic;">No traversal executed yet</span>
+        <div id="bfsVisitedDisplay" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:32px;">
+          <span style="font-size:12px;color:#64748b;font-style:italic;">No traversal executed yet</span>
         </div>
       </div>
     </div>
-
-    <!-- Expandable Adjacency List Details -->
-    <details style="margin-top: 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
-      <summary style="padding: 10px 16px; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; user-select: none; background: #f8fafc; outline: none;">
-        <i class="fa-solid fa-table-list" style="margin-right: 6px; color: #64748b;"></i> View Graph Adjacency List Representation
+    <details style="margin-top:14px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;">
+      <summary style="padding:10px 16px;font-size:12px;font-weight:700;color:#94a3b8;cursor:pointer;background:rgba(15,23,42,0.9);outline:none;">
+        <i class="fa-solid fa-sitemap" style="margin-right:6px;color:#06b6d4;"></i> Binary Tree Node Hierarchy &amp; Adjacency
       </summary>
-      <div style="padding: 10px 16px; max-height: 240px; overflow-y: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+      <div style="padding:10px 16px;max-height:240px;overflow-y:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
           <thead>
-            <tr style="border-bottom: 2px solid #cbd5e1; text-align: left; color: #64748b; font-weight: 700;">
-              <th style="padding: 6px 12px; width: 35%;">Area Node (V)</th>
-              <th style="padding: 6px 12px;">Adjacent Neighbors (E)</th>
+            <tr style="border-bottom:2px solid rgba(255,255,255,0.1);color:#64748b;font-weight:800;font-size:11px;text-transform:uppercase;">
+              <th style="padding:8px 12px;">Node</th>
+              <th style="padding:8px 12px;">Level</th>
+              <th style="padding:8px 12px;">Role</th>
+              <th style="padding:8px 12px;">Parent</th>
+              <th style="padding:8px 12px;">Left Child</th>
+              <th style="padding:8px 12px;">Right Child</th>
             </tr>
           </thead>
-          <tbody>
-            __ADJ_ROWS__
-          </tbody>
+          <tbody>__ADJ_ROWS__</tbody>
         </table>
       </div>
     </details>
   </div>
 </div>
 
-<!-- ── Scoped BFS Engine JavaScript ── -->
 <script>
 (function() {
   const _layout = __JS_LAYOUT__;
-  const _edges = __JS_EDGES__;
-  const _graph = __JS_GRAPH__;
+  const _edges  = __JS_EDGES__;
+  const _graph  = __JS_GRAPH__;
+  const _meta   = __JS_META__;
+  const ROOT    = "__START_NODE__";
 
-  let _startNode = "__START_NODE__";
-  let _stepIndex = 0;
-  let _steps = [];
-  let _timer = null;
-  let _isPlaying = false;
-  let _speedMs = 750;
+  let _startNode = ROOT;
+  let _stepIndex = 0, _steps = [], _timer = null, _isPlaying = false, _speedMs = 750;
 
-  function safeId(str) {
-    return (str || "").replace(/[^a-zA-Z0-9]/g, "_");
-  }
+  function sid(str) { return (str||"").replace(/[^a-zA-Z0-9]/g,"_"); }
 
   function buildSteps(start) {
-    const steps = [];
-    if (!_graph[start]) return steps;
-
-    const visited = [];
-    const queue = [start];
-    const inQueue = new Set([start]);
-    let orderNum = 1;
-
-    steps.push({
-      action: "start",
-      current: start,
-      queue: [...queue],
-      visited: [...visited],
-      discovered: [start],
-      activeEdge: null,
-      msg: "Starting BFS at <strong>" + (_layout[start] ? _layout[start].short : start) + "</strong>. Enqueued as Node #1."
-    });
-
-    while (queue.length > 0) {
-      const current = queue.shift();
-      visited.push(current);
-
-      const neighbors = _graph[current] || [];
-      const newlyDiscovered = [];
-
-      for (let i = 0; i < neighbors.length; i++) {
-        const nb = neighbors[i];
-        if (!visited.includes(nb) && !inQueue.has(nb)) {
-          inQueue.add(nb);
-          queue.push(nb);
-          newlyDiscovered.push(nb);
-          orderNum++;
-        }
-      }
-
-      const nbNames = newlyDiscovered.map(function(n) { return _layout[n] ? _layout[n].short : n; }).join(", ");
-      steps.push({
-        action: "visit",
-        current: current,
-        queue: [...queue],
-        visited: [...visited],
-        discovered: newlyDiscovered,
-        activeEdge: null,
-        msg: "Visiting <strong>" + (_layout[current] ? _layout[current].short : current) + "</strong>. Discovered " + newlyDiscovered.length + " neighbor(s): " + (nbNames || "None") + "."
-      });
+    var steps = [], visited = [], queue = [start], inQ = new Set([start]);
+    steps.push({ action:"start", current:start, queue:[...queue], visited:[...visited], discovered:[start],
+      msg:"Starting BFS at <strong>"+(_layout[start]?_layout[start].short:start)+"</strong>. Enqueued as Node #1 in FIFO Queue." });
+    while (queue.length) {
+      var cur = queue.shift(); visited.push(cur);
+      var nb = _graph[cur]||[], disc = [];
+      for (var i=0;i<nb.length;i++) { if (!visited.includes(nb[i])&&!inQ.has(nb[i])) { inQ.add(nb[i]); queue.push(nb[i]); disc.push(nb[i]); } }
+      var cm = _meta[cur]||{};
+      var names = disc.map(function(n){return _layout[n]?_layout[n].short:n;}).join(", ");
+      steps.push({ action:"visit", current:cur, queue:[...queue], visited:[...visited], discovered:disc,
+        msg:"Visited <strong>"+(_layout[cur]?_layout[cur].short:cur)+"</strong> ("+( cm.role||"Node")+", Level "+(cm.level!==undefined?cm.level:0)+"). "+
+            (disc.length?"Enqueued children: <strong>"+names+"</strong>.":"Leaf node — no further branches.") });
     }
-
     return steps;
   }
 
   function applyStep(step) {
     if (!step) return;
-
-    const stepBadge = document.getElementById("bfsStepBadge");
-    const progressText = document.getElementById("bfsProgressText");
-    const explainText = document.getElementById("bfsExplainText");
-
-    if (stepBadge) stepBadge.textContent = step.action === "start" ? "Queue Initialized" : ("Step " + (_stepIndex + 1) + " of " + _steps.length);
-    if (progressText) progressText.textContent = "Visiting: " + (_layout[step.current] ? _layout[step.current].short : step.current);
-    if (explainText) explainText.innerHTML = step.msg;
+    var sb=document.getElementById("bfsStepBadge"), pt=document.getElementById("bfsProgressText"), et=document.getElementById("bfsExplainText");
+    var cm=_meta[step.current]||{};
+    if(sb) sb.textContent=step.action==="start"?"Queue Initialized":("Step "+(_stepIndex+1)+" of "+_steps.length);
+    if(pt) pt.textContent="Visiting: "+(_layout[step.current]?_layout[step.current].short:step.current)+" ("+(cm.role||"Node")+")";
+    if(et) et.innerHTML=step.msg;
 
     Object.keys(_layout).forEach(function(area) {
-      const sid = safeId(area);
-      const ring = document.getElementById("bfsActiveRing_" + sid);
-      const halo = document.getElementById("bfsh_" + sid);
-      const circ = document.getElementById("bfsc_" + sid);
-      const badgeGroup = document.getElementById("bfsbg_" + sid);
-      const badgeText = document.getElementById("bfsbt_" + sid);
-      const badgeCirc = document.getElementById("bfsbc_" + sid);
-
-      const isVisited = step.visited.includes(area);
-      const isCurrent = step.current === area;
-      const isEnqueued = step.queue.includes(area);
-      const nodeCol = _layout[area] || {};
-
-      if (ring) {
-        ring.setAttribute("stroke", isCurrent ? "#ef4444" : "transparent");
-        ring.setAttribute("stroke-width", isCurrent ? "3" : "2.6");
+      var s=sid(area);
+      var ring=document.getElementById("bfsActiveRing_"+s), halo=document.getElementById("bfsh_"+s);
+      var circ=document.getElementById("bfsc_"+s), bg=document.getElementById("bfsbg_"+s);
+      var bt=document.getElementById("bfsbt_"+s), bc=document.getElementById("bfsbc_"+s);
+      var isV=step.visited.includes(area), isC=step.current===area, isE=step.queue.includes(area);
+      var nl=_layout[area]||{};
+      if(ring){ring.setAttribute("stroke",isC?"#38bdf8":(isV?"#10b981":"transparent"));ring.setAttribute("stroke-width",isC?"3.5":"2.5");}
+      if(halo) halo.setAttribute("fill",isC?"rgba(56,189,248,0.35)":(isV?"rgba(16,185,129,0.15)":"transparent"));
+      if(circ){
+        if(isC){circ.setAttribute("fill","#0284c7");circ.setAttribute("stroke","#38bdf8");circ.setAttribute("stroke-width","3.5");}
+        else if(isV){circ.setAttribute("fill","#064e3b");circ.setAttribute("stroke","#10b981");circ.setAttribute("stroke-width","2.8");}
+        else if(isE){circ.setAttribute("fill","#78350f");circ.setAttribute("stroke","#f59e0b");circ.setAttribute("stroke-width","2.8");}
+        else{circ.setAttribute("fill",nl.fill||"#1e293b");circ.setAttribute("stroke",nl.stroke||"#475569");circ.setAttribute("stroke-width","2.6");}
       }
-
-      if (halo) {
-        halo.setAttribute("fill", isCurrent ? "rgba(239, 68, 68, 0.2)" : (isVisited ? "rgba(16, 185, 129, 0.15)" : "transparent"));
-      }
-
-      if (circ) {
-        if (isCurrent) {
-          circ.setAttribute("fill", nodeCol.fill || "#dbeafe");
-          circ.setAttribute("stroke", "#ef4444");
-          circ.setAttribute("stroke-width", "3.5");
-        } else if (isVisited) {
-          circ.setAttribute("fill", nodeCol.fill || "#dcfce7");
-          circ.setAttribute("stroke", nodeCol.stroke || "#16a34a");
-          circ.setAttribute("stroke-width", "3");
-        } else if (isEnqueued) {
-          circ.setAttribute("fill", nodeCol.fill || "#fef3c7");
-          circ.setAttribute("stroke", "#f59e0b");
-          circ.setAttribute("stroke-width", "2.8");
-        } else {
-          circ.setAttribute("fill", nodeCol.fill || "#f1f5f9");
-          circ.setAttribute("stroke", nodeCol.stroke || "#64748b");
-          circ.setAttribute("stroke-width", "2.6");
-        }
-      }
-
-      if (badgeGroup && badgeText && badgeCirc) {
-        const orderIdx = step.visited.indexOf(area);
-        if (orderIdx !== -1) {
-          badgeGroup.style.display = "inline";
-          badgeText.textContent = (orderIdx + 1);
-          badgeCirc.setAttribute("fill", orderIdx === 0 ? "#ef4444" : "#f59e0b");
-        } else if (isCurrent && step.action === "start") {
-          badgeGroup.style.display = "inline";
-          badgeText.textContent = "1";
-          badgeCirc.setAttribute("fill", "#ef4444");
-        } else {
-          badgeGroup.style.display = "none";
-        }
+      if(bg&&bt&&bc){
+        var vi=step.visited.indexOf(area);
+        if(vi!==-1){bg.style.display="inline";bt.textContent=(vi+1);bc.setAttribute("fill",vi===0?"#0284c7":"#10b981");}
+        else if(isC&&step.action==="start"){bg.style.display="inline";bt.textContent="1";bc.setAttribute("fill","#0284c7");}
+        else{bg.style.display="none";}
       }
     });
 
-    _edges.forEach(function(edge) {
-      const u = edge[0];
-      const v = edge[1];
-      const edgeId1 = "bfse_" + safeId(u) + "_" + safeId(v);
-      const edgeId2 = "bfse_" + safeId(v) + "_" + safeId(u);
-      const el = document.getElementById(edgeId1) || document.getElementById(edgeId2);
-      if (el) {
-        const uVisited = step.visited.includes(u);
-        const vVisited = step.visited.includes(v);
-        if (uVisited && vVisited) {
-          el.setAttribute("stroke", "#2563eb");
-          el.setAttribute("stroke-width", "3.2");
-        } else {
-          el.setAttribute("stroke", "#576574");
-          el.setAttribute("stroke-width", "2.6");
-        }
+    _edges.forEach(function(e){
+      var el=document.getElementById("bfse_"+sid(e[0])+"_"+sid(e[1]))||document.getElementById("bfse_"+sid(e[1])+"_"+sid(e[0]));
+      if(el){
+        var uV=step.visited.includes(e[0]),vV=step.visited.includes(e[1]);
+        el.setAttribute("stroke",uV&&vV?"#38bdf8":"#475569");el.setAttribute("stroke-width",uV&&vV?"3.5":"2.8");
       }
     });
 
-    const queueDisp = document.getElementById("bfsQueueDisplay");
-    if (queueDisp) {
-      if (step.queue.length === 0) {
-        queueDisp.innerHTML = '<span style="font-size: 12px; color: #94a3b8; font-style: italic;">Queue is currently empty</span>';
-      } else {
-        queueDisp.innerHTML = step.queue.map(function(q, idx) {
-          const shortName = _layout[q] ? _layout[q].short : q;
-          return '<span style="display: inline-flex; align-items: center; gap: 5px; background: #e0f2fe; border: 1.5px solid #0284c7; color: #0369a1; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;">' +
-            '<span style="font-size: 10px; background: #0284c7; color: #fff; border-radius: 4px; padding: 1px 5px;">' + (idx === 0 ? "FRONT" : idx) + '</span> ' +
-            shortName +
-          '</span>';
-        }).join("");
-      }
+    var qd=document.getElementById("bfsQueueDisplay");
+    if(qd){
+      if(!step.queue.length){qd.innerHTML='<span style="font-size:12px;color:#64748b;font-style:italic;">Queue is empty</span>';}
+      else{qd.innerHTML=step.queue.map(function(q,i){var m=_layout[q]||{};return'<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(2,132,199,0.2);border:1.5px solid #0284c7;color:#38bdf8;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;"><span style="font-size:10px;background:#0284c7;color:#fff;border-radius:4px;padding:1px 5px;">'+(i===0?"FRONT":i)+'</span> '+(m.short||q)+' <span style="font-size:10px;opacity:0.7;">(L'+(m.level!==undefined?m.level:"?")+')  </span></span>';}).join("");}
     }
 
-    const visitedDisp = document.getElementById("bfsVisitedDisplay");
-    if (visitedDisp) {
-      if (step.visited.length === 0) {
-        visitedDisp.innerHTML = '<span style="font-size: 12px; color: #94a3b8; font-style: italic;">No nodes visited yet</span>';
-      } else {
-        visitedDisp.innerHTML = step.visited.map(function(v, idx) {
-          const shortName = _layout[v] ? _layout[v].short : v;
-          const bgCol = idx === 0 ? "#ef4444" : "#f59e0b";
-          return '<span style="display: inline-flex; align-items: center; gap: 5px; background: #dcfce7; border: 1.5px solid #16a34a; color: #15803d; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;">' +
-            '<span style="font-size: 10px; background: ' + bgCol + '; color: #fff; border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;">' + (idx + 1) + '</span> ' +
-            shortName +
-          '</span>';
-        }).join("");
-      }
+    var vd=document.getElementById("bfsVisitedDisplay");
+    if(vd){
+      if(!step.visited.length){vd.innerHTML='<span style="font-size:12px;color:#64748b;font-style:italic;">No nodes visited yet</span>';}
+      else{vd.innerHTML=step.visited.map(function(v,i){var m=_layout[v]||{};var bg=i===0?"#0284c7":"#10b981";return'<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.18);border:1.5px solid #10b981;color:#4ade80;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;"><span style="background:'+bg+';color:#fff;font-size:9px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;">'+(i+1)+'</span> '+(m.short||v)+'</span>';}).join("");}
     }
   }
 
-  window.bfsSelectNode = function(area) {
-    window.bfsChangeStart(area);
-    window.bfsTogglePlay(true);
-  };
+  window.bfsSelectNode=function(a){window.bfsChangeStart(a);window.bfsTogglePlay(true);};
+  window.bfsChangeStart=function(a){_startNode=a;var s=document.getElementById("bfsStartSelectCtrl");if(s&&s.value!==a)s.value=a;window.bfsReset();};
 
-  window.bfsChangeStart = function(area) {
-    _startNode = area;
-    const sel = document.getElementById("bfsStartSelectCtrl");
-    if (sel && sel.value !== area) sel.value = area;
-    window.bfsReset();
-  };
-
-  window.bfsTogglePlay = function(forcePlay) {
-    if (forcePlay !== undefined) _isPlaying = !forcePlay;
-
-    const btn = document.getElementById("bfsBtnPlay");
-    if (_isPlaying) {
-      _isPlaying = false;
-      clearInterval(_timer);
-      _timer = null;
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> <span>Resume BFS</span>';
-    } else {
-      _isPlaying = true;
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i> <span>Pause BFS</span>';
-
-      if (_steps.length === 0 || _stepIndex >= _steps.length - 1) {
-        _steps = buildSteps(_startNode);
-        _stepIndex = 0;
-        applyStep(_steps[0]);
-      }
-
-      clearInterval(_timer);
-      _timer = setInterval(function() {
-        if (_stepIndex < _steps.length - 1) {
-          _stepIndex++;
-          applyStep(_steps[_stepIndex]);
-        } else {
-          _isPlaying = false;
-          clearInterval(_timer);
-          _timer = null;
-          if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> <span>Restart BFS</span>';
-          const explain = document.getElementById("bfsExplainText");
-          if (explain) explain.innerHTML += " &bull; <strong style='color: #16a34a;'>BFS Traversal Completed!</strong>";
-        }
-      }, _speedMs);
+  window.bfsTogglePlay=function(fp){
+    if(fp!==undefined)_isPlaying=!fp;
+    var btn=document.getElementById("bfsBtnPlay");
+    if(_isPlaying){_isPlaying=false;clearInterval(_timer);_timer=null;if(btn)btn.innerHTML='<i class="fa-solid fa-play"></i> <span>Resume BFS</span>';}
+    else{
+      _isPlaying=true;if(btn)btn.innerHTML='<i class="fa-solid fa-pause"></i> <span>Pause BFS</span>';
+      if(!_steps.length||_stepIndex>=_steps.length-1){_steps=buildSteps(_startNode);_stepIndex=0;applyStep(_steps[0]);}
+      clearInterval(_timer);_timer=setInterval(function(){
+        if(_stepIndex<_steps.length-1){_stepIndex++;applyStep(_steps[_stepIndex]);}
+        else{_isPlaying=false;clearInterval(_timer);_timer=null;if(btn)btn.innerHTML='<i class="fa-solid fa-rotate-left"></i> <span>Restart BFS</span>';
+          var e=document.getElementById("bfsExplainText");if(e)e.innerHTML+=" &bull; <strong style='color:#10b981;'>BFS Complete!</strong>";}
+      },_speedMs);
     }
   };
 
-  window.bfsStepForward = function() {
-    if (_isPlaying) window.bfsTogglePlay();
-    if (_steps.length === 0) {
-      _steps = buildSteps(_startNode);
-      _stepIndex = 0;
-    } else if (_stepIndex < _steps.length - 1) {
-      _stepIndex++;
-    }
+  window.bfsStepForward=function(){
+    if(_isPlaying)window.bfsTogglePlay();
+    if(!_steps.length){_steps=buildSteps(_startNode);_stepIndex=0;}
+    else if(_stepIndex<_steps.length-1)_stepIndex++;
     applyStep(_steps[_stepIndex]);
   };
 
-  window.bfsReset = function() {
-    _isPlaying = false;
-    clearInterval(_timer);
-    _timer = null;
-    _steps = buildSteps(_startNode);
-    _stepIndex = 0;
-
-    const btn = document.getElementById("bfsBtnPlay");
-    if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i> <span>Run BFS Animation</span>';
-
-    Object.keys(_layout).forEach(function(area) {
-      const sid = safeId(area);
-      const ring = document.getElementById("bfsActiveRing_" + sid);
-      const halo = document.getElementById("bfsh_" + sid);
-      const circ = document.getElementById("bfsc_" + sid);
-      const badgeGroup = document.getElementById("bfsbg_" + sid);
-      const badgeText = document.getElementById("bfsbt_" + sid);
-      const badgeCirc = document.getElementById("bfsbc_" + sid);
-      const nodeCol = _layout[area] || {};
-
-      if (ring) ring.setAttribute("stroke", area === _startNode ? "#ef4444" : "transparent");
-      if (halo) halo.setAttribute("fill", "transparent");
-      if (circ) {
-        circ.setAttribute("fill", nodeCol.fill || "#f1f5f9");
-        circ.setAttribute("stroke", nodeCol.stroke || "#64748b");
-        circ.setAttribute("stroke-width", "3");
-      }
-
-      const defBadges = {
-        "Central Zone (Chowk)": "1",
-        "West Zone (Adajan)": "2",
-        "Varachha Zone A": "3",
-        "South Zone (Udhana)": "4"
-      };
-      if (badgeGroup && badgeText && badgeCirc) {
-        if (defBadges[area]) {
-          badgeGroup.style.display = "inline";
-          badgeText.textContent = defBadges[area];
-          badgeCirc.setAttribute("fill", defBadges[area] === "1" ? "#ef4444" : "#f59e0b");
-        } else {
-          badgeGroup.style.display = "none";
-        }
-      }
+  window.bfsReset=function(){
+    _isPlaying=false;clearInterval(_timer);_timer=null;_steps=buildSteps(_startNode);_stepIndex=0;
+    var btn=document.getElementById("bfsBtnPlay");if(btn)btn.innerHTML='<i class="fa-solid fa-play"></i> <span>Run BFS</span>';
+    Object.keys(_layout).forEach(function(area){
+      var s=sid(area),nl=_layout[area]||{},m=_meta[area]||{};
+      var ring=document.getElementById("bfsActiveRing_"+s),halo=document.getElementById("bfsh_"+s),circ=document.getElementById("bfsc_"+s);
+      var bg=document.getElementById("bfsbg_"+s),bt=document.getElementById("bfsbt_"+s),bc=document.getElementById("bfsbc_"+s);
+      if(ring)ring.setAttribute("stroke",area===_startNode?"#38bdf8":"transparent");
+      if(halo)halo.setAttribute("fill","transparent");
+      if(circ){circ.setAttribute("fill",nl.fill||"#1e293b");circ.setAttribute("stroke",nl.stroke||"#475569");circ.setAttribute("stroke-width",area===ROOT?"3.5":"2.6");}
+      if(bg){if(area===_startNode){bg.style.display="inline";bt.textContent="1";bc.setAttribute("fill",nl.badge||"#0284c7");}else{bg.style.display="none";}}
     });
-
-    _edges.forEach(function(edge) {
-      const u = edge[0];
-      const v = edge[1];
-      const edgeId1 = "bfse_" + safeId(u) + "_" + safeId(v);
-      const edgeId2 = "bfse_" + safeId(v) + "_" + safeId(u);
-      const el = document.getElementById(edgeId1) || document.getElementById(edgeId2);
-      if (el) {
-        el.setAttribute("stroke", "#576574");
-        el.setAttribute("stroke-width", "2.6");
-      }
-    });
-
-    const stepBadge = document.getElementById("bfsStepBadge");
-    const progressText = document.getElementById("bfsProgressText");
-    const explainText = document.getElementById("bfsExplainText");
-    const queueDisp = document.getElementById("bfsQueueDisplay");
-    const visitedDisp = document.getElementById("bfsVisitedDisplay");
-
-    if (stepBadge) stepBadge.textContent = "Ready to Traverse";
-    if (progressText) progressText.textContent = "Start: " + (_layout[_startNode] ? _layout[_startNode].short : _startNode);
-    if (explainText) explainText.innerHTML = "Click <strong>Run BFS Animation</strong> or any node on the graph to start breadth-first search traversal from that location.";
-    if (queueDisp) queueDisp.innerHTML = '<span style="font-size: 12px; color: #94a3b8; font-style: italic;">Queue empty (idle)</span>';
-    if (visitedDisp) visitedDisp.innerHTML = '<span style="font-size: 12px; color: #94a3b8; font-style: italic;">No traversal executed yet</span>';
+    _edges.forEach(function(e){var el=document.getElementById("bfse_"+sid(e[0])+"_"+sid(e[1]));if(el){el.setAttribute("stroke","#475569");el.setAttribute("stroke-width","2.8");}});
+    var sb=document.getElementById("bfsStepBadge"),pt=document.getElementById("bfsProgressText"),et=document.getElementById("bfsExplainText");
+    var qd=document.getElementById("bfsQueueDisplay"),vd=document.getElementById("bfsVisitedDisplay");
+    if(sb)sb.textContent="Ready to Traverse";
+    if(pt)pt.textContent="Start: "+(_layout[_startNode]?_layout[_startNode].short:_startNode);
+    if(et)et.innerHTML="Click <strong>Run BFS</strong> to observe level-order traversal: Root (Level 0) &rarr; Children (Level 1) &rarr; Grandchildren (Level 2) &rarr; Leaf Nodes (Level 3).";
+    if(qd)qd.innerHTML='<span style="font-size:12px;color:#64748b;font-style:italic;">Queue empty (idle)</span>';
+    if(vd)vd.innerHTML='<span style="font-size:12px;color:#64748b;font-style:italic;">No traversal executed yet</span>';
   };
 
-  window.bfsSetSpeed = function(val) {
-    _speedMs = parseInt(val, 10) || 750;
-    if (_isPlaying) {
-      clearInterval(_timer);
-      _timer = setInterval(function() {
-        if (_stepIndex < _steps.length - 1) {
-          _stepIndex++;
-          applyStep(_steps[_stepIndex]);
-        } else {
-          _isPlaying = false;
-          clearInterval(_timer);
-          _timer = null;
-        }
-      }, _speedMs);
-    }
+  window.bfsSetSpeed=function(val){
+    _speedMs=parseInt(val,10)||750;
+    if(_isPlaying){clearInterval(_timer);_timer=setInterval(function(){if(_stepIndex<_steps.length-1){_stepIndex++;applyStep(_steps[_stepIndex]);}else{_isPlaying=false;clearInterval(_timer);_timer=null;}},_speedMs);}
   };
 })();
 </script>
@@ -940,5 +825,6 @@ def get_bfs_graph_html(start_node: str = "Central Zone (Chowk)") -> str:
         .replace("__JS_LAYOUT__", js_layout)
         .replace("__JS_EDGES__", js_edges)
         .replace("__JS_GRAPH__", js_graph)
+        .replace("__JS_META__", js_meta)
         .replace("__START_NODE__", start_node)
     )
