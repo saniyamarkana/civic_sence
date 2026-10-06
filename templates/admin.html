@@ -82,7 +82,7 @@
           <i class="fa-solid fa-users-gear"></i> Manage Users
         </a>
         <a class="nav-link" data-tab="map" onclick="switchAdminTab('map')">
-          <i class="fa-solid fa-diagram-project"></i> Complaint Area Graph
+          <i class="fa-solid fa-sitemap"></i> Location Graph
         </a>
 
         <!-- <div class="nav-section-title">PHASE 1 DSA VISUAL LAB</div>
@@ -367,7 +367,7 @@
           </div>
         </section>
         <!-- ════════════════════════════════════════════════════════════════
-             TAB 4: COMPLAINT AREA GRAPH (DIAMOND STRUCTURE & BFS)
+             TAB 4: LOCATION GRAPH — BINARY TREE & BFS LEVEL-ORDER TRAVERSAL
              ════════════════════════════════════════════════════════════════ -->
         <section id="adminTab_map" style="display: none;">
 
@@ -381,8 +381,8 @@
                   <i class="fa-solid fa-diagram-project"></i>
                 </div>
                 <div>
-                  <div style="font-size: 18px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px;">Complaint Area Graph</div>
-                  <div style="font-size: 11px; color: #64748b; margin-top: 1px;">Network Map &bull; Click any node to view complaints</div>
+                  <div style="font-size: 18px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px;">Location Graph</div>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 1px;">Binary Tree &bull; BFS Level-Order Traversal &bull; Click any node to view complaints</div>
                 </div>
               </div>
 
@@ -397,6 +397,57 @@
                 <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #f59e0b; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
                   <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b;"></span> Selected
                 </span>
+              </div>
+            </div>
+
+            <!-- BFS Traversal & Search Controller Toolbar -->
+            <div style="padding: 14px 24px; background: rgba(10, 18, 35, 0.85); border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <label for="adminBfsSearchSelect" style="font-size: 11px; font-weight: 800; color: #06b6d4; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-sitemap"></i> Start Node:
+                </label>
+                <select id="adminBfsSearchSelect" onchange="adminOnStartNodeChange(this.value)" style="background: #1e293b; color: #f8fafc; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; outline: none; cursor: pointer; min-width: 230px;">
+                  <option value="">-- Select Location to Start BFS --</option>
+                  <option value="Central Zone (Chowk)">Central Zone (Chowk) [Root - L0]</option>
+                  <option value="West Zone (Adajan)">West Zone (Adajan) [Child - L1]</option>
+                  <option value="Varachha Zone A">Varachha Zone A [Child - L1]</option>
+                  <option value="North Zone (Katargam)">North Zone (Katargam) [Child - L2]</option>
+                  <option value="South West (Athwa)">South West (Athwa) [Child - L2]</option>
+                  <option value="South Zone (Udhana)">South Zone (Udhana) [Child - L2]</option>
+                  <option value="Varachha Zone B">Varachha Zone B [Child - L2]</option>
+                  <option value="Shakti Nagar">Shakti Nagar [Leaf - L3]</option>
+                  <option value="South East (Dindoli)">South East (Dindoli) [Leaf - L3]</option>
+                </select>
+
+                <button type="button" class="btn btn-sm btn-primary" onclick="adminRunBfsSearch()" style="padding: 7px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(6,182,212,0.3);">
+                  <i class="fa-solid fa-play"></i> Start BFS from this Node
+                </button>
+
+                <button type="button" class="btn btn-sm btn-success" onclick="adminAddNodePrompt()" style="padding: 7px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; background: #10b981; border: none; color: #fff; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                  <i class="fa-solid fa-plus"></i> Add Node
+                </button>
+
+                <button type="button" class="btn btn-sm btn-secondary" onclick="adminResetBfs()" style="padding: 7px 12px; font-size: 12px; color: #94a3b8;" title="Reset Graph Colors">
+                  <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+              </div>
+
+              <!-- Live Traversal Status Banner -->
+              <div id="adminBfsStatusStrip" style="font-size: 12px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span id="adminBfsBadge" style="padding: 3px 8px; border-radius: 6px; background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 10px; font-weight: 800;">READY</span>
+                <span id="adminBfsMsg">Pick a node above or click "Run Full BFS Traversal" to explore level-by-level</span>
+              </div>
+            </div>
+
+            <!-- Real-time FIFO Queue & Visited State Display -->
+            <div id="adminBfsQueueBar" style="display: none; padding: 10px 24px; background: rgba(8, 14, 28, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-size: 11px; align-items: center; gap: 16px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #38bdf8; font-weight: 800; text-transform: uppercase;"><i class="fa-solid fa-layer-group"></i> FIFO Queue:</span>
+                <span id="adminBfsQueueItems" style="color: #f1f5f9; font-family: monospace; font-weight: 700;">[ ]</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #10b981; font-weight: 800; text-transform: uppercase;"><i class="fa-solid fa-check"></i> Visited:</span>
+                <span id="adminBfsVisitedItems" style="color: #f1f5f9; font-family: monospace; font-weight: 700;">[ ]</span>
               </div>
             </div>
 
@@ -765,6 +816,12 @@
 
         renderPointWayGraph(_mapNodesData, _mapEdgesData);
 
+        const searchSel = document.getElementById('adminBfsSearchSelect');
+        if (searchSel && _mapNodesData.length > 0) {
+          searchSel.innerHTML = '<option value="">-- Select Location to Search --</option>' +
+            _mapNodesData.map(n => `<option value="${escapeHtml(n.area)}">${escapeHtml(n.area)} [${n.role || 'Node'} - L${n.level || 0}]</option>`).join('');
+        }
+
         if (_selectedZoneName) {
           selectZone(_selectedZoneName);
         }
@@ -950,6 +1007,241 @@
           }).join('');
         }
       }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // BFS Traversal & Search Controller in Admin Location Graph
+    // ══════════════════════════════════════════════════════════════════════════
+    let _bfsRunning = false;
+    let _bfsTimer = null;
+
+    function adminResetBfs() {
+      if (_bfsTimer) {
+        clearInterval(_bfsTimer);
+        _bfsTimer = null;
+      }
+      _bfsRunning = false;
+
+      // 1. Reset all node circles, halos, and labels
+      _mapNodesData.forEach(n => {
+        const el = document.getElementById(`node_${safeId(n.area)}`);
+        if (el) {
+          const isCore = ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(n.zone);
+          const circle = el.querySelector('.point-circle');
+          const halo = el.querySelector('.point-halo');
+          const label = el.querySelector('.point-label');
+          if (circle) {
+            circle.setAttribute('fill', '#1e293b');
+            circle.setAttribute('stroke', isCore ? '#06b6d4' : '#64748b');
+            circle.setAttribute('stroke-width', isCore ? '3' : '2.5');
+          }
+          if (halo) {
+            halo.setAttribute('fill', 'transparent');
+            halo.setAttribute('stroke', 'transparent');
+          }
+          if (label) {
+            label.setAttribute('fill', '#cbd5e1');
+          }
+        }
+      });
+
+      // 2. Reset all edges
+      _mapEdgesData.forEach(e => {
+        const u = _mapNodesData.find(n => n.area === e.from);
+        const v = _mapNodesData.find(n => n.area === e.to);
+        const isCore = u && v && (['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(u.zone)) &&
+                                  (['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(v.zone));
+        const defCol = isCore ? '#475569' : '#334155';
+        const defWidth = isCore ? '3.5' : '2.5';
+
+        const e1 = document.getElementById(`edge_${safeId(e.from)}_${safeId(e.to)}`);
+        const e2 = document.getElementById(`edge_${safeId(e.to)}_${safeId(e.from)}`);
+        if (e1) { e1.setAttribute('stroke', defCol); e1.setAttribute('stroke-width', defWidth); }
+        if (e2) { e2.setAttribute('stroke', defCol); e2.setAttribute('stroke-width', defWidth); }
+      });
+
+      // 3. Reset UI badges and queue bar
+      const badge = document.getElementById('adminBfsBadge');
+      const msg = document.getElementById('adminBfsMsg');
+      const qBar = document.getElementById('adminBfsQueueBar');
+      if (badge) {
+        badge.textContent = 'READY';
+        badge.style.background = 'rgba(56,189,248,0.15)';
+        badge.style.color = '#38bdf8';
+      }
+      if (msg) msg.textContent = 'Pick a node above or click "Run Full BFS Traversal" to explore level-by-level';
+      if (qBar) qBar.style.display = 'none';
+
+      if (_selectedZoneName) {
+        selectZone(_selectedZoneName);
+      }
+    }
+
+    function adminRunFullBfs() {
+      adminExecuteBfs('Central Zone (Chowk)');
+    }
+
+    function adminOnStartNodeChange(nodeName) {
+      if (nodeName) {
+        adminExecuteBfs(nodeName);
+      }
+    }
+
+    function adminAddNodePrompt() {
+      const nodeName = prompt("Enter new node/location name:");
+      if (!nodeName || !nodeName.trim()) return;
+
+      const neighbor = prompt("Enter connected neighbor node (optional, e.g. Zone A):") || "";
+
+      fetch("/api/graph/add-node", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ node_name: nodeName.trim(), neighbor: neighbor.trim() })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          if (typeof showToast === 'function') {
+            showToast(data.message, 'success');
+          } else {
+            alert(data.message);
+          }
+          const select = document.getElementById("adminBfsSearchSelect");
+          if (select) {
+            const opt = document.createElement("option");
+            opt.value = nodeName.trim();
+            opt.textContent = nodeName.trim() + " [New Node]";
+            select.appendChild(opt);
+            select.value = nodeName.trim();
+          }
+        } else {
+          alert(data.message || "Failed to add node.");
+        }
+      })
+      .catch(err => {
+        alert("Error adding node: " + err);
+      });
+    }
+
+    function adminRunBfsSearch() {
+      const selected = document.getElementById('adminBfsSearchSelect').value;
+      if (!selected) {
+        if (typeof showToast === 'function') {
+          showToast('Please select a start location from the dropdown first.', 'warning');
+        } else {
+          alert('Please select a start location from the dropdown first.');
+        }
+        return;
+      }
+      adminExecuteBfs(selected);
+    }
+
+    function adminExecuteBfs(startNode) {
+      adminResetBfs();
+      _bfsRunning = true;
+      const start = startNode || 'Central Zone (Chowk)';
+
+      const qBar = document.getElementById('adminBfsQueueBar');
+      const badge = document.getElementById('adminBfsBadge');
+      const msg = document.getElementById('adminBfsMsg');
+      const qItems = document.getElementById('adminBfsQueueItems');
+      const vItems = document.getElementById('adminBfsVisitedItems');
+
+      if (qBar) qBar.style.display = 'flex';
+      if (badge) {
+        badge.textContent = 'EXPLORING';
+        badge.style.background = 'rgba(245,158,11,0.2)';
+        badge.style.color = '#f59e0b';
+      }
+      if (msg) msg.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Starting BFS at <strong>${escapeHtml(start)}</strong> (First Node)...`;
+
+      // Select zone to display its complaints right away
+      selectZone(start);
+
+      // Start BFS directly from the selected node!
+      const url = `/api/graph/bfs?start=${encodeURIComponent(start)}`;
+
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          const steps = data.steps || [];
+          let stepIndex = 0;
+
+          _bfsTimer = setInterval(() => {
+            if (stepIndex >= steps.length) {
+              clearInterval(_bfsTimer);
+              _bfsTimer = null;
+              _bfsRunning = false;
+
+              if (badge) {
+                badge.textContent = 'COMPLETED';
+                badge.style.background = 'rgba(16,185,129,0.2)';
+                badge.style.color = '#10b981';
+              }
+              const visitedNames = (data.visited || []).map(s => getShortLabel(s)).join(' &rarr; ');
+              if (msg) {
+                msg.innerHTML = `&check; <strong style="color:#10b981;">BFS Completed from "${escapeHtml(start)}"!</strong> Traversal sequence: <span style="color:#38bdf8;font-weight:700;">${visitedNames}</span>`;
+              }
+              return;
+            }
+
+            const step = steps[stepIndex];
+            const visiting = step.visiting;
+
+            // Update realtime Queue & Visited state
+            if (qItems) {
+              qItems.textContent = (step.queue_state && step.queue_state.length > 0)
+                ? `[ ${step.queue_state.map(s => getShortLabel(s)).join(', ')} ]`
+                : '[ empty ]';
+            }
+            if (vItems) {
+              vItems.textContent = (step.visited_state && step.visited_state.length > 0)
+                ? step.visited_state.map(s => getShortLabel(s)).join(' → ')
+                : '[ none ]';
+            }
+            if (msg) {
+              msg.innerHTML = step.message || `Visiting ${escapeHtml(visiting)}...`;
+            }
+
+            // Highlight currently visiting node
+            const nodeEl = document.getElementById(`node_${safeId(visiting)}`);
+            if (nodeEl) {
+              const circle = nodeEl.querySelector('.point-circle');
+              const halo = nodeEl.querySelector('.point-halo');
+              const label = nodeEl.querySelector('.point-label');
+              const isFirstNode = (visiting === start);
+              if (circle) {
+                circle.setAttribute('fill', isFirstNode ? '#1e3a5f' : '#0f2b48');
+                circle.setAttribute('stroke', isFirstNode ? '#f59e0b' : '#38bdf8');
+                circle.setAttribute('stroke-width', isFirstNode ? '4' : '3.5');
+              }
+              if (halo) {
+                halo.setAttribute('fill', isFirstNode ? 'rgba(245, 158, 11, 0.45)' : 'rgba(56, 189, 248, 0.35)');
+                halo.setAttribute('stroke', isFirstNode ? '#f59e0b' : '#38bdf8');
+              }
+              if (label) {
+                label.setAttribute('fill', isFirstNode ? '#f59e0b' : '#38bdf8');
+              }
+            }
+
+            // Light up edges to newly discovered children
+            if (step.discovered && step.discovered.length > 0) {
+              step.discovered.forEach(disc => {
+                const e1 = document.getElementById(`edge_${safeId(visiting)}_${safeId(disc)}`);
+                const e2 = document.getElementById(`edge_${safeId(disc)}_${safeId(visiting)}`);
+                if (e1) { e1.setAttribute('stroke', '#06b6d4'); e1.setAttribute('stroke-width', '3.5'); }
+                if (e2) { e2.setAttribute('stroke', '#06b6d4'); e2.setAttribute('stroke-width', '3.5'); }
+              });
+            }
+
+            stepIndex++;
+          }, 600);
+        })
+        .catch(err => {
+          console.error('BFS execution error:', err);
+          if (msg) msg.innerHTML = `<span style="color:#ef4444;">Error executing BFS: ${err.message}</span>`;
+          _bfsRunning = false;
+        });
     }
   </script>
 

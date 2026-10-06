@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Location Graph — Binary Tree & BFS | CivicSense</title>
+  <meta name="description" content="Interactive Location Graph visualizer with Binary Tree structure and BFS Level-Order Traversal for CivicSense civic complaint zones." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #050d1a; --surface: #0a1628; --card: #0e1f35;
+      --border: rgba(6,182,212,0.18); --text: #f1f5f9; --muted: #94a3b8;
+      --cyan: #06b6d4; --blue: #3b82f6; --green: #10b981; --amber: #f59e0b;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Top Nav ── */
+    .topnav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(5,13,26,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topnav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 15px; font-weight: 800; color: var(--text);
+      text-decoration: none;
+    }
+    .topnav-brand .icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: #fff;
+    }
+    .topnav-right { display: flex; align-items: center; gap: 10px; }
+    .pill-badge {
+      padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .pill-bfs { background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+    .pill-tree { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; font-size: 12px; font-weight: 700;
+      color: var(--muted); background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .btn-back:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+
+    /* ── Page Layout ── */
+    .page-wrap { max-width: 1340px; margin: 0 auto; padding: 28px 24px 48px; }
+
+    /* ── Page Header ── */
+    .page-header {
+      margin-bottom: 28px;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .page-header h1 {
+      font-size: 26px; font-weight: 900; color: var(--text);
+      line-height: 1.2;
+    }
+    .page-header h1 span { color: var(--cyan); }
+    .page-header p { font-size: 13px; color: var(--muted); margin-top: 4px; max-width: 560px; line-height: 1.55; }
+
+    /* ── Info Stats Row ── */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-chip {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .stat-chip .icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .stat-chip .val { font-size: 18px; font-weight: 900; }
+    .stat-chip .lbl { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 1px; }
+
+    /* ── Main Graph Card (loaded from /api/graph/bfs-html) ── */
+    #graphMount { margin-bottom: 28px; }
+
+    /* ── Info Tabs ── */
+    .info-tabs { margin-bottom: 28px; }
+    .tab-bar {
+      display: flex; gap: 6px; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 20px;
+    }
+    .tab-btn {
+      padding: 8px 18px; font-size: 12px; font-weight: 700;
+      color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent;
+      cursor: pointer; transition: all 0.2s; margin-bottom: -1px;
+    }
+    .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Node Hierarchy Table ── */
+    .hierarchy-table {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+    }
+    .hierarchy-table thead tr { border-bottom: 2px solid rgba(255,255,255,0.08); }
+    .hierarchy-table th { padding: 10px 14px; text-align: left; color: var(--muted); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .hierarchy-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+    .level-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; }
+    .role-chip { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.06); color: var(--muted); }
+
+    /* ── Theory Cards ── */
+    .theory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .theory-card {
+      background: var(--card); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px;
+    }
+    .theory-card h4 { font-size: 13px; font-weight: 800; color: var(--cyan); margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+    .theory-card p, .theory-card li { font-size: 12px; color: var(--muted); line-height: 1.65; }
+    .theory-card ul { padding-left: 16px; margin-top: 6px; }
+    .theory-card li { margin-bottom: 4px; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+      .theory-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .stats-strip { grid-template-columns: 1fr 1fr; }
+      .page-header h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="topnav">
+    <a href="/admin" class="topnav-brand">
+      <div class="icon"><i class="fa-solid fa-sitemap"></i></div>
+      CivicSense &mdash; Location Graph
+    </a>
+    <div class="topnav-right">
+      <span class="pill-badge pill-tree">Binary Tree</span>
+      <span class="pill-badge pill-bfs">BFS Level-Order</span>
+      <a href="/admin" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Admin</a>
+    </div>
+  </nav>
+
+  <!-- Page Body -->
+  <div class="page-wrap">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1>📍 <span>Location Graph</span> — Binary Tree &amp; BFS</h1>
+        <p>Visualizes the 9 civic complaint zones of Surat as a hierarchical binary tree. Watch the BFS (Breadth-First Search) Level-Order traversal explore each node level-by-level, starting from the Root.</p>
+      </div>
+    </div>
+
+    <!-- Stats Strip -->
+    <div class="stats-strip">
+      <div class="stat-chip">
+        <div class="icon" style="background:rgba(6,182,212,0.15);color:#06b6d4;"><i class="fa-solid fa-circle-nodes"></i></div>
+        <div><div class="val" style="color:#06b6d4;">9</div><div class="lbl">Nodes (Vertices)</div></div>
+      </div>
+      <div class="stat-chip">
+        <div class="icon" style="background:rgba(59,130,246,0.15);color:#38bdf8;"><i class="fa-solid fa-bezier-curve"></i></div>
+        <div><div class="val" style="color:#38bdf8;">8</div><div class="lbl">Edges (Branches)</div></div>
+      </div>
+      <div class="stat-chip">
+        <div class="icon" style="background:rgba(16,185,129,0.15);color:#10b981;"><i class="fa-solid fa-layer-group"></i></div>
+        <div><div class="val" style="color:#10b981;">4</div><div class="lbl">Tree Levels (0–3)</div></div>
+      </div>
+      <div class="stat-chip">
+        <div class="icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;"><i class="fa-solid fa-gauge-high"></i></div>
+        <div><div class="val" style="color:#f59e0b;">O(V+E)</div><div class="lbl">BFS Complexity</div></div>
+      </div>
+    </div>
+
+    <!-- Search & BFS Traversal Bar -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <label for="searchNodeSelect" style="font-size:12px;font-weight:800;color:var(--cyan);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-magnifying-glass"></i> Search Node / Location:
+        </label>
+        <select id="searchNodeSelect" style="background:#1e293b;color:#f1f5f9;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;outline:none;cursor:pointer;">
+          <option value="Central Zone (Chowk)">Central Zone (Chowk) [Root - L0]</option>
+          <option value="West Zone (Adajan)">West Zone (Adajan) [Child - L1]</option>
+          <option value="Varachha Zone A">Varachha Zone A [Child - L1]</option>
+          <option value="North Zone (Katargam)">North Zone (Katargam) [Child - L2]</option>
+          <option value="South West (Athwa)">South West (Athwa) [Child - L2]</option>
+          <option value="South Zone (Udhana)">South Zone (Udhana) [Child - L2]</option>
+          <option value="Varachha Zone B">Varachha Zone B [Child - L2]</option>
+          <option value="Shakti Nagar">Shakti Nagar [Leaf - L3]</option>
+          <option value="South East (Dindoli)">South East (Dindoli) [Leaf - L3]</option>
+        </select>
+        <button onclick="runBfsSearch()" style="background:linear-gradient(135deg,#06b6d4,#2563eb);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(6,182,212,0.3);">
+          <i class="fa-solid fa-play"></i> Run BFS Search
+        </button>
+      </div>
+      <div id="searchResultPill" style="font-size:12px;color:var(--muted);font-weight:600;">
+        Pick any node from the dropdown to run level-order BFS search
+      </div>
+    </div>
+
+    <!-- Graph Component (injected from /api/graph/bfs-html) -->
+    <div id="graphMount">
+      <div style="background:rgba(14,31,53,0.6);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;color:var(--muted);">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size:28px;margin-bottom:12px;display:block;color:var(--cyan);"></i>
+        Loading Location Graph…
+      </div>
+    </div>
+
+    <!-- Info Tabs -->
+    <div class="info-tabs">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchInfoTab('hierarchy', this)"><i class="fa-solid fa-sitemap"></i> Node Hierarchy</button>
+        <button class="tab-btn" onclick="switchInfoTab('theory', this)"><i class="fa-solid fa-book-open"></i> BFS Theory</button>
+        <button class="tab-btn" onclick="switchInfoTab('compare', this)"><i class="fa-solid fa-code-compare"></i> BFS vs DFS</button>
+      </div>
+
+      <!-- Hierarchy Table Tab -->
+      <div id="infoTab_hierarchy" class="tab-panel active">
+        <div style="background:var(--card);border:1px solid rgba(255,255,255,0.06);border-radius:14px;overflow:hidden;">
+          <table class="hierarchy-table">
+            <thead>
+              <tr>
+                <th>Zone</th>
+                <th>Node Name</th>
+                <th>Level</th>
+                <th>Role</th>
+                <th>Parent</th>
+                <th>Left Child</th>
+                <th>Right Child</th>
+              </tr>
+            </thead>
+            <tbody id="hierarchyTableBody">
+              <tr><td colspan="7" style="padding:18px;text-align:center;color:var(--muted);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BFS Theory Tab -->
+      <div id="infoTab_theory" class="tab-panel">
+        <div class="theory-grid">
+          <div class="theory-card">
+            <h4><i class="fa-solid fa-arrows-turn-to-dots"></i> What is BFS?</h4>
+            <p>Breadth-First Search (BFS) is a graph traversal algorithm that explores nodes level by level — visiting all neighbors at the current depth before moving deeper. It uses a <strong>FIFO Queue</strong> (First-In, First-Out).</p>
+            <ul>
+              <li>Visits Root Node first (Level 0)</li>
+              <li>Then all Level-1 children left to right</li>
+              <li>Then Level-2 grandchildren, and so on</li>
+              <li>Guarantees shortest path in unweighted graphs</li>
+            </ul>
+          </div>
+          <div class="theory-card">
+            <h4><i class="fa-solid fa-clock"></i> Complexity Analysis</h4>
+            <p>For a Binary Tree with <strong>V</strong> vertices and <strong>E</strong> edges:</p>
+            <ul>
+              <li><strong>Time Complexity:</strong> O(V + E)</li>
+              <li><strong>Space Complexity:</strong> O(V) — for the queue</li>
+              <li>In this tree: <strong>V = 9 nodes, E = 8 edges</strong></li>
+              <li>BFS explores all 9 nodes in exactly 9 dequeue steps</li>
+            </ul>
+            <p style="margin-top:10px;">BFS traversal order for this tree:<br/>
+            <strong style="color:#38bdf8;">Root → Adajan → Varachha A → Katargam → Athwa → Udhana → Varachha B → Shakti Nagar → Dindoli</strong></p>
+          </div>
+          <div class="theory-card">
+            <h4><i class="fa-solid fa-code"></i> BFS Pseudocode</h4>
+            <pre style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;font-size:11px;color:#a5f3fc;line-height:1.7;overflow-x:auto;">BFS(graph, start):
+  visited = []
+  queue = Queue()
+  queue.enqueue(start)
+  visited.add(start)
+
+  while queue not empty:
+    node = queue.dequeue()   ← FRONT
+    process(node)
+
+    for each neighbor of node:
+      if neighbor not in visited:
+        visited.add(neighbor)
+        queue.enqueue(neighbor)</pre>
+          </div>
+          <div class="theory-card">
+            <h4><i class="fa-solid fa-diagram-next"></i> Binary Tree Structure</h4>
+            <p>A Binary Tree is a hierarchical structure where each node has at most 2 children — a <strong>Left Child</strong> and a <strong>Right Child</strong>.</p>
+            <ul>
+              <li><strong>Root:</strong> Central Zone (Chowk) — Level 0</li>
+              <li><strong>Internal nodes:</strong> Levels 1 & 2 — have children</li>
+              <li><strong>Leaf nodes:</strong> Level 3 — no children</li>
+              <li><strong>Height:</strong> 3 (longest root-to-leaf path)</li>
+              <li><strong>Width:</strong> 4 nodes at Level 2 (widest level)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- BFS vs DFS Tab -->
+      <div id="infoTab_compare" class="tab-panel">
+        <div style="background:var(--card);border:1px solid rgba(255,255,255,0.06);border-radius:14px;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="background:rgba(0,0,0,0.3);border-bottom:2px solid rgba(255,255,255,0.08);">
+                <th style="padding:12px 16px;text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Property</th>
+                <th style="padding:12px 16px;text-align:left;color:#38bdf8;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;"><i class="fa-solid fa-arrows-turn-to-dots"></i> BFS (Breadth-First)</th>
+                <th style="padding:12px 16px;text-align:left;color:#f59e0b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;"><i class="fa-solid fa-arrow-down-long"></i> DFS (Depth-First)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:11px 16px;font-weight:700;color:#94a3b8;">Data Structure</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">Queue (FIFO)</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">Stack (LIFO) / Recursion</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:11px 16px;font-weight:700;color:#94a3b8;">Traversal Order</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">Level by level (horizontal)</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">Branch by branch (vertical)</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:11px 16px;font-weight:700;color:#94a3b8;">Time Complexity</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">O(V + E)</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">O(V + E)</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:11px 16px;font-weight:700;color:#94a3b8;">Space Complexity</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">O(V) — stores entire level</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">O(h) — h = tree height</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:11px 16px;font-weight:700;color:#94a3b8;">Shortest Path</td>
+                <td style="padding:11px 16px;color:#10b981;font-weight:700;">✓ Guarantees shortest path</td>
+                <td style="padding:11px 16px;color:#ef4444;font-weight:700;">✗ Not guaranteed</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:11px 16px;font-weight:700;color:#94a3b8;">Best for</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">Nearest neighbors, level-order</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">Path finding, topological sort</td>
+              </tr>
+              <tr>
+                <td style="padding:11px 16px;font-weight:700;color:#94a3b8;">Civic Use Case</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">Find nearest civic zone to a complaint</td>
+                <td style="padding:11px 16px;color:#e2e8f0;">Explore full zone dependency chain</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Load Graph Component ──
+    fetch('/api/graph/bfs-html?start=Central+Zone+%28Chowk%29')
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        document.getElementById('graphMount').innerHTML = html;
+      })
+      .catch(function() {
+        document.getElementById('graphMount').innerHTML =
+          '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:24px;text-align:center;color:#f87171;">' +
+          '<i class="fa-solid fa-triangle-exclamation" style="font-size:22px;margin-bottom:8px;display:block;"></i>' +
+          'Could not load Location Graph. Make sure the Flask server is running on port 5000.</div>';
+      });
+
+    // ── Load Hierarchy Table ──
+    fetch('/api/graph/tree-data')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var tbody = document.getElementById('hierarchyTableBody');
+        if (!data.nodes || !data.nodes.length) return;
+        var levelColors = ['#06b6d4','#38bdf8','#a855f7','#64748b'];
+        var levelBg = ['rgba(6,182,212,0.15)','rgba(56,189,248,0.12)','rgba(168,85,247,0.12)','rgba(100,116,139,0.1)'];
+        tbody.innerHTML = data.nodes.map(function(n) {
+          var lc = levelColors[n.level] || '#64748b';
+          var lb = levelBg[n.level] || 'rgba(255,255,255,0.05)';
+          return '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+            '<td style="padding:10px 14px;font-weight:800;color:' + lc + ';">' + (n.zone||'—') + '</td>' +
+            '<td style="padding:10px 14px;font-weight:700;color:#f1f5f9;">' + (n.short_label||n.area) + '</td>' +
+            '<td style="padding:10px 14px;"><span class="level-badge" style="background:' + lb + ';color:' + lc + ';">Level ' + n.level + '</span></td>' +
+            '<td style="padding:10px 14px;"><span class="role-chip">' + (n.role||'Node') + '</span></td>' +
+            '<td style="padding:10px 14px;color:#94a3b8;">' + (n.parent ? n.parent.split(' ')[0] + '…' : '<span style="color:#06b6d4;font-weight:700;">Root</span>') + '</td>' +
+            '<td style="padding:10px 14px;color:#10b981;">' + (n.left ? n.left.split(' ')[0] + '…' : '<span style="color:#475569;">—</span>') + '</td>' +
+            '<td style="padding:10px 14px;color:#f59e0b;">' + (n.right ? n.right.split(' ')[0] + '…' : '<span style="color:#475569;">—</span>') + '</td>' +
+            '</tr>';
+        }).join('');
+      });
+
+    // ── Info Tab Switcher ──
+    function switchInfoTab(id, btn) {
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.getElementById('infoTab_' + id).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // ── Basic BFS Search / Start Node Handler ──
+    function runBfsSearch() {
+      var selected = document.getElementById('searchNodeSelect').value;
+      var pill = document.getElementById('searchResultPill');
+      pill.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Starting BFS at <strong>' + selected + '</strong>...';
+
+      if (window.bfsChangeStart) {
+        window.bfsChangeStart(selected);
+      }
+      if (window.bfsTogglePlay) {
+        window.bfsTogglePlay(true);
+      }
+
+      fetch('/api/graph/bfs?start=' + encodeURIComponent(selected))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var visitedNames = (data.visited || []).join(' &rarr; ');
+          pill.innerHTML = '<span style="color:#10b981;font-weight:800;">&check; Started BFS at ' + selected + '!</span> Sequence: <strong style="color:#38bdf8;">' + visitedNames + '</strong>';
+        })
+        .catch(function() {
+          pill.innerHTML = '<span style="color:#38bdf8;">Started at: <strong>' + selected + '</strong></span>';
+        });
+    }
+  </script>
+</body>
+</html>

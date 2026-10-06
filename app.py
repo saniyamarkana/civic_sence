@@ -16,8 +16,7 @@ from dsa.queue import Queue, PriorityQueue
 from dsa.simple_infix_postfix import calc_priority_score, infix_to_postfix, evaluate_postfix
 from dsa.iterative import IterativeAlgorithms
 from dsa.recursive import RecursiveAlgorithms
-from dsa.graph import get_map_data, bfs, bfs_shortest_path, bfs_with_steps, dfs, dfs_with_steps, get_bfs_graph_html
-
+from dsa.graph import get_map_data, bfs, bfs_search, bfs_shortest_path, bfs_with_steps, dfs, dfs_with_steps, get_bfs_graph_html, add_node, graph
 app = Flask(__name__)
 app.secret_key = "civicsense_super_secret_phase1_key"
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -218,6 +217,17 @@ def api_graph_bfs():
         **result
     })
 
+@app.route("/api/graph/bfs-search", methods=["GET"])
+def api_graph_bfs_search():
+    """Searches for a location node using BFS."""
+    target = request.args.get("target", "").strip()
+    start = request.args.get("start", "Central Zone (Chowk)").strip()
+    result = bfs_search(target, start)
+    return jsonify({
+        "success": True,
+        **result
+    })
+
 @app.route("/api/graph/dfs", methods=["GET"])
 def api_graph_dfs():
     """Runs DFS traversal on complaint form location points."""
@@ -239,6 +249,45 @@ def api_graph_bfs_html():
     html = get_bfs_graph_html(start)
     from flask import Response
     return Response(html, mimetype="text/html")
+
+@app.route("/api/graph/add-node", methods=["POST"])
+def api_graph_add_node():
+    """Adds a new node and optional connected neighbor to the location graph."""
+    data = request.json or {}
+    node_name = data.get("node_name", "").strip()
+    neighbor = data.get("neighbor", "").strip()
+
+    if not node_name:
+        return jsonify({"success": False, "message": "Node name is required."}), 400
+
+    neighbors_list = [neighbor] if neighbor else []
+    add_node(node_name, neighbors_list)
+
+    return jsonify({
+        "success": True,
+        "message": f"Node '{node_name}' added successfully to the graph!",
+        "nodes": list(graph.keys())
+    })
+
+@app.route("/location-graph")
+@app.route("/graph")
+def location_graph_page():
+    """Full-Page Location Graph — Binary Tree & BFS Level-Order Traversal platform."""
+    user = None
+    if "user_id" in session:
+        user = db.get_user_by_id(session["user_id"])
+    map_data = get_map_data()
+    return render_template(
+        "graph.html",
+        user=dict(user) if user else None,
+        map_data=map_data,
+        role=session.get("role", "guest")
+    )
+
+@app.route("/api/graph/tree-data", methods=["GET"])
+def api_graph_tree_data():
+    """Returns complete Location Graph (Binary Tree) metadata as JSON."""
+    return jsonify(get_map_data())
 
 @app.route("/api/register", methods=["POST"])
 def api_register():
