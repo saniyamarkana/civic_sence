@@ -93,16 +93,23 @@ class RecursiveAlgorithms:
             return RecursiveAlgorithms.binary_search_recursive(arr, key, low, mid - 1, field, steps)
 
     @staticmethod
-    def merge_sort(arr, field="id", steps=None, depth=0):
+    def merge_sort(arr, field="id", ascending=True, steps=None, depth=0):
         """
-        Recursive merge sort with step logging.
+        Recursive merge sort on real complaint objects with step logging.
         Returns (sorted_array, steps).
         """
         if steps is None:
             steps = []
 
         def get_val(item):
-            return item.get(field, item) if isinstance(item, dict) else item
+            if isinstance(item, dict):
+                val = item.get(field, item)
+            else:
+                val = item
+            if field == "priority" and isinstance(val, str):
+                p_map = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}
+                return p_map.get(val, 0)
+            return val if val is not None else ""
 
         ids = [get_val(x) for x in arr]
         steps.append({"action": "split", "data": ids, "depth": depth})
@@ -111,14 +118,17 @@ class RecursiveAlgorithms:
             return arr[:], steps
 
         mid = len(arr) // 2
-        left, steps = RecursiveAlgorithms.merge_sort(arr[:mid], field, steps, depth + 1)
-        right, steps = RecursiveAlgorithms.merge_sort(arr[mid:], field, steps, depth + 1)
+        left, steps = RecursiveAlgorithms.merge_sort(arr[:mid], field, ascending, steps, depth + 1)
+        right, steps = RecursiveAlgorithms.merge_sort(arr[mid:], field, ascending, steps, depth + 1)
 
         # Merge
         merged = []
         i = j = 0
         while i < len(left) and j < len(right):
-            if get_val(left[i]) <= get_val(right[j]):
+            v_left = get_val(left[i])
+            v_right = get_val(right[j])
+            should_take_left = (v_left <= v_right) if ascending else (v_left >= v_right)
+            if should_take_left:
                 merged.append(left[i])
                 i += 1
             else:
@@ -133,16 +143,23 @@ class RecursiveAlgorithms:
         return merged, steps
 
     @staticmethod
-    def quick_sort(arr, field="id", steps=None, depth=0):
+    def quick_sort(arr, field="id", ascending=True, steps=None, depth=0):
         """
-        Recursive quick sort with step logging.
+        Recursive quick sort on real complaint objects with step logging.
         Returns (sorted_array, steps).
         """
         if steps is None:
             steps = []
 
         def get_val(item):
-            return item.get(field, item) if isinstance(item, dict) else item
+            if isinstance(item, dict):
+                val = item.get(field, item)
+            else:
+                val = item
+            if field == "priority" and isinstance(val, str):
+                p_map = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}
+                return p_map.get(val, 0)
+            return val if val is not None else ""
 
         if len(arr) <= 1:
             return arr[:], steps
@@ -157,11 +174,17 @@ class RecursiveAlgorithms:
             "depth": depth,
         })
 
-        left = [x for x in arr[:-1] if get_val(x) <= pivot_val]
-        right = [x for x in arr[:-1] if get_val(x) > pivot_val]
+        left = []
+        right = []
+        for x in arr[:-1]:
+            val = get_val(x)
+            if (val <= pivot_val) if ascending else (val >= pivot_val):
+                left.append(x)
+            else:
+                right.append(x)
 
-        sorted_left, steps = RecursiveAlgorithms.quick_sort(left, field, steps, depth + 1)
-        sorted_right, steps = RecursiveAlgorithms.quick_sort(right, field, steps, depth + 1)
+        sorted_left, steps = RecursiveAlgorithms.quick_sort(left, field, ascending, steps, depth + 1)
+        sorted_right, steps = RecursiveAlgorithms.quick_sort(right, field, ascending, steps, depth + 1)
 
         result = sorted_left + [pivot] + sorted_right
 

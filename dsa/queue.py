@@ -89,7 +89,7 @@ class PriorityQueue:
     Priority values: High=3, Medium=2, Low=1
     """
 
-    PRIORITY_VALUES = {"High": 3, "Medium": 2, "Low": 1}
+    PRIORITY_VALUES = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}
 
     def __init__(self, max_size=100):
         self.items = []  # List of (priority_value, data) tuples

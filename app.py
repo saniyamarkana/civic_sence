@@ -255,19 +255,184 @@ def api_graph_add_node():
     """Adds a new node and optional connected neighbor to the location graph."""
     data = request.json or {}
     node_name = data.get("node_name", "").strip()
-    neighbor = data.get("neighbor", "").strip()
+    neighbor = data.get("neighbor", "").strip() or data.get("parent_node", "").strip()
+    zone_code = data.get("zone_code", "").strip()
+    branch = data.get("branch", "").strip()
+    role = data.get("role", "").strip()
+    description = data.get("description", "").strip()
 
     if not node_name:
-        return jsonify({"success": False, "message": "Node name is required."}), 400
+        return jsonify({"success": False, "message": "Location name is required."}), 400
 
     neighbors_list = [neighbor] if neighbor else []
-    add_node(node_name, neighbors_list)
+    success, msg = add_node(
+        node_name,
+        neighbors_list,
+        zone_code=zone_code,
+        branch=branch,
+        role=role,
+        description=description
+    )
+
+    if not success:
+        return jsonify({"success": False, "message": msg}), 400
+
+    from dsa.graph import BINARY_TREE_STRUCTURE, POINT_LAYOUT_COORDINATES
+    meta = BINARY_TREE_STRUCTURE.get(node_name, {})
+    layout = POINT_LAYOUT_COORDINATES.get(node_name, {})
 
     return jsonify({
         "success": True,
-        "message": f"Node '{node_name}' added successfully to the graph!",
+        "message": msg,
+        "node": {
+            "area": node_name,
+            "zone": meta.get("zone", "Zone"),
+            "parent": meta.get("parent"),
+            "level": meta.get("level", 1),
+            "role": meta.get("role", "Node"),
+            "x": layout.get("x", 450),
+            "y": layout.get("y", 200)
+        },
         "nodes": list(graph.keys())
     })
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 3 DSA API ROUTES: SEARCHING, SORTING & PRIORITY QUEUE
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/dsa/phase3/search", methods=["POST", "GET"])
+def api_phase3_search():
+    """Phase 3 API: Linear Search and Binary Search on Real Complaint Database."""
+    try:
+        data = request.json if request.is_json else request.args
+        target_id_raw = data.get("target_id") or data.get("complaint_id") or data.get("id")
+        method = (data.get("method") or "linear").lower()
+
+        if not target_id_raw:
+            return jsonify({"success": False, "message": "Please enter a Complaint ID to search."}), 400
+
+        try:
+            target_id = int(target_id_raw)
+        except ValueError:
+            return jsonify({"success": False, "message": "Complaint ID must be an integer."}), 400
+
+        complaints = [dict(c) for c in db.get_all_complaints()]
+
+        found_record = None
+        index_found = -1
+        steps = []
+
+        if method == "binary":
+            # Binary Search requires sorted array by ID
+            sorted_complaints = sorted(complaints, key=lambda x: x["id"])
+            low = 0
+            high = len(sorted_complaints) - 1
+
+            while low <= high:
+                mid = (low + high) // 2
+                current_id = sorted_complaints[mid]["id"]
+                steps.append({
+                    "low": low, "high": high, "mid": mid,
+                    "current_id": current_id, "target_id": target_id
+                })
+
+                if current_id == target_id:
+                    index_found = mid
+                    found_record = sorted_complaints[mid]
+                    break
+                elif current_id < target_id:
+                    low = mid + 1
+                else:
+                    high = mid - 1
+        else:
+            # Linear Search
+            for i, comp in enumerate(complaints):
+                steps.append({"index": i, "id": comp["id"], "target_id": target_id})
+                if comp["id"] == target_id:
+                    index_found = i
+                    found_record = comp
+                    break
+
+        if found_record:
+            return jsonify({
+                "success": True,
+                "found": True,
+                "method": ("Binary Search" if method == "binary" else "Linear Search"),
+                "index": index_found,
+                "record": found_record,
+                "steps_count": len(steps),
+                "steps": steps
+            })
+        else:
+            return jsonify({
+                "success": True,
+                "found": False,
+                "method": ("Binary Search" if method == "binary" else "Linear Search"),
+                "message": f"Complaint ID {target_id} not found.",
+                "steps_count": len(steps)
+            })
+    except Exception as e:
+        app.logger.error(f"Error in Phase 3 search: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route("/api/dsa/phase3/sort", methods=["POST", "GET"])
+def api_phase3_sort():
+    """Phase 3 API: Merge Sort and Quick Sort on Real Complaint Database."""
+    try:
+        data = request.json if request.is_json else request.args
+        sort_field = (data.get("field") or "id").lower()
+        algorithm = (data.get("algorithm") or "merge").lower()
+        order = (data.get("order") or "asc").lower()
+        ascending = (order == "asc")
+
+        complaints = [dict(c) for c in db.get_all_complaints()]
+
+        if not complaints:
+            return jsonify({"success": True, "sorted_records": [], "count": 0})
+
+        if algorithm == "quick":
+            sorted_complaints, steps = RecursiveAlgorithms.quick_sort(complaints, field=sort_field, ascending=ascending)
+        else:
+            sorted_complaints, steps = RecursiveAlgorithms.merge_sort(complaints, field=sort_field, ascending=ascending)
+
+        return jsonify({
+            "success": True,
+            "algorithm": "Quick Sort" if algorithm == "quick" else "Merge Sort",
+            "field": sort_field,
+            "order": "Ascending" if ascending else "Descending",
+            "count": len(sorted_complaints),
+            "sorted_records": sorted_complaints,
+            "steps_count": len(steps)
+        })
+    except Exception as e:
+        app.logger.error(f"Error in Phase 3 sort: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route("/api/dsa/phase3/priority", methods=["GET"])
+def api_phase3_priority():
+    """Phase 3 API: Process Real Complaints by Priority Queue (Critical > High > Medium > Low)."""
+    try:
+        complaints = [dict(c) for c in db.get_all_complaints()]
+        pq = PriorityQueue(max_size=max(100, len(complaints) + 10))
+
+        for comp in complaints:
+            pq.enqueue(comp, comp.get("priority", "Medium"))
+
+        processed = []
+        while not pq.is_empty():
+            processed.append(pq.dequeue())
+
+        return jsonify({
+            "success": True,
+            "algorithm": "Priority Queue",
+            "count": len(processed),
+            "records": processed
+        })
+    except Exception as e:
+        app.logger.error(f"Error in Phase 3 priority queue: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route("/location-graph")
 @app.route("/graph")
@@ -475,124 +640,145 @@ def update_complaint(cid):
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-    old_complaint = db.get_complaint(cid)
-    if not old_complaint:
-        return jsonify({"success": False, "message": "Complaint not found."}), 404
+    try:
+        old_complaint = db.get_complaint(cid)
+        if not old_complaint:
+            return jsonify({"success": False, "message": "Complaint not found."}), 404
 
-    user_role = session.get("role", "")
-    current_uid = session.get("user_id")
+        user_role = session.get("role", "")
+        current_uid = session.get("user_id")
 
-    # If citizen is updating, ensure they own the complaint
-    if user_role == "citizen":
-        if int(old_complaint.get("citizen_id", 0)) != int(current_uid):
-            return jsonify({"success": False, "message": "You can only update your own complaints."}), 403
-
-    if request.is_json:
-        data = request.get_json(silent=True) or {}
-    else:
-        data = request.form.to_dict() if request.form else {}
-
-    updates = {}
-
-    # Citizen and Admin editable fields
-    if "title" in data and str(data["title"]).strip():
-        updates["title"] = str(data["title"]).strip()
-    if "description" in data:
-        updates["description"] = str(data["description"]).strip()
-    if "category" in data and str(data["category"]).strip():
-        norm_cat = db.normalize_category(str(data["category"]).strip())
-        updates["category"] = norm_cat
+        # If citizen is updating, ensure they own the complaint
         if user_role == "citizen":
-            dept_map = {
-                "Garbage": "Sanitation Department",
-                "Pothole": "Road Department",
-                "Water Leakage": "Water Department",
-                "Streetlight": "Electricity Department",
-                "Drainage": "Water Department",
-                "Illegal Parking": "Traffic Department",
-                "Public Cleanliness": "Sanitation Department",
-                "Damaged Road": "Road Department",
-            }
-            updates["department"] = dept_map.get(norm_cat, old_complaint.get("department") or "Municipal Dept")
-    if "location" in data and str(data["location"]).strip():
-        updates["location"] = str(data["location"]).strip()
-    if "priority" in data and str(data["priority"]).strip():
-        updates["priority"] = str(data["priority"]).strip()
+            if int(old_complaint.get("citizen_id", 0)) != int(current_uid):
+                return jsonify({"success": False, "message": "You can only update your own complaints."}), 403
 
-    # Image upload support
-    img_file = (
-        request.files.get("complaint_image")
-        or request.files.get("image")
-        or request.files.get("photo")
-    )
-    if img_file and getattr(img_file, "filename", None):
-        saved_img = save_upload(img_file, UPLOAD_FOLDER_COMPLAINT)
-        if saved_img:
-            updates["complaint_image"] = saved_img
-    elif "complaint_image" in data and data["complaint_image"]:
-        updates["complaint_image"] = data["complaint_image"]
+        if request.is_json:
+            data = request.get_json(silent=True) or {}
+        else:
+            data = request.form.to_dict() if request.form else {}
 
-    # Admin / Officer specific fields (only non-citizens can change status/officer directly)
-    if user_role != "citizen":
-        if "status" in data and data["status"]:
-            updates["status"] = data["status"]
-        if "department" in data and data["department"] is not None:
-            updates["department"] = data["department"]
-        if "assigned_officer_id" in data and data["assigned_officer_id"] is not None:
-            updates["assigned_officer_id"] = data["assigned_officer_id"]
-        if "assigned_officer_name" in data and data["assigned_officer_name"] is not None:
-            updates["assigned_officer_name"] = data["assigned_officer_name"]
-        if "admin_remarks" in data and data["admin_remarks"] is not None:
-            updates["admin_remarks"] = data["admin_remarks"]
+        updates = {}
 
-    if not updates:
-        return jsonify({"success": False, "message": "Nothing to update."}), 400
+        # Citizen and Admin editable fields
+        if "title" in data and str(data["title"]).strip():
+            updates["title"] = str(data["title"]).strip()
+        if "description" in data:
+            updates["description"] = str(data["description"]).strip()
+        if "category" in data and str(data["category"]).strip():
+            norm_cat = db.normalize_category(str(data["category"]).strip())
+            updates["category"] = norm_cat
+            if user_role == "citizen":
+                dept_map = {
+                    "Garbage": "Sanitation Department",
+                    "Pothole": "Road Department",
+                    "Water Leakage": "Water Department",
+                    "Streetlight": "Electricity Department",
+                    "Drainage": "Water Department",
+                    "Illegal Parking": "Traffic Department",
+                    "Public Cleanliness": "Sanitation Department",
+                    "Damaged Road": "Road Department",
+                }
+                updates["department"] = dept_map.get(norm_cat, old_complaint.get("department") or "Municipal Dept")
+        if "location" in data and str(data["location"]).strip():
+            updates["location"] = str(data["location"]).strip()
+        if "priority" in data and str(data["priority"]).strip():
+            updates["priority"] = str(data["priority"]).strip()
 
-    status = updates.get("status") or old_complaint.get("status")
-    priority = updates.get("priority") or old_complaint.get("priority")
-    officer_name = updates.get("assigned_officer_name") or old_complaint.get("assigned_officer_name")
-    remarks = data.get("remarks", "")
+        # Image upload support
+        img_file = (
+            request.files.get("complaint_image")
+            or request.files.get("image")
+            or request.files.get("photo")
+        )
+        if img_file and getattr(img_file, "filename", None):
+            saved_img = save_upload(img_file, UPLOAD_FOLDER_COMPLAINT)
+            if saved_img:
+                updates["complaint_image"] = saved_img
+        elif "complaint_image" in data and data["complaint_image"]:
+            updates["complaint_image"] = data["complaint_image"]
 
-    if user_role == "citizen":
-        auto_remark = remarks or f"Citizen updated complaint details (#{cid})"
-    else:
-        auto_remark = remarks or (
-            f"Assigned to {officer_name} | Status: {status}" if officer_name
-            else f"Status updated to {status or 'unchanged'}"
+        # Admin / Officer specific fields (only non-citizens can change status/officer directly)
+        if user_role != "citizen":
+            if "status" in data and data["status"]:
+                updates["status"] = data["status"]
+            if "department" in data and data["department"] is not None:
+                updates["department"] = data["department"]
+            if "assigned_officer_id" in data and data["assigned_officer_id"] is not None:
+                updates["assigned_officer_id"] = data["assigned_officer_id"]
+            if "assigned_officer_name" in data and data["assigned_officer_name"] is not None:
+                updates["assigned_officer_name"] = data["assigned_officer_name"]
+            if "admin_remarks" in data and data["admin_remarks"] is not None:
+                updates["admin_remarks"] = data["admin_remarks"]
+
+        if user_role == "citizen" and str(old_complaint.get("status", "")).lower() == "resolved":
+            return jsonify({"success": False, "message": "Resolved complaints cannot be edited."}), 400
+
+        if not updates:
+            return jsonify({"success": False, "message": "Nothing to update."}), 400
+
+        status = updates.get("status") or old_complaint.get("status")
+        priority = updates.get("priority") or old_complaint.get("priority")
+        officer_name = updates.get("assigned_officer_name") or old_complaint.get("assigned_officer_name")
+        admin_remarks = updates.get("admin_remarks") or old_complaint.get("admin_remarks") or data.get("admin_remarks", "")
+        remarks = data.get("remarks", "")
+
+        if user_role == "citizen":
+            auto_remark = remarks or f"Citizen updated complaint details (#{cid})"
+        else:
+            auto_remark = remarks or (
+                f"Assigned to {officer_name} | Status: {status}" if officer_name
+                else f"Status updated to {status or 'unchanged'}"
+            )
+
+        success = db.update_complaint(
+            cid,
+            changed_by=session["user_id"],
+            remarks=auto_remark,
+            **updates
         )
 
-    success = db.update_complaint(
-        cid,
-        changed_by=session["user_id"],
-        remarks=auto_remark,
-        **updates
-    )
-    if success:
-        live_stack.push({"id": cid, "action": f"Updated #{cid} -> {status or 'Modified'}", "status": status or "Modified"})
+        if success:
+            # Safe DSA Action History Stack
+            try:
+                live_stack.push({"id": cid, "action": f"Updated #{cid} -> {status or 'Modified'}", "status": status or "Modified"})
+            except Exception as stk_err:
+                app.logger.warning(f"live_stack push error: {stk_err}")
 
-        # ── Backend DSA Operation: Recalculate Urgency Score via Infix -> Postfix ──
-        eff_priority = priority or (old_complaint.get("priority") if old_complaint else "Medium")
-        eff_status   = status   or (old_complaint.get("status")   if old_complaint else "Pending")
-        updated_eval = backend_calc_priority_score(eff_priority, eff_status)
-        app.logger.info(
-            f"[BACKEND DSA | Infix->Postfix] Complaint #{cid} updated | "
-            f"Priority: {eff_priority}, Status: {eff_status} | "
-            f"Infix: '{updated_eval['infix']}' -> Postfix: '{updated_eval['postfix']}' -> "
-            f"Recalculated Urgency Score: {updated_eval['score']} [{updated_eval['label']}]"
-        )
+            # Safe Backend DSA Operation: Infix -> Postfix recalculation
+            try:
+                eff_priority = priority or (old_complaint.get("priority") if old_complaint else "Medium")
+                eff_status   = status   or (old_complaint.get("status")   if old_complaint else "Pending")
+                updated_eval = backend_calc_priority_score(eff_priority, eff_status)
+                app.logger.info(
+                    f"[BACKEND DSA | Infix->Postfix] Complaint #{cid} updated | "
+                    f"Priority: {eff_priority}, Status: {eff_status} | "
+                    f"Infix: '{updated_eval.get('infix','')}' -> Postfix: '{updated_eval.get('postfix','')}' -> "
+                    f"Recalculated Urgency Score: {updated_eval.get('score', 0)} [{updated_eval.get('label', '')}]"
+                )
+            except Exception as dsa_err:
+                app.logger.warning(f"DSA priority recalculation warning: {dsa_err}")
 
-        # Auto-create notification when status changes to Resolved
-        if status == "Resolved" and old_complaint and old_complaint.get("status") != "Resolved":
-            citizen_id = old_complaint.get("citizen_id")
-            complaint_title = old_complaint.get("title", f"Complaint #{cid}")
-            if citizen_id:
-                msg = f"✅ Your complaint '#{cid} — {complaint_title}' has been resolved!"
-                if admin_remarks:
-                    msg += f" Notes: {admin_remarks}"
-                db.add_notification(citizen_id, cid, msg)
+            # Safe Auto-create notification when status changes to Resolved
+            try:
+                if status == "Resolved" and old_complaint and old_complaint.get("status") != "Resolved":
+                    citizen_id = old_complaint.get("citizen_id")
+                    complaint_title = old_complaint.get("title", f"Complaint #{cid}")
+                    if citizen_id is not None:
+                        msg = f"✅ Your complaint '#{cid} — {complaint_title}' has been resolved!"
+                        if admin_remarks:
+                            msg += f" Notes: {admin_remarks}"
+                        db.add_notification(int(citizen_id), cid, msg)
+            except Exception as notif_err:
+                app.logger.warning(f"Notification creation warning: {notif_err}")
 
-        return jsonify({"success": True, "message": "Complaint updated successfully."})
-    return jsonify({"success": False, "message": "Failed to update complaint."}), 400
+            return jsonify({"success": True, "message": "Complaint updated successfully."})
+
+        return jsonify({"success": False, "message": "Failed to update complaint in database."}), 400
+
+    except Exception as exc:
+        app.logger.error(f"Unexpected error in update_complaint: {exc}", exc_info=True)
+        return jsonify({"success": False, "message": f"Server error: {str(exc)}"}), 500
 
 
 @app.route("/api/complaints/<int:cid>/solve-image", methods=["POST"])
@@ -601,16 +787,20 @@ def upload_solution_image(cid):
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-    img_file = request.files.get("solution_image")
-    if not img_file:
-        return jsonify({"success": False, "message": "No image file provided."}), 400
+    try:
+        img_file = request.files.get("solution_image") or request.files.get("image") or request.files.get("file")
+        if not img_file:
+            return jsonify({"success": False, "message": "No image file provided."}), 400
 
-    fname = save_upload(img_file, UPLOAD_FOLDER_SOLUTION)
-    if not fname:
-        return jsonify({"success": False, "message": "Invalid file type. Allowed: png, jpg, jpeg, gif, webp."}), 400
+        fname = save_upload(img_file, UPLOAD_FOLDER_SOLUTION)
+        if not fname:
+            return jsonify({"success": False, "message": "Invalid file type. Allowed: png, jpg, jpeg, gif, webp, jfif, avif."}), 400
 
-    db.update_complaint(cid, solution_image=fname, changed_by=session["user_id"])
-    return jsonify({"success": True, "filename": fname, "message": "Solution image uploaded successfully."})
+        db.update_complaint(cid, solution_image=fname, changed_by=session["user_id"])
+        return jsonify({"success": True, "filename": fname, "message": "Solution image uploaded successfully."})
+    except Exception as e:
+        app.logger.error(f"Error uploading solution image: {e}")
+        return jsonify({"success": False, "message": f"Upload failed: {str(e)}"}), 500
 
 @app.route("/api/complaints/<int:cid>/complaint-image", methods=["POST"])
 def upload_complaint_image(cid):
@@ -896,6 +1086,7 @@ def dsa_linked_list():
 def dsa_expression():
     data = request.json or {}
     expr = data.get("expression", "( 3 + 5 ) * 2")
+    InfixPostfix = None
     postfix, steps = InfixPostfix.infix_to_postfix(expr)
     result, eval_steps = InfixPostfix.evaluate_postfix(postfix)
     return jsonify({

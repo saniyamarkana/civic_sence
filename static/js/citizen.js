@@ -129,9 +129,11 @@ function renderComplaints(data) {
           <button class="btn btn-sm btn-primary" onclick="openComplaintDetails(${c.id})">
             <i class="fa-solid fa-eye"></i> Details
           </button>
-          <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); font-weight: 600;" onclick="openEditComplaintModal(${c.id})">
-            <i class="fa-solid fa-pen-to-square"></i> Update
-          </button>
+          ${(c.status || '').trim().toLowerCase() !== 'resolved' ? `
+            <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); font-weight: 600;" onclick="openEditComplaintModal(${c.id})">
+              <i class="fa-solid fa-pen-to-square"></i> Update
+            </button>
+          ` : ''}
           <button class="btn btn-sm btn-secondary" onclick="openTimeline(${c.id})">
             <i class="fa-solid fa-timeline"></i> Timeline
           </button>
@@ -410,9 +412,11 @@ async function openComplaintDetails(cid) {
       <!-- Bottom Action Row -->
       <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 16px; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); font-weight: 600;" onclick="closeDetailsModal(); openEditComplaintModal(${c.id})">
-            <i class="fa-solid fa-pen-to-square"></i> Update Complaint
-          </button>
+          ${(c.status || '').trim().toLowerCase() !== 'resolved' ? `
+            <button class="btn btn-sm" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); font-weight: 600;" onclick="closeDetailsModal(); openEditComplaintModal(${c.id})">
+              <i class="fa-solid fa-pen-to-square"></i> Update Complaint
+            </button>
+          ` : ''}
           <button class="btn btn-sm btn-secondary" onclick="openTimeline(${c.id})"><i class="fa-solid fa-timeline"></i> Timeline</button>
         </div>
         ${c.status === 'Resolved' ? `<button class="btn btn-sm btn-primary" onclick="closeDetailsModal(); switchTab('feedback');"><i class="fa-solid fa-star"></i> Rate Resolution Quality</button>` : ''}
@@ -672,6 +676,11 @@ async function openEditComplaintModal(cid) {
 
   if (!c) {
     showToast('Unable to load complaint for editing.', 'error');
+    return;
+  }
+
+  if ((c.status || '').trim().toLowerCase() === 'resolved') {
+    showToast('Resolved complaints cannot be edited.', 'info');
     return;
   }
 

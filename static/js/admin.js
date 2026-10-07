@@ -267,29 +267,97 @@ async function loadAdminComplaints() {
   }
 }
 
+function renderAdminPriorityPill(prio) {
+  const p = (prio || 'Medium').trim();
+  const lower = p.toLowerCase();
+  if (lower === 'critical') {
+    return `<span class="prio-badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.55); box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); font-weight: 800;"><span class="prio-dot" style="background: #ef4444; box-shadow: 0 0 8px #ef4444;"></span>Critical</span>`;
+  } else if (lower === 'high') {
+    return `<span class="prio-badge prio-badge-high"><span class="prio-dot prio-dot-high"></span>High</span>`;
+  } else if (lower === 'medium') {
+    return `<span class="prio-badge prio-badge-medium"><span class="prio-dot prio-dot-medium"></span>Medium</span>`;
+  } else {
+    return `<span class="prio-badge prio-badge-low"><span class="prio-dot prio-dot-low"></span>Low</span>`;
+  }
+}
+
+function renderAdminStatusPill(status) {
+  const s = (status || 'Pending').trim();
+  const lower = s.toLowerCase().replace(/[\s-]/g, '_');
+  if (lower === 'resolved') {
+    return `<span class="status-badge status-badge-resolved"><i class="fa-solid fa-circle-check" style="font-size: 9px;"></i>Resolved</span>`;
+  } else if (lower === 'in_progress') {
+    return `<span class="status-badge status-badge-in_progress"><i class="fa-solid fa-spinner fa-spin" style="font-size: 9px;"></i>In Progress</span>`;
+  } else if (lower === 'rejected') {
+    return `<span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35);"><i class="fa-solid fa-circle-xmark" style="font-size: 9px;"></i>Rejected</span>`;
+  } else if (lower === 'approved') {
+    return `<span class="status-badge" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.35);"><i class="fa-solid fa-thumbs-up" style="font-size: 9px;"></i>Approved</span>`;
+  } else {
+    return `<span class="status-badge status-badge-pending"><i class="fa-solid fa-clock" style="font-size: 9px;"></i>Pending</span>`;
+  }
+}
+
 function renderAdminComplaints(data) {
   const tbody = document.getElementById('adminComplaintsTableBody');
   if (!tbody) return;
 
+  // Update record counters if elements exist
+  const p3Counter = document.getElementById('p3RecordCounter');
+  if (p3Counter && adminComplaints) {
+    p3Counter.innerHTML = `<i class="fa-solid fa-layer-group" style="color: #06b6d4;"></i> ${adminComplaints.length} Records Loaded`;
+  }
+  const counterEl = document.getElementById('admCompCounter');
+  if (counterEl) {
+    counterEl.innerHTML = `<i class="fa-solid fa-list-check" style="color: #06b6d4;"></i> Showing ${data.length} of ${adminComplaints ? adminComplaints.length : data.length} Complaints`;
+  }
+
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No complaints recorded.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 13px;"><i class="fa-solid fa-inbox" style="font-size: 28px; opacity: 0.35; display: block; margin-bottom: 8px;"></i>No complaints match the current search filter.</td></tr>';
     return;
   }
 
   tbody.innerHTML = data.map(c => `
-    <tr style="border-bottom: 1px solid var(--border-color);">
-      <td style="padding: 12px 10px; font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 700;">#${c.id}</td>
-      <td style="padding: 12px 10px; font-weight: 600;">${escapeHtml(c.title)}</td>
-      <td style="padding: 12px 10px; color: var(--text-secondary);">${c.category}</td>
-      <td style="padding: 12px 10px; color: var(--text-secondary);">${c.location || '-'}</td>
-      <td style="padding: 12px 10px;"><span class="badge ${c.priority === 'High' ? 'badge-rejected' : 'badge-pending'}">${c.priority}</span></td>
-      <td style="padding: 12px 10px; font-weight: 600; color: var(--accent-cyan);">
-        ${c.department || '<span style="color: var(--text-muted);">Unassigned</span>'}<br>
-        <small style="color: var(--text-muted); font-weight: normal;">${c.assigned_officer_name ? '\u{1F477} ' + c.assigned_officer_name : 'No officer assigned'}</small>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s ease;" onmouseover="this.style.background='rgba(56,189,248,0.03)'" onmouseout="this.style.background='transparent'">
+      <td style="padding: 14px 14px; font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 800; font-size: 12px;">#${c.id}</td>
+      <td style="padding: 14px 14px;">
+        <div style="font-weight: 700; color: #f8fafc; font-size: 13px; line-height: 1.35; margin-bottom: 3px;" title="${escapeHtml(c.title || '')}">
+          ${escapeHtml(c.title || 'Untitled Complaint')}
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+          <span><i class="fa-regular fa-calendar" style="font-size: 10px;"></i> ${escapeHtml((c.created_at || '').substring(0, 10))}</span>
+          ${c.citizen_name ? `<span>&bull; Citizen: <strong style="color: #cbd5e1;">${escapeHtml(c.citizen_name)}</strong></span>` : ''}
+        </div>
       </td>
-      <td style="padding: 12px 10px;"><span class="badge badge-${c.status.toLowerCase().replace(' ', '_')}">● ${c.status}</span></td>
-      <td style="padding: 12px 10px;">
-        <button class="btn btn-sm btn-primary" onclick="openAdminModal(${c.id})">
+      <td style="padding: 14px 14px;">
+        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); color: #cbd5e1; font-weight: 700; border: 1px solid rgba(255,255,255,0.08); white-space: nowrap;">
+          <i class="fa-solid fa-tag" style="font-size: 9px; opacity: 0.6; margin-right: 4px;"></i>${escapeHtml(c.category || 'General')}
+        </span>
+      </td>
+      <td style="padding: 14px 14px;">
+        <div style="color: #94a3b8; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+          <i class="fa-solid fa-location-dot" style="color: #06b6d4; font-size: 11px;"></i>
+          <span title="${escapeHtml(c.location || '-')}">${escapeHtml(c.location || 'Central Ward')}</span>
+        </div>
+      </td>
+      <td style="padding: 14px 14px;">
+        ${renderAdminPriorityPill(c.priority)}
+      </td>
+      <td style="padding: 14px 14px;">
+        <div style="font-weight: 700; color: #38bdf8; font-size: 12px; display: flex; align-items: center; gap: 5px;">
+          <i class="fa-solid fa-building-shield" style="font-size: 11px; opacity: 0.85;"></i>
+          <span>${escapeHtml(c.department || 'Unassigned Dept')}</span>
+        </div>
+        <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
+          ${c.assigned_officer_name 
+            ? `<i class="fa-solid fa-user-shield" style="color: #f59e0b; font-size: 10px;"></i> <span style="color: #e2e8f0; font-weight: 600;">${escapeHtml(c.assigned_officer_name)}</span>` 
+            : '<span style="color: #64748b; font-style: italic;">No officer assigned</span>'}
+        </div>
+      </td>
+      <td style="padding: 14px 14px;">
+        ${renderAdminStatusPill(c.status)}
+      </td>
+      <td style="padding: 14px 14px; text-align: center;">
+        <button class="btn btn-sm btn-primary" onclick="openAdminModal(${c.id})" style="padding: 6px 14px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(6,182,212,0.25);">
           <i class="fa-solid fa-gear"></i> Manage
         </button>
       </td>

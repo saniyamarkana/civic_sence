@@ -340,15 +340,15 @@
       "category": "Streetlight",
       "location": "North Zone (Katargam)",
       "priority": "Low",
-      "status": "In Progress",
+      "status": "Resolved",
       "department": "Electricity Department",
       "assigned_officer_id": 8,
       "assigned_officer_name": "Neha Sharma",
-      "admin_remarks": "",
+      "admin_remarks": "Verified LED driver replacement and fully solved.",
       "complaint_image": "1789445572476_Streetlight_not_working.avif",
-      "solution_image": null,
+      "solution_image": "1791379877169_Streetlight_working.jpg",
       "created_at": "2026-09-15 09:42:52",
-      "updated_at": "2026-09-22 10:05:37"
+      "updated_at": "2026-10-07 21:33:20"
     },
     {
       "id": 12,
@@ -358,15 +358,15 @@
       "category": "Drainage",
       "location": "Central Zone (Chowk)",
       "priority": "High",
-      "status": "In Progress",
+      "status": "Resolved",
       "department": "Water Department",
       "assigned_officer_id": 7,
       "assigned_officer_name": "Ramesh Rao",
-      "admin_remarks": "",
+      "admin_remarks": "solve problem",
       "complaint_image": "1789447054885_Drainage_overflow.webp",
-      "solution_image": null,
+      "solution_image": "1791380516787_water__leaked_solve.webp",
       "created_at": "2026-09-15 10:07:34",
-      "updated_at": "2026-09-22 10:05:10"
+      "updated_at": "2026-10-07 19:11:56"
     },
     {
       "id": 13,
@@ -394,15 +394,51 @@
       "category": "Water Leakage",
       "location": "Varachha Zone B",
       "priority": "Low",
-      "status": "In Progress",
+      "status": "Resolved",
       "department": "Water Department",
       "assigned_officer_id": 7,
       "assigned_officer_name": "Ramesh Rao",
-      "admin_remarks": "",
+      "admin_remarks": "Resolved test notes",
       "complaint_image": "1790219900418_water_leak.webp",
-      "solution_image": null,
+      "solution_image": "1791391288505_test.jpg",
       "created_at": "2026-09-24 08:48:20",
-      "updated_at": "2026-09-24 08:48:59"
+      "updated_at": "2026-10-07 22:11:28"
+    },
+    {
+      "id": 15,
+      "citizen_id": 2,
+      "title": "street light",
+      "description": "street light is not working",
+      "category": "Streetlight",
+      "location": "North Zone (Katargam)",
+      "priority": "Medium",
+      "status": "Resolved",
+      "department": "Electricity Department",
+      "assigned_officer_id": null,
+      "assigned_officer_name": null,
+      "admin_remarks": "solve",
+      "complaint_image": "1791379706635_Streetlight_not_working.avif",
+      "solution_image": "1791379921859_Streetlight_working.jpg",
+      "created_at": "2026-10-07 18:58:26",
+      "updated_at": "2026-10-07 19:02:01"
+    },
+    {
+      "id": 16,
+      "citizen_id": 2,
+      "title": "Broken Street Light",
+      "description": "street light is broken",
+      "category": "Streetlight",
+      "location": "West Zone (Adajan)",
+      "priority": "High",
+      "status": "Resolved",
+      "department": "Electricity Department",
+      "assigned_officer_id": null,
+      "assigned_officer_name": null,
+      "admin_remarks": "solve",
+      "complaint_image": "1791380352559_broken_light.jpg",
+      "solution_image": "1791380462080_light.webp",
+      "created_at": "2026-10-07 19:09:12",
+      "updated_at": "2026-10-07 19:11:02"
     }
   ],
   "complaint_history": [
@@ -612,6 +648,105 @@
       "changed_by": 1,
       "remarks": "Assigned to Field Officer: Ramesh Rao (Water Department)",
       "created_at": "2026-09-24 08:48:59"
+    },
+    {
+      "id": 24,
+      "complaint_id": 15,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Electricity Department",
+      "created_at": "2026-10-07 18:58:26"
+    },
+    {
+      "id": 25,
+      "complaint_id": 15,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 8,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-10-07 18:59:45"
+    },
+    {
+      "id": 26,
+      "complaint_id": 11,
+      "old_status": "In Progress",
+      "new_status": "Resolved",
+      "changed_by": 8,
+      "remarks": "Work Completed & Solved: street light is working",
+      "created_at": "2026-10-07 19:01:14"
+    },
+    {
+      "id": 27,
+      "complaint_id": 15,
+      "old_status": "In Progress",
+      "new_status": "Resolved",
+      "changed_by": 8,
+      "remarks": "Work Completed & Solved: solve problem",
+      "created_at": "2026-10-07 19:01:37"
+    },
+    {
+      "id": 28,
+      "complaint_id": 16,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Electricity Department",
+      "created_at": "2026-10-07 19:09:12"
+    },
+    {
+      "id": 29,
+      "complaint_id": 16,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 8,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-10-07 19:09:35"
+    },
+    {
+      "id": 30,
+      "complaint_id": 16,
+      "old_status": "In Progress",
+      "new_status": "Resolved",
+      "changed_by": 8,
+      "remarks": "Work Completed & Solved: solve",
+      "created_at": "2026-10-07 19:11:02"
+    },
+    {
+      "id": 31,
+      "complaint_id": 12,
+      "old_status": "In Progress",
+      "new_status": "Resolved",
+      "changed_by": 7,
+      "remarks": "Work Completed & Solved: solve problem",
+      "created_at": "2026-10-07 19:11:56"
+    },
+    {
+      "id": 32,
+      "complaint_id": 14,
+      "old_status": "In Progress",
+      "new_status": "Resolved",
+      "changed_by": 1,
+      "remarks": "Work Completed & Solved: Issue fully verified and repaired on site.",
+      "created_at": "2026-10-07 21:31:31"
+    },
+    {
+      "id": 33,
+      "complaint_id": 14,
+      "old_status": "Resolved",
+      "new_status": "In Progress",
+      "changed_by": 1,
+      "remarks": "Reverted for testing",
+      "created_at": "2026-10-07 21:31:31"
+    },
+    {
+      "id": 34,
+      "complaint_id": 14,
+      "old_status": "In Progress",
+      "new_status": "Resolved",
+      "changed_by": 5,
+      "remarks": "Work Completed & Solved: test",
+      "created_at": "2026-10-07 22:11:09"
     }
   ],
   "feedback": [
@@ -656,6 +791,22 @@
       "message": "📋 Complaint #1 has been acknowledged and routed to Sanitation Department.",
       "is_read": 1,
       "created_at": "2026-02-01 08:35:00"
+    },
+    {
+      "id": 4,
+      "citizen_id": 2,
+      "complaint_id": 14,
+      "message": "✅ Your complaint '#14 — water issue' has been resolved! Notes: Issue fully verified and repaired on site.",
+      "is_read": 0,
+      "created_at": "2026-10-07 21:31:31"
+    },
+    {
+      "id": 5,
+      "citizen_id": 2,
+      "complaint_id": 14,
+      "message": "✅ Your complaint '#14 — water issue' has been resolved! Notes: Resolved test notes",
+      "is_read": 0,
+      "created_at": "2026-10-07 22:11:09"
     }
   ]
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,13 +19,15 @@
       color: #f1f5f9 !important;
       border: 1px solid rgba(255, 255, 255, 0.15) !important;
       border-radius: 10px !important;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.45) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
       font-size: 12px !important;
       font-weight: 600 !important;
     }
+
     .leaflet-control-layers-expanded {
       padding: 10px 14px !important;
     }
+
     .leaflet-control-layers label {
       cursor: pointer !important;
       margin-bottom: 6px !important;
@@ -33,23 +36,227 @@
       gap: 8px !important;
       color: #e2e8f0 !important;
     }
+
     .leaflet-control-zoom {
       border: 1px solid rgba(255, 255, 255, 0.15) !important;
       border-radius: 8px !important;
       overflow: hidden !important;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
     }
+
     .leaflet-control-zoom a {
       background: rgba(15, 23, 42, 0.85) !important;
       color: #f1f5f9 !important;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
+
     .leaflet-control-zoom a:hover {
       background: rgba(6, 182, 212, 0.85) !important;
       color: #fff !important;
     }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       PHASE 3: ADVANCED ALGORITHMIC WORKBENCH & VISUAL OUTPUT ENGINE
+       ══════════════════════════════════════════════════════════════════════════ */
+    .algo-workbench {
+      position: relative;
+      background: linear-gradient(145deg, rgba(13, 23, 44, 0.9) 0%, rgba(8, 14, 28, 0.95) 100%);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 18px;
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), 0 0 35px rgba(6, 182, 212, 0.08);
+      overflow: hidden;
+    }
+
+    .algo-workbench::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #06b6d4 25%, #8b5cf6 50%, #f59e0b 75%, transparent);
+    }
+
+    .algo-card {
+      background: linear-gradient(180deg, rgba(18, 28, 51, 0.85) 0%, rgba(11, 19, 36, 0.92) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 18px 20px;
+      transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      min-height: 200px;
+    }
+
+    .algo-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(6, 182, 212, 0.38);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 20px rgba(6, 182, 212, 0.12);
+    }
+
+    .algo-card-accent-cyan::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #06b6d4, #3b82f6);
+    }
+
+    .algo-card-accent-purple::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    }
+
+    .algo-card-accent-amber::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+    }
+
+    .algo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .algo-btn {
+      padding: 9px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 9px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.22s ease;
+      border: none;
+      outline: none;
+      position: relative;
+    }
+
+    .algo-btn:active {
+      transform: scale(0.97);
+    }
+
+    .algo-btn-cyan {
+      background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+    }
+
+    .algo-btn-cyan:hover {
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.55);
+      background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+    }
+
+    .algo-btn-purple {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+    }
+
+    .algo-btn-purple:hover {
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55);
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    }
+
+    .algo-btn-amber {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #0b1324;
+      font-weight: 900;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+
+    .algo-btn-amber:hover {
+      box-shadow: 0 6px 22px rgba(245, 158, 11, 0.55);
+      background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+    }
+
+    .algo-output-panel {
+      position: relative;
+      background: linear-gradient(165deg, rgba(8, 16, 33, 0.96) 0%, rgba(5, 11, 24, 0.98) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      border-radius: 16px;
+      padding: 22px;
+      margin-top: 20px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 35px rgba(56, 189, 248, 0.12);
+      animation: algoFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes algoFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .algo-kpi-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #f1f5f9;
+      white-space: nowrap;
+    }
+
+    .algo-quick-chip {
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      color: #38bdf8;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .algo-quick-chip:hover {
+      background: rgba(6, 182, 212, 0.25);
+      border-color: #06b6d4;
+      color: #fff;
+      transform: translateY(-1px);
+    }
   </style>
 </head>
+
 <body>
   <div class="app-layout">
     <!-- Sidebar -->
@@ -129,7 +336,8 @@
             <div class="notif-dropdown" id="adminNotifDropdown">
               <div class="notif-header">
                 <h4><i class="fa-solid fa-bell"></i> Resolution Notifications</h4>
-                <button class="notif-mark-all-btn" onclick="adminMarkAllRead()"><i class="fa-solid fa-check-double"></i> Mark all read</button>
+                <button class="notif-mark-all-btn" onclick="adminMarkAllRead()"><i class="fa-solid fa-check-double"></i>
+                  Mark all read</button>
               </div>
               <div class="notif-list" id="adminNotifList">
                 <div class="notif-empty">Loading...</div>
@@ -159,7 +367,8 @@
             </div>
 
             <div class="glass-card stat-card">
-              <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.15); color: var(--status-pending);">
+              <div class="stat-icon-wrapper"
+                style="background: rgba(245, 158, 11, 0.15); color: var(--status-pending);">
                 <i class="fa-solid fa-hourglass"></i>
               </div>
               <div>
@@ -169,7 +378,8 @@
             </div>
 
             <div class="glass-card stat-card">
-              <div class="stat-icon-wrapper" style="background: rgba(59, 130, 246, 0.15); color: var(--status-progress);">
+              <div class="stat-icon-wrapper"
+                style="background: rgba(59, 130, 246, 0.15); color: var(--status-progress);">
                 <i class="fa-solid fa-gears"></i>
               </div>
               <div>
@@ -179,7 +389,8 @@
             </div>
 
             <div class="glass-card stat-card">
-              <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.15); color: var(--status-resolved);">
+              <div class="stat-icon-wrapper"
+                style="background: rgba(16, 185, 129, 0.15); color: var(--status-resolved);">
                 <i class="fa-solid fa-check-double"></i>
               </div>
               <div>
@@ -194,7 +405,8 @@
             <div class="glass-card" style="padding: 25px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="font-size: 16px; font-weight: 700; margin: 0;">📊 Complaints by Category</h3>
-                <span id="chartCategoryBadge" class="badge badge-approved" style="font-size: 11px;">Active Categories</span>
+                <span id="chartCategoryBadge" class="badge badge-approved" style="font-size: 11px;">Active
+                  Categories</span>
               </div>
               <div style="height: 250px; position: relative;">
                 <canvas id="categoryChart"></canvas>
@@ -211,7 +423,8 @@
           <div class="glass-card" style="padding: 25px;">
             <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 15px;">🕒 Recent Complaints Activity</h3>
             <div style="overflow-x: hidden; width: 100%;">
-              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed;">
+              <table
+                style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed;">
                 <thead>
                   <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
                     <th style="padding: 10px;">ID</th>
@@ -233,35 +446,297 @@
              ════════════════════════════════════════════════════════════════ -->
         <section id="adminTab_complaints" style="display: none;">
 
-          <!-- Search & Filter Bar -->
-          <div class="glass-card" style="padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
-            <input type="text" id="admCompSearch" class="form-control" placeholder="🔍 Search by ID, keyword, location, citizen..." style="flex: 1; min-width: 250px;" oninput="filterAdminComplaints()">
-            <select id="admCompStatusFilter" class="form-control" style="width: 160px;" onchange="filterAdminComplaints()">
-              <option value="All">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
+          <!-- ════════════════════════════════════════════════════════════════
+               PHASE 3 – INTELLIGENT ALGORITHMIC PROCESSING ENGINE (CLO3)
+               ════════════════════════════════════════════════════════════════ -->
+          <div class="algo-workbench">
+            <!-- Executive Header -->
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div
+                  style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, rgba(6,182,212,0.22), rgba(139,92,246,0.22)); border: 1px solid rgba(6,182,212,0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 18px; box-shadow: 0 0 15px rgba(6,182,212,0.25);">
+                  <i class="fa-solid fa-microchip"></i>
+                </div>
+                <div>
+                  <h3
+                    style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px; letter-spacing: -0.2px;">
+                    Civic Intelligence Algorithmic Engine
+                    <span
+                      style="font-size: 10px; background: rgba(6,182,212,0.18); color: #38bdf8; border: 1px solid rgba(6,182,212,0.4); padding: 2px 7px; border-radius: 5px; font-weight: 800; text-transform: uppercase;">CLO3
+                      LAB</span>
+                  </h3>
+                  <p style="font-size: 11px; color: #94a3b8; margin: 3px 0 0 0; font-weight: 500;">
+                    Real-Time Data Processing Workbench &middot; Searching <code
+                      style="color:#38bdf8; font-family:var(--font-mono);">O(log N)</code> &middot; Sorting <code
+                      style="color:#c084fc; font-family:var(--font-mono);">O(N log N)</code> &middot; Max-Heap Priority
+                    Queue
+                  </p>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="algo-kpi-pill"
+                  style="border-color: rgba(16,185,129,0.35); color: #34d399; background: rgba(16,185,129,0.12);">
+                  <i class="fa-solid fa-database" style="color: #10b981;"></i> Connected Database
+                </span>
+                <span id="p3RecordCounter" class="algo-kpi-pill"
+                  style="border-color: rgba(6,182,212,0.35); color: #38bdf8; background: rgba(6,182,212,0.12);">
+                  <i class="fa-solid fa-layer-group" style="color: #06b6d4;"></i> 16 Records Loaded
+                </span>
+                <span class="algo-kpi-pill"
+                  style="border-color: rgba(139,92,246,0.35); color: #c084fc; background: rgba(139,92,246,0.12);">
+                  <i class="fa-solid fa-shield-check" style="color: #a855f7;"></i> Real-Time Processing
+                </span>
+              </div>
+            </div>
+
+            <!-- 3 Processing Tool Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+
+              <!-- 1. Search Complaints Box -->
+              <div class="algo-card algo-card-accent-cyan">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span
+                      style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 7px;">
+                      <i class="fa-solid fa-magnifying-glass" style="color: #06b6d4;"></i> Search Complaint
+                    </span>
+                    <span class="algo-badge"
+                      style="background: rgba(6,182,212,0.15); color: #38bdf8; border: 1px solid rgba(6,182,212,0.35);">
+                      O(1) &ndash; O(N)
+                    </span>
+                  </div>
+
+                  <label for="p3SearchId"
+                    style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 6px;">
+                    Target Complaint ID:
+                  </label>
+                  <div style="position: relative; margin-bottom: 10px;">
+                    <span
+                      style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #06b6d4; font-family: var(--font-mono); font-weight: 800; font-size: 13px;">#</span>
+                    <input type="number" id="p3SearchId" class="form-control" placeholder="e.g. 14, 15, 16"
+                      style="width: 100%; padding: 8px 12px 8px 30px; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 8px; font-weight: 700; font-family: var(--font-mono);"
+                      onkeyup="if(event.key==='Enter') p3RunSearch('binary')">
+                  </div>
+
+                  <!-- Quick ID suggestions -->
+                  <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;">
+                    <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">Quick
+                      IDs:</span>
+                    <span class="algo-quick-chip" onclick="p3QuickSearch(16)">#16</span>
+                    <span class="algo-quick-chip" onclick="p3QuickSearch(15)">#15</span>
+                    <span class="algo-quick-chip" onclick="p3QuickSearch(14)">#14</span>
+                    <span class="algo-quick-chip" onclick="p3QuickSearch(11)">#11</span>
+                    <span class="algo-quick-chip" onclick="p3QuickSearch(8)">#8</span>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" id="p3LinearBtn" onclick="p3RunSearch('linear')" class="algo-btn algo-btn-cyan"
+                    style="flex: 1;">
+                    <i class="fa-solid fa-bars-staggered"></i> Linear <span
+                      style="font-size: 10px; opacity: 0.85; font-family: var(--font-mono);">O(N)</span>
+                  </button>
+                  <button type="button" id="p3BinaryBtn" onclick="p3RunSearch('binary')"
+                    class="algo-btn algo-btn-purple" style="flex: 1;">
+                    <i class="fa-solid fa-bolt"></i> Binary <span
+                      style="font-size: 10px; opacity: 0.85; font-family: var(--font-mono);">O(log N)</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. Sort Complaints Box -->
+              <div class="algo-card algo-card-accent-purple">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span
+                      style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 7px;">
+                      <i class="fa-solid fa-arrow-down-up-across-line" style="color: #a855f7;"></i> Recursive Sort
+                    </span>
+                    <span class="algo-badge"
+                      style="background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.35);">
+                      O(N log N)
+                    </span>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                      <label for="p3SortField"
+                        style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Sort
+                        By:</label>
+                      <select id="p3SortField" class="form-control"
+                        style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; font-size: 12px; font-weight: 600;">
+                        <option value="id">Complaint ID</option>
+                        <option value="priority">Priority Score</option>
+                        <option value="category">Category</option>
+                        <option value="location">Ward Location</option>
+                        <option value="status">Status</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="p3SortAlgo"
+                        style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Algorithm:</label>
+                      <select id="p3SortAlgo" class="form-control"
+                        style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; font-size: 12px; font-weight: 600;">
+                        <option value="merge">Merge Sort [Stable]</option>
+                        <option value="quick">Quick Sort [In-Place]</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom: 14px;">
+                    <label for="p3SortOrder"
+                      style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Order
+                      Direction:</label>
+                    <select id="p3SortOrder" class="form-control"
+                      style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; font-size: 12px; font-weight: 600;">
+                      <option value="asc">&utrif; Ascending (Low to High / A &rarr; Z)</option>
+                      <option value="desc">&dtrif; Descending (High to Low / Z &rarr; A)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="button" id="p3SortBtn" onclick="p3RunSort()" class="algo-btn algo-btn-purple"
+                  style="width: 100%;">
+                  <i class="fa-solid fa-shuffle"></i> Run Recursive Sort
+                </button>
+              </div>
+
+              <!-- 3. Priority Processing Box -->
+              <div class="algo-card algo-card-accent-amber">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span
+                      style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 7px;">
+                      <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Priority Dispatch
+                    </span>
+                    <span class="algo-badge"
+                      style="background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4);">
+                      Max-Heap
+                    </span>
+                  </div>
+
+                  <div style="display: flex; gap: 5px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+                    <span
+                      style="font-size: 10px; padding: 2px 7px; border-radius: 5px; background: rgba(239,68,68,0.22); color: #f87171; font-weight: 800; border: 1px solid rgba(239,68,68,0.4);">Critical
+                      (4)</span>
+                    <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #64748b;"></i>
+                    <span
+                      style="font-size: 10px; padding: 2px 7px; border-radius: 5px; background: rgba(249,115,22,0.22); color: #fb923c; font-weight: 800; border: 1px solid rgba(249,115,22,0.4);">High
+                      (3)</span>
+                    <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #64748b;"></i>
+                    <span
+                      style="font-size: 10px; padding: 2px 7px; border-radius: 5px; background: rgba(245,158,11,0.22); color: #fbbf24; font-weight: 800; border: 1px solid rgba(245,158,11,0.4);">Med
+                      (2)</span>
+                    <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #64748b;"></i>
+                    <span
+                      style="font-size: 10px; padding: 2px 7px; border-radius: 5px; background: rgba(16,185,129,0.22); color: #34d399; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);">Low
+                      (1)</span>
+                  </div>
+
+                  <p style="font-size: 11px; color: #94a3b8; margin: 0 0 14px 0; line-height: 1.5; font-weight: 500;">
+                    Constructs an in-memory Max-Heap to extract and sequence emergency civic complaints based on urgency
+                    score.
+                  </p>
+                </div>
+
+                <button type="button" id="p3PriorityBtn" onclick="p3RunPriority()" class="algo-btn algo-btn-amber"
+                  style="width: 100%;">
+                  <i class="fa-solid fa-bolt"></i> Process by Priority Queue
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Result Output Box (Dynamic Glassmorphic Display) -->
+            <div id="p3ResultContainer" class="algo-output-panel" style="display: none;">
+              <!-- Header Bar with Metrics -->
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span id="p3ResultIcon"
+                    style="width: 32px; height: 32px; border-radius: 8px; background: rgba(6,182,212,0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                    <i class="fa-solid fa-chart-line"></i>
+                  </span>
+                  <div>
+                    <h5 id="p3ResultTitle"
+                      style="font-size: 14px; font-weight: 800; color: #f8fafc; margin: 0; letter-spacing: -0.2px;">
+                      Algorithm Execution Result
+                    </h5>
+                    <span id="p3ResultSub" style="font-size: 11px; color: #94a3b8; font-weight: 600;">Execution
+                      telemetry</span>
+                  </div>
+                </div>
+
+                <!-- KPI & Benchmark Ribbon -->
+                <div id="p3KpiBar" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"></div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <button type="button" onclick="document.getElementById('p3ResultContainer').style.display='none'"
+                    style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #94a3b8; cursor: pointer; font-size: 13px; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                    onmouseover="this.style.background='rgba(239,68,68,0.2)'; this.style.color='#f87171';"
+                    onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.color='#94a3b8';"
+                    title="Dismiss Results">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Main Output Body -->
+              <div id="p3ResultBody"></div>
+            </div>
+
           </div>
 
-          <div class="glass-card" style="padding: 20px; overflow-x: hidden;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed;">
-              <thead>
-                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                  <th style="padding: 12px 10px;">ID</th>
-                  <th style="padding: 12px 10px;">Title</th>
-                  <th style="padding: 12px 10px;">Category</th>
-                  <th style="padding: 12px 10px;">Location</th>
-                  <th style="padding: 12px 10px;">Priority</th>
-                  <th style="padding: 12px 10px;">Department</th>
-                  <th style="padding: 12px 10px;">Status</th>
-                  <th style="padding: 12px 10px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminComplaintsTableBody"></tbody>
-            </table>
+          <!-- Search & Filter Bar -->
+          <div class="glass-card"
+            style="padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+            <div style="display: flex; gap: 12px; align-items: center; flex: 1; min-width: 280px;">
+              <div style="position: relative; flex: 1;">
+                <i class="fa-solid fa-magnifying-glass"
+                  style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 12px;"></i>
+                <input type="text" id="admCompSearch" class="form-control"
+                  placeholder="Search by ID, title, category, location, officer..."
+                  style="padding-left: 36px; width: 100%;" oninput="filterAdminComplaints()">
+              </div>
+              <select id="admCompStatusFilter" class="form-control" style="width: 160px; flex-shrink: 0;"
+                onchange="filterAdminComplaints()">
+                <option value="All">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+            <div id="admCompCounter"
+              style="font-size: 12px; font-weight: 700; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-list-check" style="color: #06b6d4;"></i> All Complaints Database
+            </div>
+          </div>
+
+          <!-- Master Complaints Data Grid -->
+          <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 14px;">
+            <div style="overflow-x: auto; width: 100%;">
+              <table
+                style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 860px;">
+                <thead>
+                  <tr
+                    style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(15, 23, 42, 0.7); color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <th style="padding: 14px 14px; width: 75px;">ID</th>
+                    <th style="padding: 14px 14px; min-width: 220px;">Title & Summary</th>
+                    <th style="padding: 14px 14px; width: 130px;">Category</th>
+                    <th style="padding: 14px 14px; width: 160px;">Ward Location</th>
+                    <th style="padding: 14px 14px; width: 110px;">Priority</th>
+                    <th style="padding: 14px 14px; width: 190px;">Department & Officer</th>
+                    <th style="padding: 14px 14px; width: 125px;">Status</th>
+                    <th style="padding: 14px 14px; width: 105px; text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminComplaintsTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -270,13 +745,15 @@
              ════════════════════════════════════════════════════════════════ -->
         <section id="adminTab_users" style="display: none;">
           <!-- Top Stats Cards for User Accounts -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px;">
+          <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px;">
             <div class="glass-card stat-card" style="padding: 18px 22px;">
               <div class="stat-icon-wrapper" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
                 <i class="fa-solid fa-users"></i>
               </div>
               <div>
-                <div class="stat-val" id="userStatTotal" style="color: var(--accent-cyan); font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-val" id="userStatTotal"
+                  style="color: var(--accent-cyan); font-size: 24px; font-weight: 800;">0</div>
                 <div class="stat-label">Total Accounts</div>
               </div>
             </div>
@@ -286,7 +763,8 @@
                 <i class="fa-solid fa-user-group"></i>
               </div>
               <div>
-                <div class="stat-val" id="userStatCitizen" style="color: #10b981; font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-val" id="userStatCitizen" style="color: #10b981; font-size: 24px; font-weight: 800;">0
+                </div>
                 <div class="stat-label">Citizens</div>
               </div>
             </div>
@@ -296,7 +774,8 @@
                 <i class="fa-solid fa-building-user"></i>
               </div>
               <div>
-                <div class="stat-val" id="userStatDept" style="color: #38bdf8; font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-val" id="userStatDept" style="color: #38bdf8; font-size: 24px; font-weight: 800;">0
+                </div>
                 <div class="stat-label">Department Officers</div>
               </div>
             </div>
@@ -306,7 +785,8 @@
                 <i class="fa-solid fa-crown"></i>
               </div>
               <div>
-                <div class="stat-val" id="userStatAdmin" style="color: #f59e0b; font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-val" id="userStatAdmin" style="color: #f59e0b; font-size: 24px; font-weight: 800;">0
+                </div>
                 <div class="stat-label">Administrators</div>
               </div>
             </div>
@@ -314,12 +794,15 @@
 
           <!-- Controls Toolbar: Search & Filter Pills & Add User -->
           <div class="glass-card" style="padding: 18px 22px; margin-bottom: 20px;">
-            <div style="display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px;">
+            <div
+              style="display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px;">
               <div style="flex: 1; min-width: 280px; position: relative;">
-                <input type="text" id="userSearch" class="form-control" placeholder="🔍 Search users by name, email, role, department..." oninput="filterUsers()">
+                <input type="text" id="userSearch" class="form-control"
+                  placeholder="🔍 Search users by name, email, role, department..." oninput="filterUsers()">
               </div>
               <div>
-                <button class="btn btn-primary" onclick="openAddUserModal()" style="display: flex; align-items: center; gap: 8px; padding: 10px 18px;">
+                <button class="btn btn-primary" onclick="openAddUserModal()"
+                  style="display: flex; align-items: center; gap: 8px; padding: 10px 18px;">
                   <i class="fa-solid fa-user-plus"></i> Add New User
                 </button>
               </div>
@@ -352,7 +835,8 @@
           <div class="glass-card" style="padding: 0; overflow-x: auto; border-radius: 16px;">
             <table style="width: 100%; min-width: 950px; border-collapse: collapse; text-align: left; font-size: 13px;">
               <thead>
-                <tr style="background: rgba(14, 21, 38, 0.85); border-bottom: 1px solid rgba(6, 182, 212, 0.2); color: var(--text-muted); font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
+                <tr
+                  style="background: rgba(14, 21, 38, 0.85); border-bottom: 1px solid rgba(6, 182, 212, 0.2); color: var(--text-muted); font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
                   <th style="padding: 16px 18px; width: 75px;">ID</th>
                   <th style="padding: 16px 18px; width: 22%;">User</th>
                   <th style="padding: 16px 18px; width: 24%;">Email Address</th>
@@ -372,41 +856,52 @@
         <section id="adminTab_map" style="display: none;">
 
           <!-- ── GRAPH CARD ─────────────────────────────────────────────── -->
-          <div style="border-radius: 20px; background: linear-gradient(135deg, #0a1628 0%, #0f2040 50%, #0a1628 100%); border: 1px solid rgba(6, 182, 212, 0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05); overflow: hidden; margin-bottom: 20px;">
+          <div
+            style="border-radius: 20px; background: linear-gradient(135deg, #0a1628 0%, #0f2040 50%, #0a1628 100%); border: 1px solid rgba(6, 182, 212, 0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05); overflow: hidden; margin-bottom: 20px;">
 
             <!-- Header Bar -->
-            <div style="padding: 20px 28px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div
+              style="padding: 20px 28px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, rgba(6,182,212,0.3), rgba(59,130,246,0.3)); border: 1px solid rgba(6,182,212,0.5); display: flex; align-items: center; justify-content: center; font-size: 17px; color: #06b6d4;">
+                <div
+                  style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, rgba(6,182,212,0.3), rgba(59,130,246,0.3)); border: 1px solid rgba(6,182,212,0.5); display: flex; align-items: center; justify-content: center; font-size: 17px; color: #06b6d4;">
                   <i class="fa-solid fa-diagram-project"></i>
                 </div>
                 <div>
-                  <div style="font-size: 18px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px;">Location Graph</div>
-                  <div style="font-size: 11px; color: #64748b; margin-top: 1px;">Binary Tree &bull; BFS Level-Order Traversal &bull; Click any node to view complaints</div>
+                  <div style="font-size: 18px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px;">Location Graph
+                  </div>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 1px;">Binary Tree &bull; BFS Level-Order
+                    Traversal &bull; Click any node to view complaints</div>
                 </div>
               </div>
 
               <!-- Legend Pills -->
               <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+                <span
+                  style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
                   <span style="width: 7px; height: 7px; border-radius: 50%; background: #06b6d4;"></span> Core Zone
                 </span>
-                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; background: rgba(100,116,139,0.12); border: 1px solid rgba(100,116,139,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+                <span
+                  style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; background: rgba(100,116,139,0.12); border: 1px solid rgba(100,116,139,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
                   <span style="width: 7px; height: 7px; border-radius: 50%; background: #64748b;"></span> Sub Zone
                 </span>
-                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #f59e0b; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+                <span
+                  style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #f59e0b; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
                   <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b;"></span> Selected
                 </span>
               </div>
             </div>
 
             <!-- BFS Traversal & Search Controller Toolbar -->
-            <div style="padding: 14px 24px; background: rgba(10, 18, 35, 0.85); border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+            <div
+              style="padding: 14px 24px; background: rgba(10, 18, 35, 0.85); border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
               <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <label for="adminBfsSearchSelect" style="font-size: 11px; font-weight: 800; color: #06b6d4; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                <label for="adminBfsSearchSelect"
+                  style="font-size: 11px; font-weight: 800; color: #06b6d4; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
                   <i class="fa-solid fa-sitemap"></i> Start Node:
                 </label>
-                <select id="adminBfsSearchSelect" onchange="adminOnStartNodeChange(this.value)" style="background: #1e293b; color: #f8fafc; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; outline: none; cursor: pointer; min-width: 230px;">
+                <select id="adminBfsSearchSelect" onchange="adminOnStartNodeChange(this.value)"
+                  style="background: #1e293b; color: #f8fafc; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; outline: none; cursor: pointer; min-width: 230px;">
                   <option value="">-- Select Location to Start BFS --</option>
                   <option value="Central Zone (Chowk)">Central Zone (Chowk) [Root - L0]</option>
                   <option value="West Zone (Adajan)">West Zone (Adajan) [Child - L1]</option>
@@ -419,73 +914,96 @@
                   <option value="South East (Dindoli)">South East (Dindoli) [Leaf - L3]</option>
                 </select>
 
-                <button type="button" class="btn btn-sm btn-primary" onclick="adminRunBfsSearch()" style="padding: 7px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(6,182,212,0.3);">
+                <button type="button" class="btn btn-sm btn-primary" onclick="adminRunBfsSearch()"
+                  style="padding: 7px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(6,182,212,0.3);">
                   <i class="fa-solid fa-play"></i> Start BFS from this Node
                 </button>
 
-                <button type="button" class="btn btn-sm btn-success" onclick="adminAddNodePrompt()" style="padding: 7px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; background: #10b981; border: none; color: #fff; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                <button type="button" class="btn btn-sm btn-success" onclick="openAddNodeModal()"
+                  style="padding: 7px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; background: #10b981; border: none; color: #fff; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
                   <i class="fa-solid fa-plus"></i> Add Node
                 </button>
 
-                <button type="button" class="btn btn-sm btn-secondary" onclick="adminResetBfs()" style="padding: 7px 12px; font-size: 12px; color: #94a3b8;" title="Reset Graph Colors">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="adminResetBfs()"
+                  style="padding: 7px 12px; font-size: 12px; color: #94a3b8;" title="Reset Graph Colors">
                   <i class="fa-solid fa-rotate-left"></i> Reset
                 </button>
               </div>
 
               <!-- Live Traversal Status Banner -->
-              <div id="adminBfsStatusStrip" style="font-size: 12px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                <span id="adminBfsBadge" style="padding: 3px 8px; border-radius: 6px; background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 10px; font-weight: 800;">READY</span>
-                <span id="adminBfsMsg">Pick a node above or click "Run Full BFS Traversal" to explore level-by-level</span>
+              <div id="adminBfsStatusStrip"
+                style="font-size: 12px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span id="adminBfsBadge"
+                  style="padding: 3px 8px; border-radius: 6px; background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 10px; font-weight: 800;">READY</span>
+                <span id="adminBfsMsg">Pick a node above or click "Run Full BFS Traversal" to explore
+                  level-by-level</span>
               </div>
             </div>
 
             <!-- Real-time FIFO Queue & Visited State Display -->
-            <div id="adminBfsQueueBar" style="display: none; padding: 10px 24px; background: rgba(8, 14, 28, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-size: 11px; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div id="adminBfsQueueBar"
+              style="display: none; padding: 10px 24px; background: rgba(8, 14, 28, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-size: 11px; align-items: center; gap: 16px; flex-wrap: wrap;">
               <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="color: #38bdf8; font-weight: 800; text-transform: uppercase;"><i class="fa-solid fa-layer-group"></i> FIFO Queue:</span>
-                <span id="adminBfsQueueItems" style="color: #f1f5f9; font-family: monospace; font-weight: 700;">[ ]</span>
+                <span style="color: #38bdf8; font-weight: 800; text-transform: uppercase;"><i
+                    class="fa-solid fa-layer-group"></i> FIFO Queue:</span>
+                <span id="adminBfsQueueItems" style="color: #f1f5f9; font-family: monospace; font-weight: 700;">[
+                  ]</span>
               </div>
               <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="color: #10b981; font-weight: 800; text-transform: uppercase;"><i class="fa-solid fa-check"></i> Visited:</span>
-                <span id="adminBfsVisitedItems" style="color: #f1f5f9; font-family: monospace; font-weight: 700;">[ ]</span>
+                <span style="color: #10b981; font-weight: 800; text-transform: uppercase;"><i
+                    class="fa-solid fa-check"></i> Visited:</span>
+                <span id="adminBfsVisitedItems" style="color: #f1f5f9; font-family: monospace; font-weight: 700;">[
+                  ]</span>
               </div>
             </div>
 
             <!-- SVG Canvas -->
-            <div style="position: relative; height: 420px; background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 70%); overflow: hidden;">
+            <div
+              style="position: relative; height: 420px; background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 70%); overflow: hidden;">
               <!-- subtle grid lines -->
-              <svg style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.04;" xmlns="http://www.w3.org/2000/svg">
+              <svg style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.04;"
+                xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#06b6d4" stroke-width="0.5"/>
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#06b6d4" stroke-width="0.5" />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
               </svg>
 
               <!-- Main Graph SVG -->
-              <svg id="locationGraphSvg" style="width: 100%; height: 100%;" viewBox="0 0 900 420" preserveAspectRatio="xMidYMid meet">
+              <svg id="locationGraphSvg" style="width: 100%; height: 100%;" viewBox="0 0 900 420"
+                preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <filter id="glowCyan" x="-60%" y="-60%" width="220%" height="220%">
-                    <feGaussianBlur stdDeviation="4" result="blur"/>
-                    <feFlood flood-color="#06b6d4" flood-opacity="0.8" result="color"/>
-                    <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                    <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feFlood flood-color="#06b6d4" flood-opacity="0.8" result="color" />
+                    <feComposite in="color" in2="blur" operator="in" result="glow" />
+                    <feMerge>
+                      <feMergeNode in="glow" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
                   </filter>
                   <filter id="glowAmber" x="-60%" y="-60%" width="220%" height="220%">
-                    <feGaussianBlur stdDeviation="5" result="blur"/>
-                    <feFlood flood-color="#f59e0b" flood-opacity="0.9" result="color"/>
-                    <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                    <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    <feGaussianBlur stdDeviation="5" result="blur" />
+                    <feFlood flood-color="#f59e0b" flood-opacity="0.9" result="color" />
+                    <feComposite in="color" in2="blur" operator="in" result="glow" />
+                    <feMerge>
+                      <feMergeNode in="glow" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
                   </filter>
                   <filter id="glowGreen" x="-60%" y="-60%" width="220%" height="220%">
-                    <feGaussianBlur stdDeviation="5" result="blur"/>
-                    <feFlood flood-color="#10b981" flood-opacity="0.9" result="color"/>
-                    <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                    <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    <feGaussianBlur stdDeviation="5" result="blur" />
+                    <feFlood flood-color="#10b981" flood-opacity="0.9" result="color" />
+                    <feComposite in="color" in2="blur" operator="in" result="glow" />
+                    <feMerge>
+                      <feMergeNode in="glow" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
                   </filter>
                   <marker id="arrowCyan" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L0,6 L6,3 z" fill="rgba(6,182,212,0.6)"/>
+                    <path d="M0,0 L0,6 L6,3 z" fill="rgba(6,182,212,0.6)" />
                   </marker>
                 </defs>
                 <g id="svgWaysGroup"></g>
@@ -495,33 +1013,44 @@
           </div>
 
           <!-- ── COMPLAINT PANEL ────────────────────────────────────────── -->
-          <div style="border-radius: 16px; background: rgba(15,23,42,0.9); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 30px rgba(0,0,0,0.4); overflow: hidden;">
+          <div
+            style="border-radius: 16px; background: rgba(15,23,42,0.9); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 30px rgba(0,0,0,0.4); overflow: hidden;">
 
             <!-- State 1: Nothing selected -->
             <div id="noZoneSelectedView" style="text-align: center; padding: 48px 20px;">
-              <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(59,130,246,0.1)); border: 1px solid rgba(6,182,212,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; color: #06b6d4;">
+              <div
+                style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(59,130,246,0.1)); border: 1px solid rgba(6,182,212,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; color: #06b6d4;">
                 <i class="fa-solid fa-map-pin"></i>
               </div>
-              <h3 style="font-size: 16px; font-weight: 800; color: #e2e8f0; margin: 0 0 8px;">Click a Node on the Graph</h3>
-              <p style="font-size: 13px; color: #475569; margin: 0; line-height: 1.6;">Select any zone to see the <strong style="color: #94a3b8;">Area Name</strong> and <strong style="color: #94a3b8;">Complaint Names</strong> registered for that zone.</p>
+              <h3 style="font-size: 16px; font-weight: 800; color: #e2e8f0; margin: 0 0 8px;">Click a Node on the Graph
+              </h3>
+              <p style="font-size: 13px; color: #475569; margin: 0; line-height: 1.6;">Select any zone to see the
+                <strong style="color: #94a3b8;">Area Name</strong> and <strong style="color: #94a3b8;">Complaint
+                  Names</strong> registered for that zone.</p>
             </div>
 
             <!-- State 2: Zone selected -->
             <div id="zoneSelectedView" style="display: none;">
 
               <!-- Zone Header -->
-              <div style="padding: 20px 24px 16px; background: linear-gradient(90deg, rgba(6,182,212,0.08) 0%, transparent 100%); border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div
+                style="padding: 20px 24px 16px; background: linear-gradient(90deg, rgba(6,182,212,0.08) 0%, transparent 100%); border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 14px;">
-                  <div id="nodeZoneBadge" style="min-width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.15)); border: 2px solid rgba(6,182,212,0.5); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #38bdf8; box-shadow: 0 0 20px rgba(6,182,212,0.25); padding: 0 8px; letter-spacing: 0.3px;">
+                  <div id="nodeZoneBadge"
+                    style="min-width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.15)); border: 2px solid rgba(6,182,212,0.5); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #38bdf8; box-shadow: 0 0 20px rgba(6,182,212,0.25); padding: 0 8px; letter-spacing: 0.3px;">
                     Zone A
                   </div>
                   <div>
-                    <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #475569; font-weight: 700; margin-bottom: 4px;">📍 Area Name</div>
-                    <div id="nodeAreaName" style="font-size: 22px; font-weight: 900; color: #ffffff; line-height: 1.2;">Central Zone (Chowk)</div>
+                    <div
+                      style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #475569; font-weight: 700; margin-bottom: 4px;">
+                      📍 Area Name</div>
+                    <div id="nodeAreaName" style="font-size: 22px; font-weight: 900; color: #ffffff; line-height: 1.2;">
+                      Central Zone (Chowk)</div>
                   </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <span id="nodeComplaintCountBadge" style="font-size: 14px; font-weight: 800; color: #f59e0b; background: rgba(245,158,11,0.15); border: 1.5px solid rgba(245,158,11,0.35); padding: 8px 18px; border-radius: 22px;">
+                  <span id="nodeComplaintCountBadge"
+                    style="font-size: 14px; font-weight: 800; color: #f59e0b; background: rgba(245,158,11,0.15); border: 1.5px solid rgba(245,158,11,0.35); padding: 8px 18px; border-radius: 22px;">
                     0 Complaints
                   </span>
                 </div>
@@ -529,13 +1058,16 @@
 
               <!-- Complaint List -->
               <div style="padding: 18px 24px;">
-                <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                <div
+                  style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
                   <i class="fa-solid fa-list-check" style="color: #06b6d4;"></i>
                   Complaint Names in This Area
                 </div>
                 <div id="nodeComplaintsList" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                <div id="nodeComplaintsEmpty" style="display: none; padding: 30px; text-align: center; background: rgba(16,185,129,0.04); border-radius: 12px; border: 1px dashed rgba(16,185,129,0.2); margin-top: 4px;">
-                  <i class="fa-regular fa-circle-check" style="font-size: 28px; color: #10b981; margin-bottom: 10px; display: block;"></i>
+                <div id="nodeComplaintsEmpty"
+                  style="display: none; padding: 30px; text-align: center; background: rgba(16,185,129,0.04); border-radius: 12px; border: 1px dashed rgba(16,185,129,0.2); margin-top: 4px;">
+                  <i class="fa-regular fa-circle-check"
+                    style="font-size: 28px; color: #10b981; margin-bottom: 10px; display: block;"></i>
                   <div style="font-size: 14px; font-weight: 700; color: #10b981; margin-bottom: 4px;">All Clear!</div>
                   <div style="font-size: 12px; color: #64748b;">No complaints registered for this area.</div>
                 </div>
@@ -551,22 +1083,32 @@
   </div>
 
   <!-- Admin Manage Complaint Modal -->
-  <div id="adminManageModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
-    <div class="glass-card" style="width: 100%; max-width: 620px; padding: 30px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
+  <div id="adminManageModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card"
+      style="width: 100%; max-width: 620px; padding: 30px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
 
       <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
-        <h3 id="admModalTitle" style="font-size: 19px; font-weight: 800; color: var(--text-primary);">🗂️ Manage Complaint</h3>
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+        <h3 id="admModalTitle" style="font-size: 19px; font-weight: 800; color: var(--text-primary);">🗂️ Manage
+          Complaint</h3>
         <button class="btn btn-sm btn-secondary" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <!-- Citizen Info Banner (Read-only) -->
-      <div id="admModalCitizenInfo" style="background: rgba(6,182,212,0.08); border: 1px solid var(--accent-cyan); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;"></div>
+      <div id="admModalCitizenInfo"
+        style="background: rgba(6,182,212,0.08); border: 1px solid var(--accent-cyan); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;">
+      </div>
 
       <!-- Description Display (Read-only) -->
       <div id="admModalDescWrap" style="margin-bottom: 16px; display: none;">
-        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">Issue Description</div>
-        <div id="admModalDesc" style="background: var(--bg-input); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; color: var(--text-primary); line-height: 1.5;"></div>
+        <div
+          style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">
+          Issue Description</div>
+        <div id="admModalDesc"
+          style="background: var(--bg-input); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; color: var(--text-primary); line-height: 1.5;">
+        </div>
       </div>
 
       <!-- Complaint Photo Thumbnail (Read-only) -->
@@ -577,9 +1119,11 @@
         <div class="form-group" style="margin: 0;">
           <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
             <span>🔄 Current Status</span>
-            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;"><i class="fa-solid fa-lock"></i> Read-only</span>
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;"><i
+                class="fa-solid fa-lock"></i> Read-only</span>
           </label>
-          <div id="admModalStatusDisplay" style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+          <div id="admModalStatusDisplay"
+            style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
             <span id="admStatusBadge" class="badge">Pending</span>
           </div>
           <input type="hidden" id="admModalStatus">
@@ -588,9 +1132,11 @@
         <div class="form-group" style="margin: 0;">
           <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
             <span>⚡ Priority Level</span>
-            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;"><i class="fa-solid fa-lock"></i> Read-only</span>
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;"><i
+                class="fa-solid fa-lock"></i> Read-only</span>
           </label>
-          <div id="admModalPriorityDisplay" style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+          <div id="admModalPriorityDisplay"
+            style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
             <span id="admPriorityBadge" class="badge">Medium</span>
           </div>
           <input type="hidden" id="admModalPriority">
@@ -620,12 +1166,16 @@
 
       <!-- Remarks / Instructions (EDITABLE BY ADMIN) -->
       <div class="form-group">
-        <label class="form-label" style="color: var(--accent-cyan); font-weight: 700;">📝 Admin Remarks / Instructions *</label>
-        <textarea id="admModalRemarks" class="form-control" placeholder="e.g. Please inspect ASAP, dispatch crew, and upload proof of resolution photo." style="height: 85px;"></textarea>
+        <label class="form-label" style="color: var(--accent-cyan); font-weight: 700;">📝 Admin Remarks / Instructions
+          *</label>
+        <textarea id="admModalRemarks" class="form-control"
+          placeholder="e.g. Please inspect ASAP, dispatch crew, and upload proof of resolution photo."
+          style="height: 85px;"></textarea>
       </div>
 
       <!-- Action Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+      <div
+        style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px;">
         <button class="btn btn-secondary" onclick="closeAdminModal()">
           <i class="fa-solid fa-xmark"></i> Cancel
         </button>
@@ -637,13 +1187,16 @@
   </div>
 
   <!-- Add User Modal -->
-  <div id="addUserModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+  <div id="addUserModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
     <div class="glass-card" style="width: 100%; max-width: 480px; padding: 30px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
         <h3 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0;">
           <i class="fa-solid fa-user-plus" style="color: var(--accent-cyan);"></i> Create User Account
         </h3>
-        <button class="btn btn-sm btn-secondary" onclick="closeAddUserModal()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="btn btn-sm btn-secondary" onclick="closeAddUserModal()"><i
+            class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="form-group">
@@ -681,7 +1234,8 @@
         <input type="password" id="newUserPass" class="form-control" placeholder="Minimum 4 characters" required>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+      <div
+        style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 16px;">
         <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
         <button type="button" id="createUserSubmitBtn" class="btn btn-primary" onclick="saveNewUser()">
           <i class="fa-solid fa-check"></i> Create Account
@@ -691,9 +1245,11 @@
   </div>
 
   <!-- Role Change Modal for Admin -->
-  <div id="changeRoleModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+  <div id="changeRoleModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
     <div class="glass-card" style="width: 100%; max-width: 440px; padding: 28px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
         <h3 style="font-size: 17px; font-weight: 800; color: var(--text-primary); margin: 0;">
           <i class="fa-solid fa-user-shield" style="color: var(--accent-cyan);"></i> Change User Role
         </h3>
@@ -722,12 +1278,264 @@
         </select>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+      <div
+        style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px;">
         <button type="button" class="btn btn-secondary" onclick="closeRoleModal()">Cancel</button>
         <button type="button" id="confirmRoleBtn" class="btn btn-primary" onclick="confirmRoleChange()">
           <i class="fa-solid fa-floppy-disk"></i> Update Role
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       Add Node to Location Graph Modal
+       ════════════════════════════════════════════════════════════════ -->
+  <!-- ════════════════════════════════════════════════════════════════
+       Add Node to Location Graph Modal (State-of-the-Art Visual Design)
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="adminAddNodeModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(12px); z-index: 1050; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card"
+      style="width: 100%; max-width: 860px; padding: 28px 32px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.35); box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(16,185,129,0.15); max-height: 92vh; overflow-y: auto;">
+
+      <!-- Modal Header -->
+      <div
+        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div
+            style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(6,182,212,0.25)); border: 1.5px solid rgba(16,185,129,0.5); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #10b981; box-shadow: 0 0 16px rgba(16,185,129,0.25);">
+            <i class="fa-solid fa-diagram-project"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px; margin: 0;">Add Node to
+              Location Graph</h3>
+            <p style="font-size: 12px; color: #94a3b8; margin: 3px 0 0;">Expand the Binary Tree &amp; BFS Routing
+              Governance Network with real-time visual preview</p>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="closeAddNodeModal()" type="button"
+          style="border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; padding: 0;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Form Body - 2 Columns Grid -->
+      <form id="adminAddNodeForm" onsubmit="submitAddNodeForm(event)">
+        <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px; align-items: stretch;">
+
+          <!-- LEFT COLUMN: Form Inputs -->
+          <div>
+            <!-- Location / Area Name -->
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label"
+                style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-location-dot" style="color: #10b981;"></i> Location / Ward Name *
+              </label>
+              <input type="text" id="addNodeAreaName" class="form-control"
+                placeholder="e.g. Palanpur Canal Road, Pandesara GIDC" required
+                style="background: #111a2e; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; color: #f8fafc; padding: 10px 14px; font-size: 13px;"
+                oninput="updateAddNodePreview()">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <!-- Zone Code / Tag -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label"
+                  style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-tag" style="color: #06b6d4;"></i> Zone Code *
+                </label>
+                <input type="text" id="addNodeZoneCode" class="form-control" placeholder="e.g. Zone J" required
+                  style="background: #111a2e; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; color: #f8fafc; padding: 10px 14px; font-size: 13px;"
+                  oninput="updateAddNodePreview()">
+              </div>
+
+              <!-- Ward Category / Role -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label"
+                  style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-city" style="color: #f59e0b;"></i> Ward Classification
+                </label>
+                <select id="addNodeRole" class="form-control"
+                  style="background: #111a2e; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; color: #f8fafc; padding: 10px 14px; font-size: 13px;"
+                  onchange="updateAddNodePreview()">
+                  <option value="Residential Ward" selected>Residential Ward</option>
+                  <option value="Commercial District">Commercial District</option>
+                  <option value="Industrial Cluster">Industrial Cluster</option>
+                  <option value="Peripheral Extension">Peripheral Extension</option>
+                  <option value="Waterfront Hub">Waterfront Hub</option>
+                  <option value="Civic Healthcare Hub">Civic Healthcare Hub</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Parent Connection Node -->
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label"
+                style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
+                <span style="display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-sitemap" style="color: #38bdf8;"></i> Connected Parent Node in Tree *
+                </span>
+                <span style="font-size: 11px; color: #94a3b8; font-weight: 500;">Branches from this node</span>
+              </label>
+              <select id="addNodeParentSelect" class="form-control" required
+                style="background: #111a2e; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; color: #f8fafc; padding: 10px 14px; font-size: 13px;"
+                onchange="updateAddNodePreview()">
+                <!-- Populated dynamically -->
+              </select>
+
+              <!-- Quick Connect Chips -->
+              <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                <span style="font-size: 10.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Quick
+                  Link:</span>
+                <button type="button" class="btn btn-sm" onclick="quickSelectParent('Central Zone (Chowk)')"
+                  style="padding: 2px 8px; font-size: 11px; background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 6px;">Chowk
+                  (Root)</button>
+                <button type="button" class="btn btn-sm" onclick="quickSelectParent('West Zone (Adajan)')"
+                  style="padding: 2px 8px; font-size: 11px; background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); border-radius: 6px;">Adajan
+                  (W)</button>
+                <button type="button" class="btn btn-sm" onclick="quickSelectParent('Varachha Zone A')"
+                  style="padding: 2px 8px; font-size: 11px; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 6px;">Varachha
+                  A</button>
+              </div>
+            </div>
+
+            <!-- Branch / Side Selector -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label"
+                style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-code-branch" style="color: #a855f7;"></i> Binary Tree Branch Placement
+              </label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <label id="labelBranchAuto"
+                  style="cursor: pointer; background: rgba(6,182,212,0.15); border: 1.5px solid #06b6d4; border-radius: 10px; padding: 10px; text-align: center; font-size: 11.5px; font-weight: 700; color: #f8fafc; transition: all 0.2s;">
+                  <input type="radio" name="addNodeBranch" value="auto" checked onchange="onBranchRadioChange()"
+                    style="display:none;">
+                  <i class="fa-solid fa-wand-magic-sparkles"
+                    style="color:#06b6d4; display:block; margin-bottom:4px; font-size:13px;"></i>
+                  Auto Branch
+                </label>
+                <label id="labelBranchLeft"
+                  style="cursor: pointer; background: #111a2e; border: 1.5px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; text-align: center; font-size: 11.5px; font-weight: 700; color: #94a3b8; transition: all 0.2s;">
+                  <input type="radio" name="addNodeBranch" value="left" onchange="onBranchRadioChange()"
+                    style="display:none;">
+                  <i class="fa-solid fa-arrow-left"
+                    style="color:#10b981; display:block; margin-bottom:4px; font-size:13px;"></i>
+                  Left Child (L)
+                </label>
+                <label id="labelBranchRight"
+                  style="cursor: pointer; background: #111a2e; border: 1.5px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; text-align: center; font-size: 11.5px; font-weight: 700; color: #94a3b8; transition: all 0.2s;">
+                  <input type="radio" name="addNodeBranch" value="right" onchange="onBranchRadioChange()"
+                    style="display:none;">
+                  <i class="fa-solid fa-arrow-right"
+                    style="color:#f59e0b; display:block; margin-bottom:4px; font-size:13px;"></i>
+                  Right Child (R)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Visual Topology Mini-Canvas -->
+          <div
+            style="background: rgba(10, 18, 35, 0.95); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div
+                  style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-sitemap"></i> Live Topology Preview
+                </div>
+                <span id="addNodePreviewLevelBadge"
+                  style="background: rgba(6,182,212,0.18); border: 1px solid rgba(6,182,212,0.4); color: #38bdf8; padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 11px;">
+                  Level 1
+                </span>
+              </div>
+
+              <!-- Mini SVG Topology Canvas -->
+              <div
+                style="position: relative; height: 190px; background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.08) 0%, transparent 80%); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.12); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <svg id="addNodeMiniSvg" viewBox="0 0 340 190" style="width: 100%; height: 100%;">
+                  <defs>
+                    <marker id="miniArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                      <path d="M0,0 L0,6 L6,3 z" fill="#10b981" />
+                    </marker>
+                    <filter id="miniGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <!-- Dynamic Branch Path -->
+                  <path id="miniSvgBranchPath" d="M 170 50 C 170 95, 170 95, 170 140" stroke="#10b981"
+                    stroke-width="2.5" stroke-dasharray="5 3" fill="none" marker-end="url(#miniArrow)" />
+
+                  <!-- Parent Node (Top) -->
+                  <g id="miniSvgParentGroup" transform="translate(170, 45)" style="cursor: default;">
+                    <circle cx="0" cy="0" r="26" fill="#1e293b" stroke="#06b6d4" stroke-width="2.5" />
+                    <text id="miniSvgParentZone" x="0" y="-4" text-anchor="middle" fill="#38bdf8" font-size="10"
+                      font-weight="900" font-family="system-ui, sans-serif">Zone A</text>
+                    <text id="miniSvgParentLabel" x="0" y="8" text-anchor="middle" fill="#cbd5e1" font-size="8.5"
+                      font-weight="700" font-family="system-ui, sans-serif">Chowk</text>
+                  </g>
+
+                  <!-- New Candidate Node (Bottom) -->
+                  <g id="miniSvgChildGroup" transform="translate(170, 140)" filter="url(#miniGlow)">
+                    <circle cx="0" cy="0" r="27" fill="#0f2027" stroke="#10b981" stroke-width="3" />
+                    <circle cx="0" cy="0" r="33" fill="none" stroke="rgba(16,185,129,0.35)" stroke-width="1.5"
+                      stroke-dasharray="4 3" />
+                    <text id="miniSvgChildZone" x="0" y="-4" text-anchor="middle" fill="#10b981" font-size="10"
+                      font-weight="900" font-family="system-ui, sans-serif">Zone J</text>
+                    <text id="miniSvgChildLabel" x="0" y="8" text-anchor="middle" fill="#f8fafc" font-size="8"
+                      font-weight="800" font-family="system-ui, sans-serif">New Ward</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Live Topology Details Summary -->
+            <div
+              style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; margin-top: 12px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #94a3b8;">Branch Mode:</span>
+                <span id="miniSvgBranchText" style="color: #10b981; font-weight: 700;">Auto Intelligent Branch</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #94a3b8;">Hierarchy Route:</span>
+                <span id="miniSvgPathText"
+                  style="color: #f1f5f9; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">Chowk
+                  &rarr; New Ward</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #94a3b8;">Parent Anchor:</span>
+                <span id="miniSvgParentNameText"
+                  style="color: #38bdf8; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">Central
+                  Zone (Chowk)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 18px; margin-top: 22px;">
+          <div style="font-size: 11.5px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-circle-info" style="color: #06b6d4;"></i> Automatically connects to adjacency graph
+            &amp; BFS routing.
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="button" class="btn btn-secondary" onclick="closeAddNodeModal()"
+              style="padding: 9px 18px; font-size: 13px; font-weight: 700;">
+              Cancel
+            </button>
+            <button type="submit" id="submitAddNodeBtn" class="btn btn-success"
+              style="padding: 9px 24px; font-size: 13px; font-weight: 800; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 18px rgba(16,185,129,0.4); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+              <i class="fa-solid fa-plus"></i> Confirm &amp; Add Node
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -746,7 +1554,7 @@
   <script src="/static/js/main.js"></script>
   <script src="/static/js/admin.js"></script>
   <script>
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
       const wrapper = document.getElementById('adminBellWrapper');
       if (wrapper && !wrapper.contains(e.target)) {
         const dd = document.getElementById('adminNotifDropdown');
@@ -794,38 +1602,45 @@
     }
 
     function loadAreaMap() {
-      Promise.all([
-        fetch('/api/graph/map-data').then(r => r.json()),
-        fetch('/api/complaints').then(r => r.json())
-      ]).then(([mapData, complaints]) => {
-        _mapNodesData = mapData.nodes || [];
-        _mapEdgesData = mapData.edges || [];
-        _allComplaintsData = complaints || [];
+      // Step 1: Immediately fetch graph structure and render — no dependency on complaints
+      fetch('/api/graph/map-data')
+        .then(r => r.json())
+        .then(mapData => {
+          _mapNodesData = mapData.nodes || [];
+          _mapEdgesData = mapData.edges || [];
 
-        // Count complaints for each zone
-        const zoneCounts = {};
-        _mapNodesData.forEach(n => { zoneCounts[n.area] = 0; });
-        _allComplaintsData.forEach(c => {
-          const matched = matchComplaintToZone(c, _mapNodesData);
-          zoneCounts[matched] = (zoneCounts[matched] || 0) + 1;
-        });
+          // Initialize complaint counts to zero so graph renders immediately
+          _mapNodesData.forEach(n => { n.complaint_count = 0; });
+          renderPointWayGraph(_mapNodesData, _mapEdgesData);
 
-        _mapNodesData.forEach(n => {
-          n.complaint_count = zoneCounts[n.area] || 0;
-        });
+          // Populate BFS search dropdown
+          const searchSel = document.getElementById('adminBfsSearchSelect');
+          if (searchSel && _mapNodesData.length > 0) {
+            searchSel.innerHTML = '<option value="">-- Select Location to Search --</option>' +
+              _mapNodesData.map(n => `<option value="${escapeHtml(n.area)}">${escapeHtml(n.area)} [${n.role || 'Node'} - L${n.level || 0}]</option>`).join('');
+          }
 
-        renderPointWayGraph(_mapNodesData, _mapEdgesData);
+          if (_selectedZoneName) selectZone(_selectedZoneName);
 
-        const searchSel = document.getElementById('adminBfsSearchSelect');
-        if (searchSel && _mapNodesData.length > 0) {
-          searchSel.innerHTML = '<option value="">-- Select Location to Search --</option>' +
-            _mapNodesData.map(n => `<option value="${escapeHtml(n.area)}">${escapeHtml(n.area)} [${n.role || 'Node'} - L${n.level || 0}]</option>`).join('');
-        }
-
-        if (_selectedZoneName) {
-          selectZone(_selectedZoneName);
-        }
-      }).catch(err => console.error('Location Graph init error:', err));
+          // Step 2: Background enrich with complaint counts (non-blocking)
+          fetch('/api/complaints')
+            .then(r => r.json())
+            .then(complaints => {
+              _allComplaintsData = complaints || [];
+              const zoneCounts = {};
+              _mapNodesData.forEach(n => { zoneCounts[n.area] = 0; });
+              _allComplaintsData.forEach(c => {
+                const matched = matchComplaintToZone(c, _mapNodesData);
+                zoneCounts[matched] = (zoneCounts[matched] || 0) + 1;
+              });
+              _mapNodesData.forEach(n => { n.complaint_count = zoneCounts[n.area] || 0; });
+              // Re-render with complaint count badges
+              renderPointWayGraph(_mapNodesData, _mapEdgesData);
+              if (_selectedZoneName) selectZone(_selectedZoneName);
+            })
+            .catch(() => { /* silently skip if complaints API unavailable */ });
+        })
+        .catch(err => console.error('Location Graph init error:', err));
     }
 
     function renderPointWayGraph(nodes, edges) {
@@ -842,7 +1657,7 @@
         const edgeId = `edge_${safeId(u.area)}_${safeId(v.area)}`;
         // Core diamond edges get higher visual weight
         const isCoreDiamond = (u.zone && ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(u.zone)) &&
-                              (v.zone && ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(v.zone));
+          (v.zone && ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(v.zone));
         const strokeColor = isCoreDiamond ? '#475569' : '#334155';
         const strokeWidth = isCoreDiamond ? '3.5' : '2.5';
 
@@ -1050,7 +1865,7 @@
         const u = _mapNodesData.find(n => n.area === e.from);
         const v = _mapNodesData.find(n => n.area === e.to);
         const isCore = u && v && (['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(u.zone)) &&
-                                  (['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(v.zone));
+          (['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(v.zone));
         const defCol = isCore ? '#475569' : '#334155';
         const defWidth = isCore ? '3.5' : '2.5';
 
@@ -1087,40 +1902,229 @@
       }
     }
 
-    function adminAddNodePrompt() {
-      const nodeName = prompt("Enter new node/location name:");
-      if (!nodeName || !nodeName.trim()) return;
+    async function openAddNodeModal() {
+      const modal = document.getElementById('adminAddNodeModal');
+      if (!modal) return;
 
-      const neighbor = prompt("Enter connected neighbor node (optional, e.g. Zone A):") || "";
+      // Ensure map data is loaded before opening modal
+      if (!_mapNodesData || _mapNodesData.length === 0) {
+        try {
+          const r = await fetch('/api/graph/map-data');
+          const mapData = await r.json();
+          _mapNodesData = mapData.nodes || [];
+          _mapEdgesData = mapData.edges || [];
+          _mapNodesData.forEach(n => { n.complaint_count = 0; });
+        } catch (e) { /* continue with empty if fetch fails */ }
+      }
 
-      fetch("/api/graph/add-node", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ node_name: nodeName.trim(), neighbor: neighbor.trim() })
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          if (typeof showToast === 'function') {
-            showToast(data.message, 'success');
-          } else {
-            alert(data.message);
-          }
-          const select = document.getElementById("adminBfsSearchSelect");
-          if (select) {
-            const opt = document.createElement("option");
-            opt.value = nodeName.trim();
-            opt.textContent = nodeName.trim() + " [New Node]";
-            select.appendChild(opt);
-            select.value = nodeName.trim();
-          }
+      // Populate Parent Dropdown from current nodes
+      const parentSelect = document.getElementById('addNodeParentSelect');
+      if (parentSelect) {
+        if (_mapNodesData && _mapNodesData.length > 0) {
+          parentSelect.innerHTML = _mapNodesData.map(n => {
+            const isSelected = (_selectedZoneName === n.area) || (!_selectedZoneName && n.level === 0);
+            return `<option value="${escapeHtml(n.area)}" ${isSelected ? 'selected' : ''}>${escapeHtml(n.area)} [${n.role || 'Node'} · L${n.level || 0}]</option>`;
+          }).join('');
         } else {
-          alert(data.message || "Failed to add node.");
+          parentSelect.innerHTML = '<option value="Central Zone (Chowk)">Central Zone (Chowk) [Root Node · L0]</option>';
         }
-      })
-      .catch(err => {
-        alert("Error adding node: " + err);
-      });
+      }
+
+      // Suggest next zone code
+      const existingZones = new Set((_mapNodesData || []).map(n => n.zone));
+      let nextZone = 'Zone J';
+      for (let i = 65; i <= 90; i++) {
+        const candidate = 'Zone ' + String.fromCharCode(i);
+        if (!existingZones.has(candidate)) { nextZone = candidate; break; }
+      }
+      const zoneInput = document.getElementById('addNodeZoneCode');
+      if (zoneInput) zoneInput.value = nextZone;
+      const nameInput = document.getElementById('addNodeAreaName');
+      if (nameInput) nameInput.value = '';
+
+      // Reset branch selection to auto
+      const autoRadio = document.querySelector('input[name="addNodeBranch"][value="auto"]');
+      if (autoRadio) autoRadio.checked = true;
+      onBranchRadioChange();
+      updateAddNodePreview();
+
+      modal.style.display = 'flex';
+      setTimeout(() => { if (nameInput) nameInput.focus(); }, 120);
+    }
+
+    function quickSelectParent(areaName) {
+      const sel = document.getElementById('addNodeParentSelect');
+      if (!sel) return;
+      // Try to select the matching option
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === areaName) {
+          sel.selectedIndex = i;
+          break;
+        }
+      }
+      updateAddNodePreview();
+    }
+
+    function closeAddNodeModal() {
+      const modal = document.getElementById('adminAddNodeModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function onBranchRadioChange() {
+      const radios = document.getElementsByName('addNodeBranch');
+      let val = 'auto';
+      for (const r of radios) {
+        if (r.checked) { val = r.value; break; }
+      }
+
+      const lAuto = document.getElementById('labelBranchAuto');
+      const lLeft = document.getElementById('labelBranchLeft');
+      const lRight = document.getElementById('labelBranchRight');
+
+      if (lAuto) {
+        lAuto.style.background = val === 'auto' ? 'rgba(6,182,212,0.15)' : '#111a2e';
+        lAuto.style.borderColor = val === 'auto' ? '#06b6d4' : 'rgba(255,255,255,0.12)';
+        lAuto.style.color = val === 'auto' ? '#f8fafc' : '#94a3b8';
+      }
+      if (lLeft) {
+        lLeft.style.background = val === 'left' ? 'rgba(16,185,129,0.15)' : '#111a2e';
+        lLeft.style.borderColor = val === 'left' ? '#10b981' : 'rgba(255,255,255,0.12)';
+        lLeft.style.color = val === 'left' ? '#f8fafc' : '#94a3b8';
+      }
+      if (lRight) {
+        lRight.style.background = val === 'right' ? 'rgba(245,158,11,0.15)' : '#111a2e';
+        lRight.style.borderColor = val === 'right' ? '#f59e0b' : 'rgba(255,255,255,0.12)';
+        lRight.style.color = val === 'right' ? '#f8fafc' : '#94a3b8';
+      }
+
+      updateAddNodePreview();
+    }
+
+    function updateAddNodePreview() {
+      const name = (document.getElementById('addNodeAreaName')?.value || '').trim() || 'New Ward';
+      const parent = document.getElementById('addNodeParentSelect')?.value || 'Central Zone (Chowk)';
+      const zone = (document.getElementById('addNodeZoneCode')?.value || '').trim() || 'Zone ?';
+
+      const parentNode = (_mapNodesData || []).find(n => n.area === parent);
+      const parentLevel = parentNode ? (parentNode.level || 0) : 0;
+      const newLevel = Math.min(parentLevel + 1, 3);
+      const parentShort = parentNode ? (parentNode.short_label || parentNode.area.split(' ')[0]) : (parent.split(' ')[0]);
+      const parentZone = parentNode ? (parentNode.zone || parentNode.code || 'Zone A') : 'Zone A';
+
+      const radios = document.getElementsByName('addNodeBranch');
+      let branch = 'auto';
+      for (const r of radios) { if (r.checked) { branch = r.value; break; } }
+
+      // ── Update Level Badge ──
+      const badgeEl = document.getElementById('addNodePreviewLevelBadge');
+      if (badgeEl) badgeEl.textContent = `Level ${newLevel}`;
+
+      // ── Update Mini SVG ──
+      // Branch path: left curves to (90,140), right to (250,140), auto stays center (170,140)
+      let childX = 170;
+      let branchLabel = 'Auto Intelligent Branch';
+      let pathStroke = '#10b981';
+      if (branch === 'left') { childX = 90; branchLabel = 'Left Child Slot (L)'; pathStroke = '#10b981'; }
+      if (branch === 'right') { childX = 250; branchLabel = 'Right Child Slot (R)'; pathStroke = '#f59e0b'; }
+
+      // Curve control: arc from parent center (170,45) to child position
+      const pathD = `M 170 45 C 170 95, ${childX} 95, ${childX} 140`;
+      const branchPath = document.getElementById('miniSvgBranchPath');
+      if (branchPath) {
+        branchPath.setAttribute('d', pathD);
+        branchPath.setAttribute('stroke', pathStroke);
+        // Update arrowhead color
+        const miniArrow = document.getElementById('miniArrow');
+        if (miniArrow) { const p = miniArrow.querySelector('path'); if (p) p.setAttribute('fill', pathStroke); }
+      }
+
+      // Move child node group to new X position
+      const childGroup = document.getElementById('miniSvgChildGroup');
+      if (childGroup) childGroup.setAttribute('transform', `translate(${childX}, 140)`);
+
+      // Update parent node labels
+      const pZone = document.getElementById('miniSvgParentZone');
+      if (pZone) pZone.textContent = parentZone;
+      const pLabel = document.getElementById('miniSvgParentLabel');
+      if (pLabel) pLabel.textContent = parentShort.substring(0, 10);
+
+      // Update child node labels
+      const cZone = document.getElementById('miniSvgChildZone');
+      if (cZone) { cZone.textContent = zone.substring(0, 8); cZone.setAttribute('fill', pathStroke); }
+      const cLabel = document.getElementById('miniSvgChildLabel');
+      if (cLabel) cLabel.textContent = name.substring(0, 12);
+
+      // Update info summary below SVG
+      const branchTextEl = document.getElementById('miniSvgBranchText');
+      if (branchTextEl) { branchTextEl.textContent = branchLabel; branchTextEl.style.color = pathStroke; }
+      const pathTextEl = document.getElementById('miniSvgPathText');
+      if (pathTextEl) pathTextEl.textContent = `${parentShort} → ${name.substring(0, 12)}`;
+      const parentNameEl = document.getElementById('miniSvgParentNameText');
+      if (parentNameEl) parentNameEl.textContent = parent;
+    }
+
+    async function submitAddNodeForm(e) {
+      e.preventDefault();
+      const name = (document.getElementById('addNodeAreaName').value || '').trim();
+      const parent = document.getElementById('addNodeParentSelect').value;
+      const zoneCode = (document.getElementById('addNodeZoneCode').value || '').trim();
+      const role = document.getElementById('addNodeRole').value;
+
+      const radios = document.getElementsByName('addNodeBranch');
+      let branch = 'auto';
+      for (const r of radios) { if (r.checked) { branch = r.value; break; } }
+
+      if (!name) {
+        showToast('Please provide a location name.', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('submitAddNodeBtn');
+      const origHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
+
+      try {
+        const res = await fetch('/api/graph/add-node', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            node_name: name,
+            neighbor: parent,
+            zone_code: zoneCode,
+            branch: branch,
+            role: role,
+            description: `${role} connected under ${parent}`
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(data.message || `Location '${name}' added successfully!`, 'success');
+          closeAddNodeModal();
+
+          // Refresh the location graph
+          loadAreaMap();
+
+          // Select and highlight the newly added node after graph reload
+          setTimeout(() => {
+            selectZone(name);
+            const searchSel = document.getElementById('adminBfsSearchSelect');
+            if (searchSel) searchSel.value = name;
+          }, 350);
+        } else {
+          showToast(data.message || 'Failed to add node to graph.', 'error');
+        }
+      } catch (err) {
+        showToast('Network error while adding node.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+
+    function adminAddNodePrompt() {
+      openAddNodeModal();
     }
 
     function adminRunBfsSearch() {
@@ -1243,7 +2247,555 @@
           _bfsRunning = false;
         });
     }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // PHASE 3: ALGORITHM WORKBENCH HANDLERS & RICH OUTPUT RENDERERS
+    // ══════════════════════════════════════════════════════════════════════════
+
+    // Global state for Phase 3 results
+    let _p3CurrentSortedRecords = [];
+    let _p3CurrentPriorityRecords = [];
+
+    function p3QuickSearch(id) {
+      const input = document.getElementById('p3SearchId');
+      if (input) {
+        input.value = id;
+        p3RunSearch('binary');
+      }
+    }
+
+    function p3RenderPriorityPill(prio) {
+      const p = (prio || 'Medium').trim();
+      const lower = p.toLowerCase();
+      if (lower === 'critical') {
+        return `<span class="prio-badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.55); box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); font-weight: 800;"><span class="prio-dot" style="background: #ef4444; box-shadow: 0 0 8px #ef4444;"></span>Critical</span>`;
+      } else if (lower === 'high') {
+        return `<span class="prio-badge prio-badge-high"><span class="prio-dot prio-dot-high"></span>High</span>`;
+      } else if (lower === 'medium') {
+        return `<span class="prio-badge prio-badge-medium"><span class="prio-dot prio-dot-medium"></span>Medium</span>`;
+      } else {
+        return `<span class="prio-badge prio-badge-low"><span class="prio-dot prio-dot-low"></span>Low</span>`;
+      }
+    }
+
+    function p3RenderStatusPill(status) {
+      const s = (status || 'Pending').trim();
+      const lower = s.toLowerCase().replace(/[\s-]/g, '_');
+      if (lower === 'resolved') {
+        return `<span class="status-badge status-badge-resolved"><i class="fa-solid fa-circle-check" style="font-size: 9px;"></i>Resolved</span>`;
+      } else if (lower === 'in_progress') {
+        return `<span class="status-badge status-badge-in_progress"><i class="fa-solid fa-spinner fa-spin" style="font-size: 9px;"></i>In Progress</span>`;
+      } else if (lower === 'rejected') {
+        return `<span class="status-badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35);"><i class="fa-solid fa-circle-xmark" style="font-size: 9px;"></i>Rejected</span>`;
+      } else if (lower === 'approved') {
+        return `<span class="status-badge" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.35);"><i class="fa-solid fa-thumbs-up" style="font-size: 9px;"></i>Approved</span>`;
+      } else {
+        return `<span class="status-badge status-badge-pending"><i class="fa-solid fa-clock" style="font-size: 9px;"></i>Pending</span>`;
+      }
+    }
+
+    async function p3RunSearch(method) {
+      const targetId = (document.getElementById('p3SearchId').value || '').trim();
+      if (!targetId) {
+        showToast('Please enter a Complaint ID to search.', 'warning');
+        const input = document.getElementById('p3SearchId');
+        if (input) input.focus();
+        return;
+      }
+
+      const activeBtn = method === 'binary' ? document.getElementById('p3BinaryBtn') : document.getElementById('p3LinearBtn');
+      const origText = activeBtn ? activeBtn.innerHTML : '';
+      if (activeBtn) {
+        activeBtn.disabled = true;
+        activeBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Searching...`;
+      }
+
+      const box = document.getElementById('p3ResultContainer');
+      const title = document.getElementById('p3ResultTitle');
+      const sub = document.getElementById('p3ResultSub');
+      const icon = document.getElementById('p3ResultIcon');
+      const kpi = document.getElementById('p3KpiBar');
+      const body = document.getElementById('p3ResultBody');
+
+      box.style.display = 'block';
+      body.innerHTML = `
+        <div style="text-align: center; padding: 24px; color: #94a3b8; font-size: 13px;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #06b6d4; margin-bottom: 8px; display: block;"></i>
+          Executing ${method.toUpperCase()} Search across database records...
+        </div>
+      `;
+
+      const t0 = performance.now();
+
+      try {
+        const res = await fetch('/api/dsa/phase3/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_id: targetId, method: method })
+        });
+        const data = await res.json();
+        const t1 = performance.now();
+        const runtime = (t1 - t0).toFixed(2);
+
+        if (!data.success || !data.found) {
+          icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>';
+          icon.style.background = 'rgba(239, 68, 68, 0.15)';
+          title.textContent = `Search Result: Complaint #${escapeHtml(targetId)} Not Found`;
+          sub.textContent = `Scanned database via ${data.method || method.toUpperCase()}`;
+          kpi.innerHTML = `
+            <span class="algo-kpi-pill" style="border-color: rgba(239,68,68,0.3); color: #f87171; background: rgba(239,68,68,0.1);"><i class="fa-solid fa-xmark"></i> Status: Unresolved</span>
+            <span class="algo-kpi-pill"><i class="fa-solid fa-stopwatch"></i> Runtime: ${runtime} ms</span>
+            <span class="algo-kpi-pill"><i class="fa-solid fa-bars-staggered"></i> Steps Checked: ${data.steps_count || 0}</span>
+          `;
+          body.innerHTML = `
+            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 18px 20px; font-size: 13px; color: #f87171;">
+              <div style="font-weight: 800; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-circle-exclamation"></i> No Matching Record in Database
+              </div>
+              <p style="margin: 0 0 12px 0; color: #fca5a5; font-size: 12px; line-height: 1.5;">
+                Complaint ID <strong>#${escapeHtml(targetId)}</strong> was not found in the current civic records repository after ${data.steps_count || 0} step(s).
+              </p>
+              <div style="font-size: 11px; color: #cbd5e1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span>Try searching an existing complaint:</span>
+                <span class="algo-quick-chip" onclick="p3QuickSearch(16)">#16</span>
+                <span class="algo-quick-chip" onclick="p3QuickSearch(15)">#15</span>
+                <span class="algo-quick-chip" onclick="p3QuickSearch(14)">#14</span>
+                <span class="algo-quick-chip" onclick="p3QuickSearch(11)">#11</span>
+                <span class="algo-quick-chip" onclick="p3QuickSearch(8)">#8</span>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        const c = data.record;
+        icon.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i>';
+        icon.style.background = 'rgba(16, 185, 129, 0.15)';
+        title.textContent = `Verified Match: Complaint #${c.id} Found`;
+        sub.textContent = `Located at array index [${data.index}] using ${data.method}`;
+
+        kpi.innerHTML = `
+          <span class="algo-kpi-pill" style="border-color: rgba(16,185,129,0.35); color: #34d399; background: rgba(16,185,129,0.12);"><i class="fa-solid fa-check"></i> Found at Index ${data.index}</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-microchip"></i> ${data.method}</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-gauge-high"></i> Complexity: ${method === 'binary' ? 'O(log N)' : 'O(N)'}</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-list-ol"></i> ${data.steps_count} Comparison Step(s)</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-stopwatch"></i> ${runtime} ms</span>
+        `;
+
+        // Render high-impact Split Card: Hero Card (left) and Algorithmic Diagnostic Trace (right)
+        body.innerHTML = `
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
+            
+            <!-- Hero Complaint Card -->
+            <div style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(10, 18, 35, 0.95)); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+                <div>
+                  <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 800; color: #10b981; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); padding: 3px 8px; border-radius: 6px;">
+                    #${c.id}
+                  </span>
+                  <h4 style="font-size: 15px; font-weight: 800; color: #f8fafc; margin: 8px 0 4px 0;">
+                    ${escapeHtml(c.title || 'Untitled Complaint')}
+                  </h4>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                  ${p3RenderPriorityPill(c.priority)}
+                  ${p3RenderStatusPill(c.status)}
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; font-size: 12px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+                <div>
+                  <span style="color: #64748b; font-size: 10px; font-weight: 700; text-transform: uppercase; display: block;">Category</span>
+                  <span style="color: #cbd5e1; font-weight: 700;"><i class="fa-solid fa-tag" style="color: #06b6d4; font-size: 10px;"></i> ${escapeHtml(c.category || 'General')}</span>
+                </div>
+                <div>
+                  <span style="color: #64748b; font-size: 10px; font-weight: 700; text-transform: uppercase; display: block;">Ward Location</span>
+                  <span style="color: #cbd5e1; font-weight: 700;"><i class="fa-solid fa-location-dot" style="color: #f59e0b; font-size: 10px;"></i> ${escapeHtml(c.location || 'Central Ward')}</span>
+                </div>
+                <div>
+                  <span style="color: #64748b; font-size: 10px; font-weight: 700; text-transform: uppercase; display: block;">Department</span>
+                  <span style="color: #38bdf8; font-weight: 700;">${escapeHtml(c.department || 'Unassigned')}</span>
+                </div>
+                <div>
+                  <span style="color: #64748b; font-size: 10px; font-weight: 700; text-transform: uppercase; display: block;">Assigned Officer</span>
+                  <span style="color: #cbd5e1; font-weight: 600;">${c.assigned_officer_name ? escapeHtml(c.assigned_officer_name) : '<em style="color:#64748b;">None</em>'}</span>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 14px;">
+                <button type="button" class="algo-btn algo-btn-cyan" style="flex: 1;" onclick="openAdminModal(${c.id})">
+                  <i class="fa-solid fa-gear"></i> Manage & Edit Complaint
+                </button>
+              </div>
+            </div>
+
+            <!-- Algorithmic Diagnostic Trace -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="font-size: 12px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-diagram-project"></i> Execution Telemetry Trace
+                </div>
+                <p style="font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 12px;">
+                  ${method === 'binary'
+            ? `Binary Search repeatedly halved the search boundary using integer midpoint pivots <code style="color:#38bdf8; font-family:var(--font-mono);">mid = (low + high) // 2</code> until targeting ID #${c.id}.`
+            : `Linear Search performed sequential examination starting from index 0 across active database records until matching ID #${c.id}.`}
+                </p>
+
+                <!-- Comparison Step Sequence -->
+                <div style="background: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.06); max-height: 120px; overflow-y: auto; font-family: var(--font-mono); font-size: 11px;">
+                  ${(data.steps || []).map((s, idx) => `
+                    <div style="padding: 3px 0; color: ${s.current_id === c.id || s.id === c.id ? '#10b981' : '#94a3b8'}; font-weight: ${s.current_id === c.id || s.id === c.id ? '800' : 'normal'};">
+                      &bull; Step ${idx + 1}: ${method === 'binary' ? `Range [${s.low}..${s.high}] &rarr; Pivot index ${s.mid} (ID #${s.current_id}) ${s.current_id === c.id ? '&check; MATCH!' : ''}` : `Index ${s.index}: Checking ID #${s.id} ${s.id === c.id ? '&check; MATCH!' : ''}`}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
+                <span style="color: #94a3b8;">Algorithm Performance:</span>
+                <span style="color: #10b981; font-weight: 800;">
+                  <i class="fa-solid fa-bolt"></i> Verified in ${data.steps_count} comparison(s)
+                </span>
+              </div>
+            </div>
+
+          </div>
+        `;
+      } catch (err) {
+        body.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 14px;">Error executing search: ${err.message}</div>`;
+      } finally {
+        if (activeBtn) {
+          activeBtn.disabled = false;
+          activeBtn.innerHTML = origText;
+        }
+      }
+    }
+
+    async function p3RunSort() {
+      const field = document.getElementById('p3SortField').value;
+      const algo = document.getElementById('p3SortAlgo').value;
+      const order = document.getElementById('p3SortOrder').value;
+
+      const btn = document.getElementById('p3SortBtn');
+      const origText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Sorting Records...`;
+      }
+
+      const box = document.getElementById('p3ResultContainer');
+      const title = document.getElementById('p3ResultTitle');
+      const sub = document.getElementById('p3ResultSub');
+      const icon = document.getElementById('p3ResultIcon');
+      const kpi = document.getElementById('p3KpiBar');
+      const body = document.getElementById('p3ResultBody');
+
+      box.style.display = 'block';
+      body.innerHTML = `
+        <div style="text-align: center; padding: 24px; color: #94a3b8; font-size: 13px;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #a855f7; margin-bottom: 8px; display: block;"></i>
+          Executing ${algo === 'quick' ? 'Quick Sort' : 'Merge Sort'} on ${field.toUpperCase()}...
+        </div>
+      `;
+
+      const t0 = performance.now();
+
+      try {
+        const res = await fetch('/api/dsa/phase3/sort', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ field: field, algorithm: algo, order: order })
+        });
+        const data = await res.json();
+        const t1 = performance.now();
+        const runtime = (t1 - t0).toFixed(2);
+
+        if (!data.success) {
+          body.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 14px;">Sorting failed: ${data.message || 'Unknown error'}</div>`;
+          return;
+        }
+
+        _p3CurrentSortedRecords = data.sorted_records || [];
+
+        icon.innerHTML = '<i class="fa-solid fa-arrow-down-up-across-line" style="color: #a855f7;"></i>';
+        icon.style.background = 'rgba(168, 85, 247, 0.15)';
+        title.textContent = `Sorted ${data.count} Complaint Records (${data.algorithm})`;
+        sub.textContent = `Key: ${data.field.toUpperCase()} &middot; Direction: ${data.order}`;
+
+        kpi.innerHTML = `
+          <span class="algo-kpi-pill" style="border-color: rgba(168,85,247,0.35); color: #c084fc; background: rgba(168,85,247,0.12);"><i class="fa-solid fa-microchip"></i> ${data.algorithm}</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-gauge-high"></i> Complexity: O(N log N)</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-layer-group"></i> ${data.count} Records</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-stopwatch"></i> ${runtime} ms</span>
+          <button type="button" class="algo-btn algo-btn-cyan" style="padding: 5px 11px; font-size: 11px;" onclick="p3ApplySortedToMainTable()">
+            <i class="fa-solid fa-table"></i> Apply to Main Table
+          </button>
+        `;
+
+        renderP3SortedTable(_p3CurrentSortedRecords);
+
+      } catch (err) {
+        body.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 14px;">Error executing sort: ${err.message}</div>`;
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origText;
+        }
+      }
+    }
+
+    function renderP3SortedTable(records) {
+      const body = document.getElementById('p3ResultBody');
+      if (!body) return;
+
+      body.innerHTML = `
+        <!-- Filter inside sorted table -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+          <div style="position: relative; flex: 1; max-width: 320px;">
+            <i class="fa-solid fa-filter" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 11px;"></i>
+            <input type="text" placeholder="Filter sorted list..."
+                   oninput="p3FilterSortedResults(this.value)"
+                   style="width: 100%; padding: 6px 10px 6px 28px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: #fff; font-size: 12px;">
+          </div>
+          <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">
+            Displaying <strong style="color: #38bdf8;">${records.length}</strong> items in sorted sequence
+          </span>
+        </div>
+
+        <div style="max-height: 340px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: rgba(10, 16, 30, 0.7);">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; min-width: 700px;">
+            <thead style="position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); z-index: 2;">
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-size: 11px; text-transform: uppercase;">
+                <th style="padding: 10px 12px; width: 50px;">#</th>
+                <th style="padding: 10px 12px; width: 75px;">ID</th>
+                <th style="padding: 10px 12px; min-width: 180px;">Title</th>
+                <th style="padding: 10px 12px; width: 120px;">Category</th>
+                <th style="padding: 10px 12px; width: 140px;">Ward Location</th>
+                <th style="padding: 10px 12px; width: 100px;">Priority</th>
+                <th style="padding: 10px 12px; width: 115px;">Status</th>
+                <th style="padding: 10px 12px; width: 85px; text-align: center;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${records.map((c, idx) => `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease;"
+                    onmouseover="this.style.background='rgba(56,189,248,0.04)'"
+                    onmouseout="this.style.background='transparent'">
+                  <td style="padding: 10px 12px; color: #64748b; font-family: var(--font-mono); font-weight: 700;">#${idx + 1}</td>
+                  <td style="padding: 10px 12px; font-family: var(--font-mono); font-weight: 800; color: #38bdf8;">#${c.id}</td>
+                  <td style="padding: 10px 12px; font-weight: 600; color: #f8fafc;" title="${escapeHtml(c.title || '')}">
+                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">
+                      ${escapeHtml(c.title || 'Untitled')}
+                    </div>
+                  </td>
+                  <td style="padding: 10px 12px; color: #cbd5e1;">${escapeHtml(c.category || 'General')}</td>
+                  <td style="padding: 10px 12px; color: #94a3b8;">
+                    <i class="fa-solid fa-location-dot" style="color: #06b6d4; font-size: 10px; margin-right: 4px;"></i>${escapeHtml(c.location || '-')}
+                  </td>
+                  <td style="padding: 10px 12px;">
+                    ${p3RenderPriorityPill(c.priority)}
+                  </td>
+                  <td style="padding: 10px 12px;">
+                    ${p3RenderStatusPill(c.status)}
+                  </td>
+                  <td style="padding: 10px 12px; text-align: center;">
+                    <button type="button" class="btn btn-sm btn-primary" style="padding: 4px 8px; font-size: 11px;" onclick="openAdminModal(${c.id})">
+                      <i class="fa-solid fa-eye"></i> View
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function p3FilterSortedResults(query) {
+      const q = (query || '').toLowerCase().trim();
+      if (!q) {
+        renderP3SortedTable(_p3CurrentSortedRecords);
+        return;
+      }
+      const filtered = _p3CurrentSortedRecords.filter(c => {
+        const text = `${c.id} ${c.title || ''} ${c.category || ''} ${c.location || ''} ${c.priority || ''} ${c.status || ''}`.toLowerCase();
+        return text.includes(q);
+      });
+      renderP3SortedTable(filtered);
+    }
+
+    function p3ApplySortedToMainTable() {
+      if (!_p3CurrentSortedRecords || _p3CurrentSortedRecords.length === 0) return;
+      if (typeof renderAdminComplaints === 'function') {
+        renderAdminComplaints(_p3CurrentSortedRecords);
+        showToast(`Main Complaints Table updated with ${_p3CurrentSortedRecords.length} sorted records!`, 'success');
+        const searchInput = document.getElementById('admCompSearch');
+        if (searchInput) searchInput.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    async function p3RunPriority() {
+      const btn = document.getElementById('p3PriorityBtn');
+      const origText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Max-Heap...`;
+      }
+
+      const box = document.getElementById('p3ResultContainer');
+      const title = document.getElementById('p3ResultTitle');
+      const sub = document.getElementById('p3ResultSub');
+      const icon = document.getElementById('p3ResultIcon');
+      const kpi = document.getElementById('p3KpiBar');
+      const body = document.getElementById('p3ResultBody');
+
+      box.style.display = 'block';
+      body.innerHTML = `
+        <div style="text-align: center; padding: 24px; color: #94a3b8; font-size: 13px;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #f59e0b; margin-bottom: 8px; display: block;"></i>
+          Constructing PriorityQueue Heap and Extracting Ordered Dispatch Elements...
+        </div>
+      `;
+
+      const t0 = performance.now();
+
+      try {
+        const res = await fetch('/api/dsa/phase3/priority');
+        const data = await res.json();
+        const t1 = performance.now();
+        const runtime = (t1 - t0).toFixed(2);
+
+        if (!data.success) {
+          body.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 14px;">Priority queue processing failed: ${data.message || 'Unknown error'}</div>`;
+          return;
+        }
+
+        _p3CurrentPriorityRecords = data.records || [];
+
+        icon.innerHTML = '<i class="fa-solid fa-crown" style="color: #f59e0b;"></i>';
+        icon.style.background = 'rgba(245, 158, 11, 0.15)';
+        title.textContent = `Priority Queue Dispatch Sequence (${data.count} Complaints)`;
+        sub.textContent = `Extracted via Binary Max-Heap &middot; Emergency Urgency Hierarchy`;
+
+        kpi.innerHTML = `
+          <span class="algo-kpi-pill" style="border-color: rgba(245,158,11,0.35); color: #fbbf24; background: rgba(245,158,11,0.12);"><i class="fa-solid fa-crown"></i> Max-Heap Extraction</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-bolt"></i> O(1) Peek / O(log N) Dequeue</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-layer-group"></i> ${data.count} Complaints</span>
+          <span class="algo-kpi-pill"><i class="fa-solid fa-stopwatch"></i> ${runtime} ms</span>
+          <button type="button" class="algo-btn algo-btn-amber" style="padding: 5px 11px; font-size: 11px;" onclick="p3ApplyPriorityToMainTable()">
+            <i class="fa-solid fa-table"></i> Apply to Main Table
+          </button>
+        `;
+
+        const top3 = _p3CurrentPriorityRecords.slice(0, 3);
+        const remaining = _p3CurrentPriorityRecords.slice(3);
+
+        body.innerHTML = `
+          <!-- Top 3 Priority Dispatch Hero Cards -->
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 12px; font-weight: 800; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Immediate Field Dispatch Priority (Top Urgent Actions)
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+              ${top3.map((c, idx) => {
+          const rankCol = idx === 0 ? '#ef4444' : (idx === 1 ? '#f97316' : '#f59e0b');
+          const rankBg = idx === 0 ? 'rgba(239,68,68,0.12)' : (idx === 1 ? 'rgba(249,115,22,0.12)' : 'rgba(245,158,11,0.12)');
+          const rankBorder = idx === 0 ? 'rgba(239,68,68,0.45)' : (idx === 1 ? 'rgba(249,115,22,0.4)' : 'rgba(245,158,11,0.35)');
+          return `
+                  <div style="background: ${rankBg}; border: 1px solid ${rankBorder}; border-radius: 12px; padding: 16px; position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                      <span style="font-size: 11px; font-weight: 800; color: #fff; background: ${rankCol}; padding: 2px 8px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-crown" style="font-size: 9px;"></i> Rank #${idx + 1}
+                      </span>
+                      ${p3RenderPriorityPill(c.priority)}
+                    </div>
+
+                    <h4 style="font-size: 14px; font-weight: 800; color: #f8fafc; margin: 0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(c.title || '')}">
+                      #${c.id} &middot; ${escapeHtml(c.title || 'Untitled')}
+                    </h4>
+
+                    <div style="font-size: 11px; color: #cbd5e1; margin-bottom: 12px; display: flex; flex-direction: column; gap: 3px;">
+                      <span><i class="fa-solid fa-location-dot" style="color: #06b6d4; font-size: 10px; width: 14px;"></i> ${escapeHtml(c.location || 'Central Ward')}</span>
+                      <span><i class="fa-solid fa-building-shield" style="color: #a855f7; font-size: 10px; width: 14px;"></i> ${escapeHtml(c.department || 'Municipal Dept')}</span>
+                    </div>
+
+                    <button type="button" class="algo-btn algo-btn-cyan" style="width: 100%; padding: 7px; font-size: 11px;" onclick="openAdminModal(${c.id})">
+                      <i class="fa-solid fa-truck-fast"></i> Dispatch &amp; Solve
+                    </button>
+                  </div>
+                `;
+        }).join('')}
+            </div>
+          </div>
+
+          <!-- Complete Sequence Timeline -->
+          ${remaining.length > 0 ? `
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-list-ol"></i> Remaining Heap Queue Sequence (Rank #4 &ndash; #${_p3CurrentPriorityRecords.length})
+              </div>
+
+              <div style="max-height: 220px; overflow-y: auto; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px;">
+                ${remaining.map((c, idx) => `
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+                      <span style="font-family: var(--font-mono); color: #64748b; font-weight: 700; width: 35px;">#${idx + 4}</span>
+                      <span style="font-family: var(--font-mono); color: #38bdf8; font-weight: 800; width: 45px;">#${c.id}</span>
+                      <span style="font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px;" title="${escapeHtml(c.title || '')}">
+                        ${escapeHtml(c.title || 'Untitled')}
+                      </span>
+                      <span style="color: #94a3b8; font-size: 11px;">(${escapeHtml(c.location || 'Ward')})</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      ${p3RenderPriorityPill(c.priority)}
+                      <button type="button" class="btn btn-sm btn-secondary" style="padding: 3px 8px; font-size: 10px;" onclick="openAdminModal(${c.id})">
+                        Manage
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        `;
+
+      } catch (err) {
+        body.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 14px;">Error executing priority processing: ${err.message}</div>`;
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origText;
+        }
+      }
+    }
+
+    function p3ApplyPriorityToMainTable() {
+      if (!_p3CurrentPriorityRecords || _p3CurrentPriorityRecords.length === 0) return;
+      if (typeof renderAdminComplaints === 'function') {
+        renderAdminComplaints(_p3CurrentPriorityRecords);
+        showToast(`Main Complaints Table ordered by Priority Queue (${_p3CurrentPriorityRecords.length} records)!`, 'success');
+        const searchInput = document.getElementById('admCompSearch');
+        if (searchInput) searchInput.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // ── Eagerly preload graph map data on page ready (background) ──
+    // This ensures _mapNodesData is populated even before the user visits the Map tab.
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!_mapNodesData || _mapNodesData.length === 0) {
+        fetch('/api/graph/map-data')
+          .then(r => r.json())
+          .then(mapData => {
+            _mapNodesData = mapData.nodes || [];
+            _mapEdgesData = mapData.edges || [];
+            _mapNodesData.forEach(n => { n.complaint_count = 0; });
+          })
+          .catch(() => { });
+      }
+    });
   </script>
 
 </body>
+
 </html>

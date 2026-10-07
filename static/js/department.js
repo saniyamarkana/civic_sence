@@ -506,6 +506,11 @@ function closeDeptSolveModal() {
 }
 
 async function confirmDeptSolve() {
+  if (!activeSolvingId) {
+    showToast('No complaint selected to solve.', 'error');
+    return;
+  }
+
   const notes = document.getElementById('deptSolveNotes').value.trim();
   if (!notes) {
     showToast('Please provide resolution details.', 'error');
@@ -518,10 +523,15 @@ async function confirmDeptSolve() {
     if (solveImgInput && solveImgInput.files && solveImgInput.files[0]) {
       const imgFormData = new FormData();
       imgFormData.append('solution_image', solveImgInput.files[0]);
-      await fetch(`/api/complaints/${activeSolvingId}/solve-image`, {
+      const imgRes = await fetch(`/api/complaints/${activeSolvingId}/solve-image`, {
         method: 'POST',
         body: imgFormData
       });
+      const imgData = await imgRes.json().catch(() => ({}));
+      if (!imgRes.ok || imgData.success === false) {
+        showToast(imgData.message || 'Failed to upload proof photo', 'error');
+        return;
+      }
     }
 
     // 2. Mark as Resolved with remarks
@@ -534,14 +544,16 @@ async function confirmDeptSolve() {
         remarks: `Work Completed & Solved: ${notes}`
       })
     });
-    const data = await res.json();
-    if (data.success) {
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.success) {
       showToast(`Complaint #${activeSolvingId} marked as Solved!`, 'success');
       closeDeptSolveModal();
       loadDeptData();
+    } else {
+      showToast(data.message || 'Failed to solve complaint', 'error');
     }
   } catch (e) {
-    showToast('Failed to solve complaint', 'error');
+    showToast('Failed to solve complaint: ' + (e.message || e), 'error');
   }
 }
 
