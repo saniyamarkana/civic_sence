@@ -2,7 +2,7 @@
 Recursive algorithms for Civic Sense Management System.
 Implements recursive traversal, searching, sorting, and classic problems.
 
-Algorithms: Factorial, Fibonacci, Recursive Binary Search, Merge Sort, Quick Sort
+Algorithms: Factorial, Fibonacci, Recursive Binary Search, Merge Sort
 """
 
 
@@ -142,59 +142,6 @@ class RecursiveAlgorithms:
 
         return merged, steps
 
-    @staticmethod
-    def quick_sort(arr, field="id", ascending=True, steps=None, depth=0):
-        """
-        Recursive quick sort on real complaint objects with step logging.
-        Returns (sorted_array, steps).
-        """
-        if steps is None:
-            steps = []
-
-        def get_val(item):
-            if isinstance(item, dict):
-                val = item.get(field, item)
-            else:
-                val = item
-            if field == "priority" and isinstance(val, str):
-                p_map = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}
-                return p_map.get(val, 0)
-            return val if val is not None else ""
-
-        if len(arr) <= 1:
-            return arr[:], steps
-
-        pivot = arr[-1]
-        pivot_val = get_val(pivot)
-
-        steps.append({
-            "action": "partition",
-            "pivot": pivot_val,
-            "data": [get_val(x) for x in arr],
-            "depth": depth,
-        })
-
-        left = []
-        right = []
-        for x in arr[:-1]:
-            val = get_val(x)
-            if (val <= pivot_val) if ascending else (val >= pivot_val):
-                left.append(x)
-            else:
-                right.append(x)
-
-        sorted_left, steps = RecursiveAlgorithms.quick_sort(left, field, ascending, steps, depth + 1)
-        sorted_right, steps = RecursiveAlgorithms.quick_sort(right, field, ascending, steps, depth + 1)
-
-        result = sorted_left + [pivot] + sorted_right
-
-        steps.append({
-            "action": "combine",
-            "data": [get_val(x) for x in result],
-            "depth": depth,
-        })
-
-        return result, steps
 
     @staticmethod
     def traverse_recursive(arr, index=0, result=None):

@@ -378,7 +378,7 @@ def api_phase3_search():
 
 @app.route("/api/dsa/phase3/sort", methods=["POST", "GET"])
 def api_phase3_sort():
-    """Phase 3 API: Merge Sort and Quick Sort on Real Complaint Database."""
+    """Phase 3 API: Merge Sort on Real Complaint Database."""
     try:
         data = request.json if request.is_json else request.args
         sort_field = (data.get("field") or "id").lower()
@@ -391,14 +391,11 @@ def api_phase3_sort():
         if not complaints:
             return jsonify({"success": True, "sorted_records": [], "count": 0})
 
-        if algorithm == "quick":
-            sorted_complaints, steps = RecursiveAlgorithms.quick_sort(complaints, field=sort_field, ascending=ascending)
-        else:
-            sorted_complaints, steps = RecursiveAlgorithms.merge_sort(complaints, field=sort_field, ascending=ascending)
+        sorted_complaints, steps = RecursiveAlgorithms.merge_sort(complaints, field=sort_field, ascending=ascending)
 
         return jsonify({
             "success": True,
-            "algorithm": "Quick Sort" if algorithm == "quick" else "Merge Sort",
+            "algorithm": "Merge Sort",
             "field": sort_field,
             "order": "Ascending" if ascending else "Descending",
             "count": len(sorted_complaints),
@@ -412,17 +409,30 @@ def api_phase3_sort():
 
 @app.route("/api/dsa/phase3/priority", methods=["GET"])
 def api_phase3_priority():
-    """Phase 3 API: Process Real Complaints by Priority Queue (Critical > High > Medium > Low)."""
+    """Phase 3 API: Process Real Complaints by Priority Queue (Critical > High > Medium > Low).
+    Prioritizes active/actionable complaints for emergency field dispatch."""
     try:
-        complaints = [dict(c) for c in db.get_all_complaints()]
-        pq = PriorityQueue(max_size=max(100, len(complaints) + 10))
+        all_comps = [dict(c) for c in db.get_all_complaints()]
+        # Separate active complaints (need dispatch) from resolved complaints
+        active_comps = [c for c in all_comps if str(c.get("status", "")).lower() != "resolved"]
+        resolved_comps = [c for c in all_comps if str(c.get("status", "")).lower() == "resolved"]
 
-        for comp in complaints:
+        pq = PriorityQueue(max_size=max(100, len(all_comps) + 10))
+
+        # Enqueue active complaints first based on emergency priority
+        for comp in active_comps:
             pq.enqueue(comp, comp.get("priority", "Medium"))
 
         processed = []
         while not pq.is_empty():
             processed.append(pq.dequeue())
+
+        # Enqueue/append resolved complaints after active complaints
+        pq_res = PriorityQueue(max_size=max(100, len(resolved_comps) + 10))
+        for comp in resolved_comps:
+            pq_res.enqueue(comp, comp.get("priority", "Medium"))
+        while not pq_res.is_empty():
+            processed.append(pq_res.dequeue())
 
         return jsonify({
             "success": True,

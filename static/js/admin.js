@@ -302,67 +302,63 @@ function renderAdminComplaints(data) {
   if (!tbody) return;
 
   // Update record counters if elements exist
-  const p3Counter = document.getElementById('p3RecordCounter');
-  if (p3Counter && adminComplaints) {
-    p3Counter.innerHTML = `<i class="fa-solid fa-layer-group" style="color: #06b6d4;"></i> ${adminComplaints.length} Records Loaded`;
-  }
   const counterEl = document.getElementById('admCompCounter');
   if (counterEl) {
     counterEl.innerHTML = `<i class="fa-solid fa-list-check" style="color: #06b6d4;"></i> Showing ${data.length} of ${adminComplaints ? adminComplaints.length : data.length} Complaints`;
   }
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 13px;"><i class="fa-solid fa-inbox" style="font-size: 28px; opacity: 0.35; display: block; margin-bottom: 8px;"></i>No complaints match the current search filter.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 13px;"><i class="fa-solid fa-inbox" style="font-size: 28px; opacity: 0.35; display: block; margin-bottom: 8px;"></i>No complaints match the current filter.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = data.map(c => `
-    <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s ease;" onmouseover="this.style.background='rgba(56,189,248,0.03)'" onmouseout="this.style.background='transparent'">
-      <td style="padding: 14px 14px; font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 800; font-size: 12px;">#${c.id}</td>
-      <td style="padding: 14px 14px;">
-        <div style="font-weight: 700; color: #f8fafc; font-size: 13px; line-height: 1.35; margin-bottom: 3px;" title="${escapeHtml(c.title || '')}">
-          ${escapeHtml(c.title || 'Untitled Complaint')}
+  tbody.innerHTML = data.map(c => {
+    const isResolved = (c.status || '').toLowerCase() === 'resolved';
+    return `
+    <tr id="comp-row-${c.id}" style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s ease;" onmouseover="this.style.background='rgba(56,189,248,0.04)'" onmouseout="this.style.background='transparent'">
+      <td style="padding: 14px 10px; font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 800; font-size: 13px; text-align: center; white-space: nowrap;">
+        #${c.id}
+      </td>
+      <td style="padding: 14px 16px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+          <span style="font-weight: 700; color: #f8fafc; font-size: 13.5px; line-height: 1.3;" title="${escapeHtml(c.title || '')}">
+            ${escapeHtml(c.title || 'Untitled Complaint')}
+          </span>
+          <span style="font-size: 10px; padding: 2px 7px; border-radius: 5px; background: rgba(6,182,212,0.12); color: #38bdf8; font-weight: 700; border: 1px solid rgba(6,182,212,0.3); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+            <i class="fa-solid fa-tag" style="font-size: 8px;"></i> ${escapeHtml(c.category || 'General')}
+          </span>
         </div>
-        <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
-          <span><i class="fa-regular fa-calendar" style="font-size: 10px;"></i> ${escapeHtml((c.created_at || '').substring(0, 10))}</span>
+        <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span><i class="fa-regular fa-calendar" style="font-size: 10px; margin-right: 3px;"></i> ${escapeHtml((c.created_at || '').substring(0, 10))}</span>
           ${c.citizen_name ? `<span>&bull; Citizen: <strong style="color: #cbd5e1;">${escapeHtml(c.citizen_name)}</strong></span>` : ''}
+          ${c.department ? `<span>&bull; <span style="color: #a855f7;"><i class="fa-solid fa-building-shield" style="font-size: 9px; margin-right: 2px;"></i> ${escapeHtml(c.department)}</span></span>` : ''}
+          ${isResolved && c.assigned_officer_name ? `<span>&bull; <span style="color: #10b981;"><i class="fa-solid fa-circle-check" style="font-size: 9px; margin-right: 2px;"></i> Solved: ${escapeHtml(c.assigned_officer_name)}</span></span>` : ''}
         </div>
       </td>
       <td style="padding: 14px 14px;">
-        <span style="font-size: 11px; padding: 4px 9px; border-radius: 6px; background: rgba(148, 163, 184, 0.1); color: #cbd5e1; font-weight: 700; border: 1px solid rgba(255,255,255,0.08); white-space: nowrap;">
-          <i class="fa-solid fa-tag" style="font-size: 9px; opacity: 0.6; margin-right: 4px;"></i>${escapeHtml(c.category || 'General')}
-        </span>
-      </td>
-      <td style="padding: 14px 14px;">
-        <div style="color: #94a3b8; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px;">
-          <i class="fa-solid fa-location-dot" style="color: #06b6d4; font-size: 11px;"></i>
+        <div style="color: #cbd5e1; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-location-dot" style="color: #06b6d4; font-size: 12px; flex-shrink: 0;"></i>
           <span title="${escapeHtml(c.location || '-')}">${escapeHtml(c.location || 'Central Ward')}</span>
         </div>
       </td>
-      <td style="padding: 14px 14px;">
+      <td style="padding: 14px 12px; text-align: center; white-space: nowrap;">
         ${renderAdminPriorityPill(c.priority)}
       </td>
-      <td style="padding: 14px 14px;">
-        <div style="font-weight: 700; color: #38bdf8; font-size: 12px; display: flex; align-items: center; gap: 5px;">
-          <i class="fa-solid fa-building-shield" style="font-size: 11px; opacity: 0.85;"></i>
-          <span>${escapeHtml(c.department || 'Unassigned Dept')}</span>
-        </div>
-        <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
-          ${c.assigned_officer_name 
-            ? `<i class="fa-solid fa-user-shield" style="color: #f59e0b; font-size: 10px;"></i> <span style="color: #e2e8f0; font-weight: 600;">${escapeHtml(c.assigned_officer_name)}</span>` 
-            : '<span style="color: #64748b; font-style: italic;">No officer assigned</span>'}
-        </div>
-      </td>
-      <td style="padding: 14px 14px;">
+      <td style="padding: 14px 12px; text-align: center; white-space: nowrap;">
         ${renderAdminStatusPill(c.status)}
       </td>
-      <td style="padding: 14px 14px; text-align: center;">
-        <button class="btn btn-sm btn-primary" onclick="openAdminModal(${c.id})" style="padding: 6px 14px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(6,182,212,0.25);">
-          <i class="fa-solid fa-gear"></i> Manage
-        </button>
+      <td style="padding: 14px 14px; text-align: center; white-space: nowrap;">
+        ${isResolved
+          ? `<button class="btn btn-sm btn-secondary" onclick="openAdminModal(${c.id})" style="padding: 6px 14px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 7px; width: 100%; max-width: 82px; border: 1px solid rgba(16,185,129,0.35); color: #34d399; background: rgba(16,185,129,0.08);" title="View Solved Complaint #${c.id}">
+              <i class="fa-solid fa-eye"></i> View
+            </button>`
+          : `<button class="btn btn-sm btn-primary" onclick="openAdminModal(${c.id})" style="padding: 6px 14px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 8px rgba(6,182,212,0.25); border-radius: 7px; width: 100%; max-width: 82px;" title="Manage Complaint #${c.id}">
+              <i class="fa-solid fa-gear"></i> Manage
+            </button>`
+        }
       </td>
     </tr>
-  `).join('');
+  `}).join('');
 }
 
 function filterAdminComplaints() {
@@ -441,7 +437,7 @@ async function openAdminModal(id) {
     const c = data.complaint;
 
     // Update title
-    document.getElementById('admModalTitle').textContent = `🗂️ Manage & Assign Complaint #${id}`;
+    document.getElementById('admModalTitle').textContent = `🗂️ Manage Complaint #${id}`;
 
     // Set hidden form values for status and priority (Read-only for Admin)
     document.getElementById('admModalStatus').value = c.status || 'Pending';
@@ -461,9 +457,49 @@ async function openAdminModal(id) {
       prioBadge.textContent = c.priority || 'Medium';
     }
 
-    // Editable Admin fields: Department, Officer, Remarks
-    document.getElementById('admModalDept').value = c.department || 'Sanitation Department';
-    document.getElementById('admModalRemarks').value = c.admin_remarks || '';
+    // === RESOLVED STATE: hide assignment section, show resolved banner & details ===
+    const isResolved = (c.status || '').toLowerCase() === 'resolved';
+    const assignSection = document.getElementById('admAssignSection');
+    const resolvedBanner = document.getElementById('admResolvedBanner');
+    const resolvedFooter = document.getElementById('admResolvedFooter');
+    if (isResolved) {
+      document.getElementById('admModalTitle').textContent = `✅ Complaint #${id} · Solved & Closed`;
+      if (assignSection) assignSection.style.display = 'none';
+      if (resolvedBanner) {
+        resolvedBanner.style.display = 'flex';
+        const deptEl = document.getElementById('admResolvedDeptText');
+        const offEl = document.getElementById('admResolvedOfficerText');
+        const remEl = document.getElementById('admResolvedRemarksText');
+        if (deptEl) deptEl.textContent = c.department || 'General Municipal Department';
+        if (offEl) offEl.textContent = c.assigned_officer_name ? `👷 ${c.assigned_officer_name}` : 'Direct Municipal Resolution';
+        if (remEl) remEl.textContent = c.admin_remarks || c.remarks || 'Complaint successfully verified and addressed.';
+
+        const proofWrap = document.getElementById('admResolvedProofWrap');
+        const proofContainer = document.getElementById('admResolvedProofContainer');
+        if (proofWrap && proofContainer) {
+          if (c.solution_image) {
+            proofWrap.style.display = 'block';
+            proofContainer.innerHTML = `
+              <img src="/static/uploads/solution_images/${escapeHtml(c.solution_image)}" alt="Resolution Proof"
+                   style="max-height: 160px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(16,185,129,0.3); object-fit: cover;"
+                   onclick="openLightbox('/static/uploads/solution_images/${escapeHtml(c.solution_image)}')">
+            `;
+          } else {
+            proofWrap.style.display = 'none';
+            proofContainer.innerHTML = '';
+          }
+        }
+      }
+      if (resolvedFooter) resolvedFooter.style.display = 'flex';
+    } else {
+      document.getElementById('admModalTitle').textContent = `🗂️ Manage Complaint #${id}`;
+      if (assignSection) assignSection.style.display = 'block';
+      if (resolvedBanner) resolvedBanner.style.display = 'none';
+      if (resolvedFooter) resolvedFooter.style.display = 'none';
+      // Editable Admin fields: Department, Officer, Remarks
+      document.getElementById('admModalDept').value = c.department || 'Sanitation Department';
+      document.getElementById('admModalRemarks').value = c.admin_remarks || '';
+    }
 
     // Show citizen info banner (Read-only)
     document.getElementById('admModalCitizenInfo').innerHTML = `
@@ -510,8 +546,10 @@ async function openAdminModal(id) {
       }
     }
 
-    // Load officers for the department
-    await loadOfficersForDept(c.department || 'Sanitation Department', c.assigned_officer_id);
+    // Load officers for the department (only when not resolved)
+    if (!isResolved) {
+      await loadOfficersForDept(c.department || 'Sanitation Department', c.assigned_officer_id);
+    }
   } catch (err) {
     document.getElementById('admModalCitizenInfo').innerHTML =
       '<div style="color: var(--status-rejected);">❌ Failed to load complaint details.</div>';
@@ -539,7 +577,7 @@ async function saveAdminComplaintChanges() {
   // Admin only assigns department, officer, and instructions (status and priority remain untouched)
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Assigning...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
   }
 
   try {
@@ -580,7 +618,62 @@ async function saveAdminComplaintChanges() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Assign Department &amp; Officer';
+      btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Assign &amp; Save';
+    }
+  }
+}
+
+async function resolveComplaintDirectly() {
+  const resolveBtn = document.getElementById('admResolveBtn');
+  if (!currentManagingId) return;
+
+  const department = document.getElementById('admModalDept').value;
+  const officerSelect = document.getElementById('admModalOfficer');
+  const assigned_officer_id = officerSelect && officerSelect.value ? parseInt(officerSelect.value) : null;
+  const selectedOpt = officerSelect ? officerSelect.options[officerSelect.selectedIndex] : null;
+  const assigned_officer_name = (assigned_officer_id && selectedOpt)
+    ? (selectedOpt.getAttribute('data-name') || selectedOpt.textContent.trim())
+    : null;
+  const admin_remarks = document.getElementById('admModalRemarks').value.trim();
+
+  if (resolveBtn) {
+    resolveBtn.disabled = true;
+    resolveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resolving...';
+  }
+
+  try {
+    const payload = {
+      status: 'Resolved',
+      department,
+      admin_remarks: admin_remarks || 'Complaint resolved by administrator.',
+      remarks: `Complaint resolved${assigned_officer_name ? ' by ' + assigned_officer_name : ''} (${department})`
+    };
+    if (assigned_officer_id) {
+      payload.assigned_officer_id = assigned_officer_id;
+      payload.assigned_officer_name = assigned_officer_name;
+    }
+
+    const res = await fetch(`/api/complaints/${currentManagingId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      showToast(`✅ Complaint #${currentManagingId} has been marked as Resolved!`, 'success');
+      closeAdminModal();
+      loadAdminComplaints();
+      loadAdminDashboard();
+    } else {
+      showToast(data.message || 'Failed to resolve complaint.', 'error');
+    }
+  } catch (err) {
+    showToast('Network error while resolving complaint.', 'error');
+  } finally {
+    if (resolveBtn) {
+      resolveBtn.disabled = false;
+      resolveBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mark as Resolved';
     }
   }
 }
@@ -1224,6 +1317,398 @@ async function runRecursiveAlgo(algo) {
     }).join('');
   }
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CLO3 — CIVIC INTELLIGENCE ALGORITHMIC ENGINE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/* ── Priority weight map (Max-Heap order: Critical > High > Medium > Low) ── */
+const PRIO_WEIGHT = { critical: 4, high: 3, medium: 2, low: 1 };
+
+function getPrioWeight(p) {
+  return PRIO_WEIGHT[(p || 'medium').toLowerCase()] || 1;
+}
+
+/* ─────────────── MAX-HEAP helpers ─────────────── */
+function heapify(arr, n, i) {
+  let largest = i, l = 2 * i + 1, r = 2 * i + 2;
+  if (l < n && getPrioWeight(arr[l].priority) > getPrioWeight(arr[largest].priority)) largest = l;
+  if (r < n && getPrioWeight(arr[r].priority) > getPrioWeight(arr[largest].priority)) largest = r;
+  if (largest !== i) {
+    [arr[i], arr[largest]] = [arr[largest], arr[i]];
+    heapify(arr, n, largest);
+  }
+}
+
+function heapSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) heapify(a, n, i);
+  const result = [];
+  let size = n;
+  while (size > 0) {
+    result.push(a[0]);
+    a[0] = a[--size];
+    heapify(a, size, 0);
+  }
+  return result;
+}
+
+/* ─────────────── MERGE SORT helper ─────────────── */
+function mergeSort(arr, keyFn, dir) {
+  if (arr.length <= 1) return arr;
+  const mid = Math.floor(arr.length / 2);
+  const left  = mergeSort(arr.slice(0, mid), keyFn, dir);
+  const right = mergeSort(arr.slice(mid),    keyFn, dir);
+  return mergeParts(left, right, keyFn, dir);
+}
+function mergeParts(l, r, keyFn, dir) {
+  const out = [];
+  let i = 0, j = 0;
+  while (i < l.length && j < r.length) {
+    const a = keyFn(l[i]), b = keyFn(r[j]);
+    const cmp = (a < b) ? -1 : (a > b) ? 1 : 0;
+    out.push((dir === 'asc' ? cmp <= 0 : cmp >= 0) ? l[i++] : r[j++]);
+  }
+  return out.concat(l.slice(i)).concat(r.slice(j));
+}
+
+/* ── Shared helper: glow + flash + scroll to main table ── */
+function flashMainTable(color, flashElId) {
+  // Glow the main table card border
+  const card = document.getElementById('mainComplaintsTableCard');
+  if (card) {
+    card.style.borderColor = color;
+    card.style.boxShadow = `0 0 28px ${color}55, 0 10px 30px rgba(0,0,0,0.35)`;
+    setTimeout(() => {
+      card.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+      card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)';
+    }, 2500);
+  }
+
+  // Show flash banner, auto-hide after 3s
+  ['priorityAppliedFlash', 'searchAppliedFlash', 'sortAppliedFlash'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  if (flashElId) {
+    const flashEl = document.getElementById(flashElId);
+    if (flashEl) {
+      flashEl.style.display = 'block';
+      setTimeout(() => { flashEl.style.display = 'none'; }, 3000);
+    }
+  }
+
+  // Smooth scroll to the main table
+  setTimeout(() => {
+    const card2 = document.getElementById('mainComplaintsTableCard');
+    if (card2) card2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+/* ══════════════════════════════════════════════════════════
+   1.  PRIORITY-BASED PROCESSING — Max-Heap → Main Table
+   ══════════════════════════════════════════════════════════ */
+async function p3RunPriorityWithTable() {
+  const btn = document.getElementById('p3PriorityBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing…'; }
+
+  try {
+    const t0 = performance.now();
+    let records = [];
+
+    // 1. Try real Python DSA Priority Queue backend (Max-Heap)
+    try {
+      const res = await fetch('/api/dsa/phase3/priority');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.records && data.records.length > 0) {
+          records = data.records;
+        }
+      }
+    } catch (_) {}
+
+    // 2. Fallback to in-memory Heap Sort if API is unavailable
+    if (!records || records.length === 0) {
+      if (!adminComplaints || adminComplaints.length === 0) {
+        const res = await fetch('/api/complaints');
+        adminComplaints = await res.json();
+      }
+      records = heapSort(adminComplaints);
+    }
+
+    const elapsed = (performance.now() - t0).toFixed(2);
+
+    // Apply directly to the main real complaints table
+    adminComplaints = records;
+    renderAdminComplaints(records);
+
+    showAlgoStatusRibbon(
+      '👑 Max-Heap Priority Processing',
+      `${records.length} complaints sequenced: Critical → High → Medium → Low (Active emergencies first)`,
+      '#f59e0b',
+      elapsed
+    );
+    flashMainTable('#f59e0b', 'priorityAppliedFlash');
+    showToast(`👑 Max-Heap: ${records.length} complaints processed in ${elapsed} ms`, 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('Failed to run priority processing.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Process by Priority'; }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   2.  SEARCH — Linear O(N) / Binary O(log N) → Main Table
+   ══════════════════════════════════════════════════════════ */
+async function p3RunSearch(mode) {
+  const idVal = (document.getElementById('p3SearchId').value || '').trim();
+  const targetId = parseInt(idVal);
+  const linearBtn = document.getElementById('p3LinearBtn');
+  const binaryBtn = document.getElementById('p3BinaryBtn');
+
+  if (!idVal || isNaN(targetId)) {
+    showToast('Please enter a valid Complaint ID to search.', 'warning');
+    const input = document.getElementById('p3SearchId');
+    if (input) input.focus();
+    return;
+  }
+
+  const activeBtn = mode === 'linear' ? linearBtn : binaryBtn;
+  if (activeBtn) { activeBtn.disabled = true; activeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+
+  try {
+    const t0 = performance.now();
+    let found = null;
+    let steps = 0;
+
+    // 1. Try real Python DSA Search backend
+    try {
+      const res = await fetch('/api/dsa/phase3/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_id: targetId, method: mode })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          if (data.found && data.record) {
+            found = data.record;
+            steps = data.steps_count || 1;
+          } else {
+            steps = data.steps_count || 0;
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 2. Fallback to in-memory search if backend was offline
+    if (!found && steps === 0) {
+      if (!adminComplaints || adminComplaints.length === 0) {
+        const res = await fetch('/api/complaints');
+        adminComplaints = await res.json();
+      }
+
+      if (mode === 'linear') {
+        for (let i = 0; i < adminComplaints.length; i++) {
+          steps++;
+          if (adminComplaints[i].id === targetId) { found = adminComplaints[i]; break; }
+        }
+      } else {
+        const sorted = [...adminComplaints].sort((a, b) => a.id - b.id);
+        let lo = 0, hi = sorted.length - 1;
+        while (lo <= hi) {
+          steps++;
+          const mid = Math.floor((lo + hi) / 2);
+          if (sorted[mid].id === targetId)     { found = sorted[mid]; break; }
+          else if (sorted[mid].id < targetId)  lo = mid + 1;
+          else                                  hi = mid - 1;
+        }
+      }
+    }
+
+    const elapsed = (performance.now() - t0).toFixed(2);
+
+    if (found) {
+      if (!adminComplaints || adminComplaints.length === 0) {
+        const res = await fetch('/api/complaints');
+        adminComplaints = await res.json();
+      }
+
+      // Show ONLY this particular searched complaint in the main table
+      renderAdminComplaints([found]);
+
+      showAlgoStatusRibbon(
+        mode === 'linear' ? '🔍 Linear Search O(N)' : '⚡ Binary Search O(log N)',
+        `Showing Complaint #${found.id} — "${escapeHtml((found.title || '').substring(0, 40))}" · Found in ${steps} step(s) · Single Record View (Click "Reset Table View" to restore all)`,
+        '#06b6d4',
+        elapsed
+      );
+      flashMainTable('#06b6d4', 'searchAppliedFlash');
+      showToast(`✅ Showing Complaint #${targetId} (Found in ${steps} step${steps === 1 ? '' : 's'})`, 'success');
+
+      // Highlight the single row in the real table
+      setTimeout(() => {
+        const row = document.getElementById(`comp-row-${found.id}`);
+        if (row) {
+          row.style.background = 'rgba(6, 182, 212, 0.22)';
+          row.style.outline = '2px solid #06b6d4';
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => {
+            row.style.background = 'transparent';
+            row.style.outline = 'none';
+          }, 3500);
+        }
+      }, 150);
+    } else {
+      // If not found, show empty state in main table with reset option
+      renderAdminComplaints([]);
+      const tbody = document.getElementById('adminComplaintsTableBody');
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 42px 20px; color: #f87171; font-size: 13px; font-weight: 600;">
+          <i class="fa-solid fa-circle-xmark" style="font-size: 32px; display: block; margin-bottom: 10px; color: #ef4444;"></i>
+          Complaint #${targetId} was not found via ${mode === 'linear' ? 'Linear Search' : 'Binary Search'} (scanned ${steps} record${steps === 1 ? '' : 's'}).
+          <div style="margin-top: 12px;">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="resetAdminComplaintsOrder()" style="padding: 5px 14px; font-size: 11px; border-radius: 6px; font-weight: 700; cursor: pointer;">
+              <i class="fa-solid fa-rotate-left"></i> Restore All Complaints
+            </button>
+          </div>
+        </td></tr>`;
+      }
+
+      showAlgoStatusRibbon(
+        mode === 'linear' ? '🔍 Linear Search' : '⚡ Binary Search',
+        `Complaint #${targetId} not found after scanning ${steps} record(s).`,
+        '#ef4444',
+        elapsed
+      );
+      flashMainTable('#ef4444', 'searchAppliedFlash');
+      showToast(`❌ Complaint #${targetId} not found.`, 'error');
+    }
+  } catch (e) {
+    console.error(e);
+    showToast('Search failed. Please try again.', 'error');
+  } finally {
+    if (linearBtn) { linearBtn.disabled = false; linearBtn.innerHTML = '<i class="fa-solid fa-bars-staggered"></i> Linear'; }
+    if (binaryBtn) { binaryBtn.disabled = false; binaryBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Binary'; }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   3.  RECURSIVE MERGE SORT → Main Table
+   ══════════════════════════════════════════════════════════ */
+async function p3RunSort() {
+  const field = document.getElementById('p3SortField').value;
+  const order = document.getElementById('p3SortOrder').value;
+  const btn   = document.getElementById('p3SortBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sorting…'; }
+
+  try {
+    const t0 = performance.now();
+    let sorted = [];
+    let stepsCount = null;
+
+    // 1. Try real Python DSA Merge Sort backend
+    try {
+      const res = await fetch('/api/dsa/phase3/sort', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field, algorithm: 'merge', order })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.sorted_records && data.sorted_records.length > 0) {
+          sorted = data.sorted_records;
+          stepsCount = data.steps_count;
+        }
+      }
+    } catch (_) {}
+
+    // 2. Fallback to client-side mergeSort if API was unavailable
+    if (!sorted || sorted.length === 0) {
+      if (!adminComplaints || adminComplaints.length === 0) {
+        const res = await fetch('/api/complaints');
+        adminComplaints = await res.json();
+      }
+
+      const keyFn = c => {
+        if (field === 'priority') return getPrioWeight(c.priority);
+        if (field === 'id')       return c.id;
+        return String(c[field] || '').toLowerCase();
+      };
+      sorted = mergeSort([...adminComplaints], keyFn, order === 'asc' ? 'asc' : 'desc');
+    }
+
+    const elapsed = (performance.now() - t0).toFixed(2);
+
+    adminComplaints = sorted;
+    renderAdminComplaints(sorted);
+
+    const fieldLabel = { id: 'Complaint ID', priority: 'Priority Score', category: 'Category', location: 'Ward Location', status: 'Status' }[field] || field;
+    const dirLabel   = order === 'asc' ? '▲ Ascending' : '▼ Descending';
+    const stepsInfo  = stepsCount !== null ? ` · ${stepsCount} recursion steps` : '';
+
+    showAlgoStatusRibbon(
+      '⚙️ Merge Sort [Divide & Conquer · O(N log N)]',
+      `${sorted.length} complaints sorted by ${fieldLabel} — ${dirLabel}${stepsInfo}`,
+      '#8b5cf6',
+      elapsed
+    );
+    flashMainTable('#8b5cf6', 'sortAppliedFlash');
+    showToast(`✅ Sorted ${sorted.length} records by ${fieldLabel} in ${elapsed} ms`, 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('Sort failed. Please try again.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-code-merge"></i> Merge Sort'; }
+  }
+}
+
+/* ── Algo Status Ribbon helper ── */
+function showAlgoStatusRibbon(title, detail, color, ms) {
+  const ribbon  = document.getElementById('admAlgoStatusRibbon');
+  const content = document.getElementById('admAlgoStatusContent');
+  if (!ribbon || !content) return;
+
+  content.innerHTML = `
+    <span style="width:32px;height:32px;border-radius:8px;background:${color}22;border:1px solid ${color}66;display:flex;align-items:center;justify-content:center;color:${color};font-size:15px;flex-shrink:0;">
+      <i class="fa-solid fa-microchip"></i>
+    </span>
+    <div>
+      <div style="font-size:13px;font-weight:800;color:#f8fafc;">${title}</div>
+      <div style="font-size:11px;color:#94a3b8;font-weight:500;margin-top:2px;">${detail}</div>
+    </div>
+    <span style="margin-left:auto;font-size:11px;font-weight:700;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);padding:3px 10px;border-radius:6px;color:${color};white-space:nowrap;">⏱ ${ms} ms</span>
+  `;
+  ribbon.style.display = 'flex';
+  ribbon.style.borderColor = color + '66';
+}
+
+/* ── Reset main table to original API order ── */
+async function resetAdminComplaintsOrder() {
+  const ribbon = document.getElementById('admAlgoStatusRibbon');
+  if (ribbon) ribbon.style.display = 'none';
+
+  // Clear all flash banners
+  ['priorityAppliedFlash', 'searchAppliedFlash', 'sortAppliedFlash'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  // Reset table glow
+  const card = document.getElementById('mainComplaintsTableCard');
+  if (card) {
+    card.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+    card.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)';
+  }
+
+  await loadAdminComplaints();
+  showToast('Table reset to default order.', 'info');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
