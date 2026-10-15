@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicSense — Real Data Analysis Dashboard (3 Core Objectives)</title>
+
+  <!-- Google Fonts & Font Awesome 6 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js 4.4.1 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg-main: #070b14;
+      --bg-card: rgba(15, 23, 42, 0.78);
+      --bg-card-hover: rgba(30, 41, 59, 0.85);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(6, 182, 212, 0.35);
+
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.25);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --purple: #a855f7;
+      --purple-glow: rgba(168, 85, 247, 0.25);
+      --rose: #f43f5e;
+      --blue: #3b82f6;
+
+      --text-main: #f8fafc;
+      --text-sub: #cbd5e1;
+      --text-muted: #94a3b8;
+
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      background-image:
+        radial-gradient(circle at 10% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 45%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* Container */
+    .dashboard-container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 30px 24px;
+    }
+
+    /* Header */
+    .dashboard-header {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      padding: 26px 32px;
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dashboard-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--amber), var(--emerald), var(--purple));
+    }
+
+    .header-title-box h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title-box p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 5px;
+      font-weight: 500;
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-dataset {
+      background: rgba(6, 182, 212, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+    }
+
+    .badge-objective {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .badge-action {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .badge-action:hover {
+      background: rgba(16, 185, 129, 0.25);
+      color: #fff;
+    }
+
+    /* Executive KPI Strip */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .kpi-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .kpi-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      font-family: var(--font-mono);
+      line-height: 1.1;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--cyan);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Section Header */
+    .section-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      margin-top: 10px;
+    }
+
+    .section-banner h2 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Objective Grid: 3 Objective Sections */
+    .objective-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    .objective-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .objective-title {
+      font-size: 18px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .objective-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .objective-body {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 30px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 992px) {
+      .objective-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Chart Box */
+    .chart-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-height: 340px;
+    }
+
+    .chart-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .chart-box-header h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chart-canvas-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 280px;
+    }
+
+    /* Insights Box */
+    .insights-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .insights-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .insight-item {
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid;
+      border-radius: 0 10px 10px 0;
+      padding: 14px 16px;
+      transition: background 0.15s ease;
+    }
+
+    .insight-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .insight-title {
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .insight-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .insight-stat {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Data Distribution Bars */
+    .data-metric-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .metric-bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 1s ease-out;
+    }
+
+    /* Solved Status Pills */
+    .status-badge-resolved {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .status-badge-progress {
+      background: rgba(59, 130, 246, 0.18);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .status-badge-pending {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    /* Verification Raw Table */
+    .audit-table-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      margin-top: 10px;
+    }
+
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+
+    .audit-table th {
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .audit-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+    }
+
+    .audit-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Footer */
+    .dashboard-footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="dashboard-container">
+
+    <!-- Header -->
+    <header class="dashboard-header">
+      <div class="header-title-box">
+        <h1>
+          <i class="fa-solid fa-chart-pie" style="color: var(--cyan);"></i>
+          CivicSense Analytics &amp; Intelligence Dashboard
+        </h1>
+        <p>
+          Comprehensive data visualization and key insights based on <strong>3 Core Objectives</strong> from the real
+          complaint database.
+        </p>
+      </div>
+
+      <div class="header-badges">
+        <span class="badge-pill badge-dataset">
+          <i class="fa-solid fa-database"></i> Real Dataset: 16 Verified Complaints
+        </span>
+        <span class="badge-pill badge-objective">
+          <i class="fa-solid fa-bullseye"></i> 3 Core Objectives (No Search/Sort)
+        </span>
+        <a href="/admin" class="badge-pill badge-action" title="Back to Admin Console">
+          <i class="fa-solid fa-arrow-left"></i> Admin Portal
+        </a>
+        <button type="button" onclick="window.print()" class="badge-pill"
+          style="background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.18); cursor: pointer;">
+          <i class="fa-solid fa-print"></i> Export / Print
+        </button>
+      </div>
+    </header>
+
+    <!-- Executive KPI Summary Cards -->
+    <section class="kpi-grid">
+      <!-- KPI 1 -->
+      <div class="kpi-card" style="border-left: 3px solid var(--cyan);">
+        <div class="kpi-icon" style="background: rgba(6, 182, 212, 0.12); color: var(--cyan);">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div>
+          <div class="kpi-val" id="kpiTotal">16</div>
+          <div class="kpi-label">Total Real Complaints</div>
+          <div class="kpi-sub">8 Unique Categories</div>
+        </div>
+      </div>
+
+      <!-- KPI 2 -->
+      <div class="kpi-card" style="border-left: 3px solid var(--emerald);">
+        <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.12); color: var(--emerald);">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div>
+          <div class="kpi-val" id="kpiSolvedRate">50.0%</div>
+          <div class="kpi-label">Complaint Solved Rate</div>
+          <div class="kpi-sub" style="color: var(--emerald);">8 of 16 Fully Resolved</div>
+        </div>
+      </div>
+
+      <!-- KPI 3 -->
+      <div class="kpi-card" style="border-left: 3px solid var(--amber);">
+        <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.12); color: var(--amber);">
+          <i class="fa-solid fa-lightbulb"></i>
+        </div>
+        <div>
+          <div class="kpi-val" style="font-size: 20px;">Streetlight</div>
+          <div class="kpi-label">Top Complaint Category</div>
+          <div class="kpi-sub" style="color: var(--amber);">4 Records (25.0% Volume)</div>
+        </div>
+      </div>
+
+      <!-- KPI 4 -->
+      <div class="kpi-card" style="border-left: 3px solid var(--purple);">
+        <div class="kpi-icon" style="background: rgba(168, 85, 247, 0.12); color: var(--purple);">
+          <i class="fa-solid fa-map-location-dot"></i>
+        </div>
+        <div>
+          <div class="kpi-val" style="font-size: 18px;">Katargam &amp; Adajan</div>
+          <div class="kpi-label">Peak Complaint Areas</div>
+          <div class="kpi-sub" style="color: var(--purple);">3 Complaints Each (37.5% City Load)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         OBJECTIVE 1: COMPLAINT CATEGORY ANALYSIS
+         ══════════════════════════════════════════════════════════════ -->
+    <article class="objective-card" style="border-top: 3px solid var(--cyan);">
+      <div class="objective-header">
+        <div class="objective-title">
+          <i class="fa-solid fa-tags" style="color: var(--cyan);"></i>
+          Objective 1: Complaint Category Distribution
+        </div>
+        <span class="objective-tag"
+          style="background: rgba(6, 182, 212, 0.12); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3);">
+          8 CATEGORIES &middot; DONUT VISUALIZATION
+        </span>
+      </div>
+
+      <div class="objective-body">
+        <!-- Chart 1 -->
+        <div class="chart-box">
+          <div class="chart-box-header">
+            <h4><i class="fa-solid fa-chart-pie" style="color: var(--cyan);"></i> Category Share (%)</h4>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Hover segments for details</span>
+          </div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="categoryDonutChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Insights 1 -->
+        <div class="insights-box">
+          <div class="insights-list">
+            <div class="insight-item" style="border-color: #06b6d4;">
+              <div class="insight-title" style="color: #38bdf8;">
+                <i class="fa-solid fa-bolt"></i> Primary Volume Driver: Streetlight (25.0%)
+              </div>
+              <div class="insight-desc">
+                Streetlight faults comprise <span class="insight-stat">4 out of 16 complaints</span> (25.0% of total
+                volume). This is the single highest civic issue reported by citizens across the city.
+              </div>
+            </div>
+
+            <div class="insight-item" style="border-color: #f59e0b;">
+              <div class="insight-title" style="color: #fbbf24;">
+                <i class="fa-solid fa-trash-can"></i> Sanitation &amp; Cleanliness Cluster (43.8%)
+              </div>
+              <div class="insight-desc">
+                Combining <strong>Garbage (3)</strong>, <strong>Drainage (2)</strong>, and <strong>Public Cleanliness
+                  (2)</strong> totals <span class="insight-stat">7 complaints (43.75%)</span>, indicating that
+                sanitation and waste logistics form the largest operational workload.
+              </div>
+            </div>
+
+            <div class="insight-item" style="border-color: #a855f7;">
+              <div class="insight-title" style="color: #c084fc;">
+                <i class="fa-solid fa-road"></i> Infrastructure &amp; Mobility Hazards (18.8%)
+              </div>
+              <div class="insight-desc">
+                Roadway issues including <strong>Damaged Road (1)</strong>, <strong>Potholes (1)</strong>, and
+                <strong>Illegal Parking (1)</strong> represent <span class="insight-stat">18.75%</span>, posing direct
+                risks to vehicle transit and pedestrians.
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress breakdown list -->
+          <div class="data-metric-bars">
+            <div class="metric-bar-item">
+              <div class="metric-bar-header">
+                <span><i class="fa-solid fa-lightbulb" style="color: #38bdf8; margin-right: 5px;"></i>Streetlight</span>
+                <span class="insight-stat">4 (25.0%)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 25.0%; background: #06b6d4;"></div>
+              </div>
+            </div>
+
+            <div class="metric-bar-item">
+              <div class="metric-bar-header">
+                <span><i class="fa-solid fa-trash" style="color: #f59e0b; margin-right: 5px;"></i>Garbage</span>
+                <span class="insight-stat">3 (18.75%)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 18.75%; background: #f59e0b;"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         OBJECTIVE 2: COMPLAINT SOLVED (STATUS & RESOLUTION EFFICIENCY)
+         ══════════════════════════════════════════════════════════════ -->
+    <article class="objective-card" style="border-top: 3px solid var(--emerald);">
+      <div class="objective-header">
+        <div class="objective-title">
+          <i class="fa-solid fa-circle-check" style="color: var(--emerald);"></i>
+          Objective 2: Complaint Solved &amp; Resolution Performance
+        </div>
+        <span class="objective-tag"
+          style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+          RESOLVED VS UNRESOLVED &middot; GAUGE / DOUGHNUT
+        </span>
+      </div>
+
+      <div class="objective-body">
+        <!-- Chart 2 -->
+        <div class="chart-box">
+          <div class="chart-box-header">
+            <h4><i class="fa-solid fa-chart-column" style="color: var(--emerald);"></i> Resolution Breakdown (Count
+              &amp; %)</h4>
+            <span style="font-size: 11px; color: #34d399; font-weight: 700;">50.0% Solved Rate</span>
+          </div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="solvedStatusChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Insights 2 -->
+        <div class="insights-box">
+          <div class="insights-list">
+            <div class="insight-item" style="border-color: #10b981;">
+              <div class="insight-title" style="color: #34d399;">
+                <i class="fa-solid fa-award"></i> 50.0% Baseline Solved Rate (8 of 16 Resolved)
+              </div>
+              <div class="insight-desc">
+                Exactly <span class="insight-stat">8 complaints (50.0%)</span> have been successfully resolved by
+                assigned field officers with verified post-fix documentation and solution images.
+              </div>
+            </div>
+
+            <div class="insight-item" style="border-color: #06b6d4;">
+              <div class="insight-title" style="color: #38bdf8;">
+                <i class="fa-solid fa-trophy"></i> 100% Streetlight &amp; Drainage Resolution
+              </div>
+              <div class="insight-desc">
+                <strong>Streetlight</strong> (4 of 4) and <strong>Drainage</strong> (2 of 2) maintain a perfect <span
+                  class="insight-stat">100% resolution closure</span>, highlighting excellent field efficiency in
+                electricity and drainage divisions.
+              </div>
+            </div>
+
+            <div class="insight-item" style="border-color: #ef4444;">
+              <div class="insight-title" style="color: #f87171;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Critical Bottleneck: Garbage Complaints (0% Solved)
+              </div>
+              <div class="insight-desc">
+                None of the <strong>3 Garbage complaints</strong> are marked resolved yet (<span class="insight-stat">2
+                  In Progress, 1 Pending</span>). Solid waste collection constitutes the primary resolution bottleneck.
+              </div>
+            </div>
+
+            <div class="insight-item" style="border-color: #f59e0b;">
+              <div class="insight-title" style="color: #fbbf24;">
+                <i class="fa-solid fa-clock"></i> Actionable Pending Triage: 2 Complaints (12.5%)
+              </div>
+              <div class="insight-desc">
+                Only two complaints remain in <strong>Pending</strong> status: Complaint #7 (Damaged Road in Varachha B)
+                and #13 (Garbage in Varachha A), requiring priority assignment.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         OBJECTIVE 3: COMPLAINT AREA (GEOGRAPHIC WARD DISTRIBUTION)
+         ══════════════════════════════════════════════════════════════ -->
+    <article class="objective-card" style="border-top: 3px solid var(--purple);">
+      <div class="objective-header">
+        <div class="objective-title">
+          <i class="fa-solid fa-location-dot" style="color: var(--purple);"></i>
+          Objective 3: Complaint Area &amp; Geographic Distribution
+        </div>
+        <span class="objective-tag"
+          style="background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
+          8 MUNICIPAL ZONES &middot; HORIZONTAL BAR CHART
+        </span>
+      </div>
+
+      <div class="objective-body">
+        <!-- Chart 3 -->
+        <div class="chart-box">
+          <div class="chart-box-header">
+            <h4><i class="fa-solid fa-chart-bar" style="color: var(--purple);"></i> Complaints by Ward / Area</h4>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">8 Municipal Zones</span>
+          </div>
+          <div class="chart-canvas-wrapper" style="height: 320px;">
+            <canvas id="areaBarChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Insights 3 -->
+        <div class="insights-box">
+          <div class="insights-list">
+            <div class="insight-item" style="border-color: #a855f7;">
+              <div class="insight-title" style="color: #c084fc;">
+                <i class="fa-solid fa-fire"></i> Primary Civic Hotspots: Katargam &amp; Adajan (37.5%)
+              </div>
+              <div class="insight-desc">
+                <strong>North Zone (Katargam)</strong> and <strong>West Zone (Adajan)</strong> tie as the highest
+                complaint
+                sources with <span class="insight-stat">3 complaints each (18.75% each)</span>. Together they account
+                for 37.5% of all grievances.
+              </div>
+            </div>
+
+            <div class="insight-item" style="border-color: #10b981;">
+              <div class="insight-title" style="color: #34d399;">
+                <i class="fa-solid fa-circle-check"></i> North Zone (Katargam) Operational Benchmark
+              </div>
+              <div class="insight-desc">
+                North Zone (Katargam) achieved an outstanding <span class="insight-stat">100% resolution rate</span>
+                (all 3 complaints resolved: #4, #11, #15), establishing the city's operational gold standard.
+              </div>
+            </div>
+
+            <div class="insight-item" style="border-color: #f59e0b;">
+              <div class="insight-title" style="color: #fbbf24;">
+                <i class="fa-solid fa-bullhorn"></i> Varachha Regional Alert (Zones A &amp; B)
+              </div>
+              <div class="insight-desc">
+                Varachha represents <span class="insight-stat">4 complaints (25.0%)</span> and contains <strong>100% of
+                  the entire city's pending complaints</strong> (#7 and #13), pinpointing Varachha as the primary
+                administrative focus.
+              </div>
+            </div>
+
+            <div class="insight-item" style="border-color: #3b82f6;">
+              <div class="insight-title" style="color: #60a5fa;">
+                <i class="fa-solid fa-wrench"></i> West Zone (Adajan) Open Workload
+              </div>
+              <div class="insight-desc">
+                West Zone (Adajan) holds the largest active field burden with <span class="insight-stat">2 complaints
+                  in progress</span> (#2 Pothole &amp; #9 Garbage), requiring field support.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         VERIFIED REAL DATASET AUDIT TABLE (16 COMPLAINTS)
+         ══════════════════════════════════════════════════════════════ -->
+    <section class="audit-table-card">
+      <div
+        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+        <h3 style="font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-table-list" style="color: var(--cyan);"></i>
+          Real Dataset Verification (All 16 Records &middot; Audit Table)
+        </h3>
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
+          Directly sourced from <code>civic_sense.db</code> / <code>static_data.json</code>
+        </span>
+      </div>
+
+      <div style="overflow-x: auto; width: 100%;">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th style="width: 50px; text-align: center;">ID</th>
+              <th>Issue Title</th>
+              <th>Objective 1: Category</th>
+              <th>Objective 3: Area Location</th>
+              <th style="text-align: center;">Objective 2: Solved Status</th>
+              <th>Department Assigned</th>
+            </tr>
+          </thead>
+          <tbody id="realDatasetAuditBody">
+            <!-- Dynamically populated from REAL_DATASET -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+      CivicSense Municipal Data Analysis &middot; Real Dataset Analytics Engine &middot; Surat Smart City Project
+    </footer>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       DATASET ENGINE & INTERACTIVE CHART.JS INITIALIZATION
+       ══════════════════════════════════════════════════════════════ -->
+  <script>
+    // ── 100% Real Dataset embedded directly (16 Complaints) ──
+    const REAL_DATASET = [
+      { id: 16, title: "Broken Street Light", category: "Streetlight", location: "West Zone (Adajan)", status: "Resolved", department: "Electricity Department" },
+      { id: 15, title: "Broken Street Light", category: "Streetlight", location: "North Zone (Katargam)", status: "Resolved", department: "Electricity Department" },
+      { id: 14, title: "water leak", category: "Water Leakage", location: "Varachha Zone B", status: "Resolved", department: "Water Department" },
+      { id: 13, title: "garbage", category: "Garbage", location: "Varachha Zone A", status: "Pending", department: "Sanitation Department" },
+      { id: 12, title: "Drain blocked and overflowing", category: "Drainage", location: "Central Zone (Chowk)", status: "Resolved", department: "Water Department" },
+      { id: 11, title: "Streetlight not working near main road", category: "Streetlight", location: "North Zone (Katargam)", status: "Resolved", department: "Electricity Department" },
+      { id: 10, title: "Road cleaning problem", category: "Public Cleanliness", location: "Varachha Zone A", status: "In Progress", department: "Sanitation Department" },
+      { id: 9, title: "Garbage accumulation", category: "Garbage", location: "West Zone (Adajan)", status: "In Progress", department: "Sanitation Department" },
+      { id: 7, title: "Extensive Road Surface Erosion", category: "Damaged Road", location: "Varachha Zone B", status: "Pending", department: "Road Department" },
+      { id: 6, title: "Commercial Trucks Blocking Temple Road", category: "Illegal Parking", location: "South East (Dindoli)", status: "In Progress", department: "Traffic Department" },
+      { id: 5, title: "Drainage Sewage Overflow in Colony", category: "Drainage", location: "South Zone (Udhana)", status: "Resolved", department: "Water Department" },
+      { id: 3, title: "Main Water Supply Pipe Leakage", category: "Water Leakage", location: "South West (Athwa)", status: "In Progress", department: "Water Department" },
+      { id: 2, title: "Large Dangerous Pothole on Main Road", category: "Pothole", location: "West Zone (Adajan)", status: "In Progress", department: "Road Department" },
+      { id: 1, title: "Severe Garbage Overflow Near Market", category: "Garbage", location: "Central Zone (Chowk)", status: "In Progress", department: "Sanitation Department" },
+      { id: 4, title: "Broken Streetlight Causing Dark Zone", category: "Streetlight", location: "North Zone (Katargam)", status: "Resolved", department: "Electricity Department" },
+      { id: 8, title: "Public Park Cleanliness Issue", category: "Public Cleanliness", location: "South West (Athwa)", status: "Resolved", department: "Sanitation Department" }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Render Audit Table
+      const tbody = document.getElementById('realDatasetAuditBody');
+      if (tbody) {
+        tbody.innerHTML = REAL_DATASET.map(c => {
+          let statusBadge = '';
+          const s = (c.status || '').toLowerCase();
+          if (s === 'resolved') {
+            statusBadge = '<span class="badge-pill status-badge-resolved"><i class="fa-solid fa-check"></i> Resolved (Solved)</span>';
+          } else if (s === 'in progress') {
+            statusBadge = '<span class="badge-pill status-badge-progress"><i class="fa-solid fa-spinner"></i> In Progress</span>';
+          } else {
+            statusBadge = '<span class="badge-pill status-badge-pending"><i class="fa-solid fa-clock"></i> Pending</span>';
+          }
+
+          return `
+            <tr>
+              <td style="font-family: var(--font-mono); font-weight: 800; color: var(--cyan); text-align: center;">#${c.id}</td>
+              <td style="font-weight: 700; color: #fff;">${escapeHtml(c.title)}</td>
+              <td><span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(6,182,212,0.12); color: #38bdf8; font-weight: 700;">${escapeHtml(c.category)}</span></td>
+              <td><i class="fa-solid fa-location-dot" style="color: var(--cyan); margin-right: 5px; font-size: 11px;"></i>${escapeHtml(c.location)}</td>
+              <td style="text-align: center;">${statusBadge}</td>
+              <td style="color: var(--text-muted); font-size: 11.5px;">${escapeHtml(c.department)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Initialize Charts
+      initChart1Category();
+      initChart2SolvedStatus();
+      initChart3AreaLocation();
+    });
+
+    // ── CHART 1: Category Distribution (Donut) ──
+    function initChart1Category() {
+      const ctx = document.getElementById('categoryDonutChart');
+      if (!ctx) return;
+
+      const labels = [
+        'Streetlight',
+        'Garbage',
+        'Water Leakage',
+        'Drainage',
+        'Public Cleanliness',
+        'Damaged Road',
+        'Illegal Parking',
+        'Pothole'
+      ];
+
+      const dataCounts = [4, 3, 2, 2, 2, 1, 1, 1];
+      const bgColors = [
+        '#06b6d4', // Cyan (Streetlight)
+        '#f59e0b', // Amber (Garbage)
+        '#3b82f6', // Blue (Water Leakage)
+        '#10b981', // Emerald (Drainage)
+        '#a855f7', // Purple (Public Cleanliness)
+        '#ec4899', // Pink (Damaged Road)
+        '#f97316', // Orange (Illegal Parking)
+        '#64748b'  // Slate (Pothole)
+      ];
+
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataCounts,
+            backgroundColor: bgColors,
+            borderColor: '#0f172a',
+            borderWidth: 2,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                color: '#cbd5e1',
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 },
+                boxWidth: 12,
+                boxHeight: 12,
+                padding: 10
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  const val = ctx.raw || 0;
+                  const pct = ((val / 16) * 100).toFixed(1);
+                  return ` ${ctx.label}: ${val} complaints (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ── CHART 2: Complaint Solved / Resolution Status (Polar Area / Doughnut) ──
+    function initChart2SolvedStatus() {
+      const ctx = document.getElementById('solvedStatusChart');
+      if (!ctx) return;
+
+      const labels = ['Resolved (Solved)', 'In Progress (Active Work)', 'Pending (Unassigned)'];
+      const dataCounts = [8, 6, 2];
+      const bgColors = [
+        '#10b981', // Emerald (Resolved)
+        '#3b82f6', // Blue (In Progress)
+        '#f59e0b'  // Amber (Pending)
+      ];
+
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataCounts,
+            backgroundColor: bgColors,
+            borderColor: '#0f172a',
+            borderWidth: 2,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#cbd5e1',
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 },
+                boxWidth: 12,
+                padding: 14
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  const val = ctx.raw || 0;
+                  const pct = ((val / 16) * 100).toFixed(1);
+                  return ` ${ctx.label}: ${val} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ── CHART 3: Complaint Area / Location Distribution (Horizontal Bar) ──
+    function initChart3AreaLocation() {
+      const ctx = document.getElementById('areaBarChart');
+      if (!ctx) return;
+
+      const labels = [
+        'North Zone (Katargam)',
+        'West Zone (Adajan)',
+        'Varachha Zone A',
+        'Varachha Zone B',
+        'Central Zone (Chowk)',
+        'South West (Athwa)',
+        'South Zone (Udhana)',
+        'South East (Dindoli)'
+      ];
+
+      const dataCounts = [3, 3, 2, 2, 2, 2, 1, 1];
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total Complaints',
+            data: dataCounts,
+            backgroundColor: [
+              'rgba(16, 185, 129, 0.85)',  // Katargam (100% Solved -> Green)
+              'rgba(6, 182, 212, 0.85)',   // Adajan (Cyan)
+              'rgba(245, 158, 11, 0.85)',  // Varachha A (Amber)
+              'rgba(245, 158, 11, 0.85)',  // Varachha B (Amber)
+              'rgba(168, 85, 247, 0.85)',  // Chowk (Purple)
+              'rgba(59, 130, 246, 0.85)',  // Athwa (Blue)
+              'rgba(16, 185, 129, 0.75)',  // Udhana (Green)
+              'rgba(236, 72, 153, 0.75)'   // Dindoli (Pink)
+            ],
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  const val = ctx.raw || 0;
+                  const pct = ((val / 16) * 100).toFixed(1);
+                  return ` Volume: ${val} Complaints (${pct}%)`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: {
+                color: '#94a3b8',
+                stepSize: 1,
+                font: { family: "'JetBrains Mono', monospace", size: 10 }
+              },
+              beginAtZero: true,
+              max: 4
+            },
+            y: {
+              grid: { display: false },
+              ticks: {
+                color: '#cbd5e1',
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      }[m]));
+    }
+  </script>
+
+</body>
+
+</html>

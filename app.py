@@ -161,6 +161,12 @@ def admin_page():
         return redirect("/")
     return render_template("admin.html", user=dict(user))
 
+@app.route("/analytics")
+@app.route("/analysis")
+def analytics_dashboard():
+    user = db.get_user_by_id(session.get("user_id")) if session.get("user_id") else None
+    return render_template("analysis_dashboard.html", user=dict(user) if user else None)
+
 @app.route("/department")
 def department_page():
     if "user_id" not in session or session.get("role") != "department":
