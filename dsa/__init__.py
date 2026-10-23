@@ -7,6 +7,7 @@ from .recursive import RecursiveAlgorithms
 from .dataset import SampleDataset
 from .binary_search_tree import BST
 from .graph import graph, bfs, bfs_search, bfs_shortest_path, bfs_with_steps, dfs, dfs_with_steps, get_map_data, ZONE_ALIASES, add_node, add_edge
+from .greedy import GreedyComplaintProcessor, PRIORITY_RANK, INELIGIBLE_STATUSES
 
 __all__ = [
     # Phase 1
@@ -36,5 +37,9 @@ __all__ = [
     "ZONE_ALIASES",
     "add_node",
     "add_edge",
+    # Phase 4
+    "GreedyComplaintProcessor",
+    "PRIORITY_RANK",
+    "INELIGIBLE_STATUSES",
 ]
 

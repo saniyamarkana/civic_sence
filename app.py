@@ -17,6 +17,7 @@ from dsa.simple_infix_postfix import calc_priority_score, infix_to_postfix, eval
 from dsa.iterative import IterativeAlgorithms
 from dsa.recursive import RecursiveAlgorithms
 from dsa.graph import get_map_data, bfs, bfs_search, bfs_shortest_path, bfs_with_steps, dfs, dfs_with_steps, get_bfs_graph_html, add_node, graph
+from dsa.greedy import GreedyComplaintProcessor
 app = Flask(__name__)
 app.secret_key = "civicsense_super_secret_phase1_key"
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -464,6 +465,53 @@ def location_graph_page():
         map_data=map_data,
         role=session.get("role", "guest")
     )
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 4 DSA API ROUTE: GREEDY ALGORITHM — PRIORITY-BASED COMPLAINT PROCESSING
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/dsa/greedy/next-complaint", methods=["GET"])
+def api_greedy_next_complaint():
+    """
+    Phase 4 API: Greedy Algorithm — Priority-Based Complaint Processing.
+
+    Reads all complaint records from the database, runs the Greedy Algorithm,
+    and returns:
+      - The single highest-priority eligible complaint to process next.
+      - The full recommended processing order of all eligible complaints.
+      - Priority-level counts (Critical / High / Medium / Low / Unknown).
+      - Eligible vs. ineligible counts.
+
+    Greedy strategy: always pick the locally optimal (highest-urgency) choice.
+    Tie-breaking: among equal-priority complaints, process the oldest first (FIFO).
+    Ineligible statuses excluded: Resolved, Rejected, Closed, Cancelled.
+
+    Time complexity: O(N log N) for the sort-based greedy selection.
+    """
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"success": False, "message": "Unauthorized — admin access required."}), 401
+
+    try:
+        all_complaints = [dict(c) for c in db.get_all_complaints()]
+        processor = GreedyComplaintProcessor()
+        result = processor.run(all_complaints)
+        return jsonify({
+            "success":         True,
+            "algorithm":       "Greedy — Priority-Based Complaint Processing",
+            "phase":           4,
+            "time_complexity": "O(N log N)",
+            "eligible_count":  result["eligible_count"],
+            "ineligible_count": result["ineligible_count"],
+            "total_count":     result["total_count"],
+            "next_complaint":  result["next_complaint"],
+            "processing_order": result["processing_order"],
+            "priority_counts": result["priority_counts"],
+            "unknown_priority": result["unknown_priority"],
+        })
+    except Exception as e:
+        app.logger.error(f"Error in Phase 4 greedy algorithm: {e}", exc_info=True)
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
 
 @app.route("/api/graph/tree-data", methods=["GET"])
 def api_graph_tree_data():

@@ -23,7 +23,7 @@ function switchAdminTab(tabId) {
   const activeLink = document.querySelector(`.nav-link[data-tab="${tabId}"]`);
   if (activeLink) activeLink.classList.add('active');
 
-  const tabs = ['dashboard', 'complaints', 'users', 'dsa_queue', 'dsa_stack', 'dsa_ll', 'dsa_expr', 'dsa_iter', 'dsa_rec', 'map'];
+  const tabs = ['dashboard', 'complaints', 'users', 'dsa_queue', 'dsa_stack', 'dsa_ll', 'dsa_expr', 'dsa_iter', 'dsa_rec', 'map', 'greedy'];
   tabs.forEach(t => {
     const el = document.getElementById(`adminTab_${t}`);
     if (el) el.style.display = (t === tabId) ? 'block' : 'none';
@@ -39,7 +39,8 @@ function switchAdminTab(tabId) {
     dsa_expr: '<i class="fa-solid fa-calculator" style="color: var(--accent-cyan);"></i> Shunting-Yard Expression Parser',
     dsa_iter: '<i class="fa-solid fa-bolt" style="color: var(--status-resolved);"></i> Iterative Sorting & Search Lab',
     dsa_rec: '<i class="fa-solid fa-sitemap" style="color: var(--accent-purple);"></i> Recursive Call Tree Visualizer',
-    map: '<i class="fa-solid fa-sitemap" style="color: var(--accent-cyan);"></i> Location Graph — Binary Tree & BFS'
+    map: '<i class="fa-solid fa-sitemap" style="color: var(--accent-cyan);"></i> Location Graph — Binary Tree & BFS',
+    greedy: '<i class="fa-solid fa-ranking-star" style="color: #10b981;"></i> Greedy Priority Processing — Phase 4'
   };
   document.getElementById('adminHeaderTitle').innerHTML = titles[tabId] || 'Admin Portal';
 
@@ -53,6 +54,7 @@ function switchAdminTab(tabId) {
   else if (tabId === 'dsa_expr') runExpression();
   else if (tabId === 'dsa_iter') renderIterArray();
   else if (tabId === 'map') loadAreaMap();
+  else if (tabId === 'greedy') runGreedyAlgorithm();
 }
 
 function refreshCurrentAdminTab() {
@@ -1786,3 +1788,168 @@ async function adminMarkAllRead() {
   }
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// PHASE 4: GREEDY ALGORITHM — PRIORITY-BASED COMPLAINT PROCESSING
+// ══════════════════════════════════════════════════════════════════════════════
+
+let _greedyNextComplaintId = null;
+
+function _greedyPriorityBadge(priority) {
+  const p = (priority || '').trim();
+  const map = {
+    'Critical': { bg: 'rgba(239,68,68,0.18)', color: '#f87171', border: 'rgba(239,68,68,0.45)' },
+    'High':     { bg: 'rgba(249,115,22,0.18)', color: '#fb923c', border: 'rgba(249,115,22,0.45)' },
+    'Medium':   { bg: 'rgba(245,158,11,0.18)', color: '#fbbf24', border: 'rgba(245,158,11,0.45)' },
+    'Low':      { bg: 'rgba(16,185,129,0.18)',  color: '#34d399', border: 'rgba(16,185,129,0.45)' },
+  };
+  const s = map[p] || { bg: 'rgba(100,116,139,0.18)', color: '#94a3b8', border: 'rgba(100,116,139,0.35)' };
+  return `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800;background:${s.bg};color:${s.color};border:1px solid ${s.border};">${escapeHtml(p || 'Unknown')}</span>`;
+}
+
+function _greedyStatusBadge(status) {
+  const st = (status || '').trim();
+  const map = {
+    'Pending':     'badge-pending',
+    'Approved':    'badge-approved',
+    'In Progress': 'badge-progress',
+    'Resolved':    'badge-resolved',
+    'Rejected':    'badge-rejected',
+  };
+  const cls = map[st] || 'badge-pending';
+  return `<span class="badge ${cls}" style="font-size:11px;">${escapeHtml(st || 'Unknown')}</span>`;
+}
+
+function _greedyFormatDate(dateStr) {
+  if (!dateStr) return '—';
+  try {
+    const d = new Date(dateStr.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+         + ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+  } catch {
+    return dateStr;
+  }
+}
+
+async function runGreedyAlgorithm() {
+  const btn = document.getElementById('greedyRunBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+  }
+
+  try {
+    const res = await fetch('/api/dsa/greedy/next-complaint');
+    const data = await res.json();
+
+    if (!data.success) {
+      if (typeof showToast === 'function') showToast(data.message || 'Failed to run greedy algorithm.', 'error');
+      return;
+    }
+
+    // Update KPI stat cards safely
+    const pc = data.priority_counts || {};
+    const setGreedyText = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = (val !== undefined && val !== null) ? val : '—';
+    };
+    const setGreedyHtml = (id, html) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html || '';
+    };
+
+    setGreedyText('greedyEligibleCount', data.eligible_count ?? 0);
+    setGreedyText('greedyCriticalCount', pc.Critical ?? 0);
+    setGreedyText('greedyHighCount', pc.High ?? 0);
+    setGreedyText('greedyMediumCount', pc.Medium ?? 0);
+    setGreedyText('greedyLowCount', pc.Low ?? 0);
+
+    const nextCard = document.getElementById('greedyNextCard');
+    const emptyMsg = document.getElementById('greedyEmptyMsg');
+    const tableCard = document.getElementById('greedyTableCard');
+
+    if (!data.next_complaint) {
+      // No eligible complaints
+      if (nextCard) nextCard.style.display = 'none';
+      if (tableCard) tableCard.style.display = 'none';
+      if (emptyMsg) emptyMsg.style.display = 'block';
+      _greedyNextComplaintId = null;
+    } else {
+      if (emptyMsg) emptyMsg.style.display = 'none';
+      if (nextCard) nextCard.style.display = 'block';
+      if (tableCard) tableCard.style.display = 'block';
+
+      const nc = data.next_complaint;
+      _greedyNextComplaintId = nc.id;
+
+      setGreedyText('greedyNextId', '#' + nc.id);
+      setGreedyText('greedyNextTitle', nc.title || 'Untitled');
+      setGreedyText('greedyNextCategory', nc.category || '—');
+      setGreedyText('greedyNextLocation', nc.location || '—');
+      setGreedyHtml('greedyNextPriority', _greedyPriorityBadge(nc.priority));
+      setGreedyHtml('greedyNextStatus', _greedyStatusBadge(nc.status));
+      setGreedyText('greedyNextDate', _greedyFormatDate(nc.created_at));
+
+      // Populate processing order table
+      const tbody = document.getElementById('greedyTableBody');
+      const orders = data.processing_order || [];
+      const tableCount = document.getElementById('greedyTableCount');
+      if (tableCount) tableCount.textContent = orders.length + ' complaint' + (orders.length !== 1 ? 's' : '');
+
+      if (tbody) {
+        if (orders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#64748b;">No eligible complaints.</td></tr>';
+        } else {
+          tbody.innerHTML = orders.map((c, i) => {
+            const isFirst = (i === 0);
+            const rowBg = isFirst
+              ? 'background: linear-gradient(90deg, rgba(16,185,129,0.08) 0%, transparent 100%);'
+              : (i % 2 === 0 ? '' : 'background: rgba(255,255,255,0.015);');
+            const borderLeft = isFirst ? 'border-left: 3px solid #10b981;' : '';
+            return `<tr style="${rowBg}${borderLeft} border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s;" onmouseenter="this.style.background='rgba(6,182,212,0.06)'" onmouseleave="this.style.background='${isFirst ? 'rgba(16,185,129,0.08)' : (i%2===0?'transparent':'rgba(255,255,255,0.015)')}'">
+              <td style="padding:12px;text-align:center;font-weight:900;color:${isFirst ? '#10b981' : '#94a3b8'};font-size:${isFirst?'14px':'12px'};">${isFirst ? '<i class=\"fa-solid fa-crown\" style=\"margin-right:3px;\"></i>' : ''}${i + 1}</td>
+              <td style="padding:12px;text-align:center;font-weight:800;color:#38bdf8;font-family:var(--font-mono);font-size:13px;">#${c.id}</td>
+              <td style="padding:12px 16px;font-weight:600;color:#e2e8f0;font-size:13px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(c.title || '')}">${escapeHtml(c.title || 'Untitled')}</td>
+              <td style="padding:12px 14px;font-size:12px;color:#cbd5e1;">${escapeHtml(c.category || '—')}</td>
+              <td style="padding:12px 14px;font-size:12px;color:#94a3b8;">${escapeHtml(c.location || '—')}</td>
+              <td style="padding:12px;text-align:center;">${_greedyPriorityBadge(c.priority)}</td>
+              <td style="padding:12px;text-align:center;">${_greedyStatusBadge(c.status)}</td>
+              <td style="padding:12px 14px;font-size:11px;color:#64748b;">${_greedyFormatDate(c.created_at)}</td>
+            </tr>`;
+          }).join('');
+        }
+      }
+    }
+
+    if (typeof showToast === 'function') {
+      showToast(`Greedy Algorithm executed — ${data.eligible_count} eligible complaint${data.eligible_count !== 1 ? 's' : ''} analyzed.`, 'success');
+    }
+
+  } catch (err) {
+    console.error('Greedy algorithm error:', err);
+    if (typeof showToast === 'function') showToast('Failed to run Greedy Algorithm. Please try again.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Find Next Complaint';
+    }
+  }
+}
+
+
+function greedyManageNext() {
+  if (!_greedyNextComplaintId) {
+    if (typeof showToast === 'function') showToast('No complaint selected.', 'error');
+    return;
+  }
+  // Use the existing admin complaint management modal
+  if (typeof openAdminManageModal === 'function') {
+    openAdminManageModal(_greedyNextComplaintId);
+  } else {
+    // Fallback: switch to complaints tab and load that specific complaint
+    switchAdminTab('complaints');
+    if (typeof showToast === 'function') {
+      showToast(`Complaint #${_greedyNextComplaintId} — switched to Complaints tab.`, 'info');
+    }
+  }
+}
