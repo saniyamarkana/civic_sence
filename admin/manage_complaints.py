@@ -244,7 +244,7 @@ class ManageComplaintsPage(ctk.CTkFrame):
                      text_color=self.TEXT_DIM).pack(anchor="w", pady=(10, 2))
         status_var = ctk.StringVar(value=complaint["status"])
         status_menu = ctk.CTkOptionMenu(
-            scroll, values=["Pending", "Approved", "In Progress", "Resolved", "Rejected"],
+            scroll, values=["Pending", "Approved", "In Progress", "Rejected"],
             variable=status_var, height=38, fg_color=self.INPUT_BG, button_color=self.ACCENT, text_color=self.TEXT
         )
         status_menu.pack(fill="x", pady=(0, 10))

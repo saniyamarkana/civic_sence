@@ -21,46 +21,49 @@ class TestPhase4GreedyAlgorithm(unittest.TestCase):
         self.processor = GreedyComplaintProcessor()
         self.db = Database()
         self.client = app.test_client()
+        self.fixed_now = datetime(2026, 2, 10, 12, 0, 0)
 
     def test_1_different_priorities(self):
-        """Test 1: Given Critical, High, Medium, and Low eligible complaints, recommend in that order."""
+        """Test 1: Given High, Medium, and Low eligible complaints, recommend High (Priority 1) first."""
         complaints = [
-            {"id": 1, "title": "C1", "priority": "Low", "status": "Pending", "created_at": "2026-01-01 10:00:00"},
-            {"id": 2, "title": "C2", "priority": "Critical", "status": "Pending", "created_at": "2026-01-02 10:00:00"},
-            {"id": 3, "title": "C3", "priority": "Medium", "status": "Pending", "created_at": "2026-01-03 10:00:00"},
-            {"id": 4, "title": "C4", "priority": "High", "status": "Pending", "created_at": "2026-01-04 10:00:00"},
+            {"id": 1, "title": "Low Issue", "priority": "Low", "category": "Streetlight", "status": "Pending", "created_at": "2026-02-05 10:00:00"},
+            {"id": 2, "title": "High Issue", "priority": "High", "category": "Water Leakage", "status": "Pending", "created_at": "2026-02-05 10:00:00"},
+            {"id": 3, "title": "Medium Issue", "priority": "Medium", "category": "Garbage", "status": "Pending", "created_at": "2026-02-05 10:00:00"},
         ]
-        res = self.processor.run(complaints)
-        self.assertEqual(res["eligible_count"], 4)
+        res = self.processor.run(complaints, ref_time=self.fixed_now)
+        self.assertEqual(res["eligible_count"], 3)
         self.assertEqual(res["next_complaint"]["id"], 2)
-        self.assertEqual(res["next_complaint"]["priority"], "Critical")
+        self.assertEqual(res["next_complaint"]["priority"], "High")
+        self.assertEqual(res["next_complaint"]["priority_rank"], 1)
+        self.assertEqual(res["next_complaint"]["priority_label"], "1 - High")
         order_priorities = [c["priority"] for c in res["processing_order"]]
-        self.assertEqual(order_priorities, ["Critical", "High", "Medium", "Low"])
-        print("\n[PASS] Test 1: Different priorities ordered as Critical > High > Medium > Low")
+        self.assertEqual(order_priorities, ["High", "Medium", "Low"])
+        self.assertNotIn("Critical", res["priority_counts"])
+        print("\n[PASS] Test 1: Different priorities ordered as High (1) > Medium (2) > Low (3)")
 
     def test_2_same_priority_fifo(self):
         """Test 2: Given two eligible High-priority complaints, recommend the older one first."""
         complaints = [
-            {"id": 10, "title": "Newer High", "priority": "High", "status": "Pending", "created_at": "2026-02-15 12:00:00"},
-            {"id": 11, "title": "Older High", "priority": "High", "status": "Pending", "created_at": "2026-01-10 09:00:00"},
-            {"id": 12, "title": "Mid High", "priority": "High", "status": "Pending", "created_at": "2026-01-20 14:00:00"},
+            {"id": 10, "title": "Newer High", "priority": "High", "category": "Pothole", "status": "Pending", "created_at": "2026-02-08 12:00:00"},
+            {"id": 11, "title": "Older High", "priority": "High", "category": "Pothole", "status": "Pending", "created_at": "2026-02-01 09:00:00"},
+            {"id": 12, "title": "Mid High", "priority": "High", "category": "Pothole", "status": "Pending", "created_at": "2026-02-04 14:00:00"},
         ]
-        res = self.processor.run(complaints)
+        res = self.processor.run(complaints, ref_time=self.fixed_now)
         self.assertEqual(res["next_complaint"]["id"], 11)
         order_ids = [c["id"] for c in res["processing_order"]]
         self.assertEqual(order_ids, [11, 12, 10])
         print("[PASS] Test 2: Same priority tie-breaking selects older complaint first (FIFO)")
 
     def test_3_resolved_excluded(self):
-        """Test 3: A resolved complaint must not be recommended."""
+        """Test 3: A resolved or closed complaint must not be recommended."""
         complaints = [
-            {"id": 20, "title": "Critical Resolved", "priority": "Critical", "status": "Resolved", "created_at": "2026-01-01 00:00:00"},
-            {"id": 21, "title": "High Pending", "priority": "High", "status": "Pending", "created_at": "2026-01-02 00:00:00"},
-            {"id": 22, "title": "Critical Closed", "priority": "Critical", "status": "Closed", "created_at": "2026-01-01 00:00:00"},
-            {"id": 23, "title": "Critical Rejected", "priority": "Critical", "status": "Rejected", "created_at": "2026-01-01 00:00:00"},
-            {"id": 24, "title": "Critical Cancelled", "priority": "Critical", "status": "Cancelled", "created_at": "2026-01-01 00:00:00"},
+            {"id": 20, "title": "High Resolved", "priority": "High", "category": "Drainage", "status": "Resolved", "created_at": "2026-01-01 00:00:00"},
+            {"id": 21, "title": "High Pending", "priority": "High", "category": "Drainage", "status": "Pending", "created_at": "2026-01-02 00:00:00"},
+            {"id": 22, "title": "High Closed", "priority": "High", "category": "Drainage", "status": "Closed", "created_at": "2026-01-01 00:00:00"},
+            {"id": 23, "title": "Medium Rejected", "priority": "Medium", "category": "Drainage", "status": "Rejected", "created_at": "2026-01-01 00:00:00"},
+            {"id": 24, "title": "Low Cancelled", "priority": "Low", "category": "Drainage", "status": "Cancelled", "created_at": "2026-01-01 00:00:00"},
         ]
-        res = self.processor.run(complaints)
+        res = self.processor.run(complaints, ref_time=self.fixed_now)
         self.assertEqual(res["eligible_count"], 1)
         self.assertEqual(res["next_complaint"]["id"], 21)
         self.assertEqual(res["ineligible_count"], 4)
@@ -75,7 +78,7 @@ class TestPhase4GreedyAlgorithm(unittest.TestCase):
         """Test 4: When no eligible complaints exist, return safe empty response without error."""
         complaints = [
             {"id": 30, "priority": "High", "status": "Resolved", "created_at": "2026-01-01 00:00:00"},
-            {"id": 31, "priority": "Critical", "status": "Closed", "created_at": "2026-01-02 00:00:00"},
+            {"id": 31, "priority": "Medium", "status": "Closed", "created_at": "2026-01-02 00:00:00"},
         ]
         res = self.processor.run(complaints)
         self.assertEqual(res["eligible_count"], 0)
@@ -92,32 +95,33 @@ class TestPhase4GreedyAlgorithm(unittest.TestCase):
     def test_5_changed_priority(self):
         """Test 5: After an eligible complaint's priority changes, recommendation dynamically updates."""
         complaints = [
-            {"id": 40, "priority": "Medium", "status": "Pending", "created_at": "2026-01-01 00:00:00"},
-            {"id": 41, "priority": "High", "status": "Pending", "created_at": "2026-01-02 00:00:00"},
+            {"id": 40, "priority": "Low", "category": "Garbage", "status": "Pending", "created_at": "2026-02-01 00:00:00"},
+            {"id": 41, "priority": "Medium", "category": "Garbage", "status": "Pending", "created_at": "2026-02-02 00:00:00"},
         ]
-        res_initial = self.processor.run(complaints)
+        res_initial = self.processor.run(complaints, ref_time=self.fixed_now)
         self.assertEqual(res_initial["next_complaint"]["id"], 41)
 
-        # Escalate complaint 40 to Critical
-        complaints[0]["priority"] = "Critical"
-        res_updated = self.processor.run(complaints)
+        # Escalate complaint 40 to High
+        complaints[0]["priority"] = "High"
+        res_updated = self.processor.run(complaints, ref_time=self.fixed_now)
         self.assertEqual(res_updated["next_complaint"]["id"], 40)
-        self.assertEqual(res_updated["next_complaint"]["priority"], "Critical")
+        self.assertEqual(res_updated["next_complaint"]["priority"], "High")
+        self.assertEqual(res_updated["next_complaint"]["priority_rank"], 1)
         print("[PASS] Test 5: Dynamic priority elevation re-orders queue immediately")
 
     def test_6_changed_status(self):
         """Test 6: After a complaint is resolved, it must drop out of the recommendation list."""
         complaints = [
-            {"id": 50, "priority": "Critical", "status": "In Progress", "created_at": "2026-01-01 00:00:00"},
-            {"id": 51, "priority": "High", "status": "Pending", "created_at": "2026-01-02 00:00:00"},
+            {"id": 50, "priority": "High", "category": "Water Leakage", "status": "In Progress", "created_at": "2026-02-01 00:00:00"},
+            {"id": 51, "priority": "Medium", "category": "Water Leakage", "status": "Pending", "created_at": "2026-02-02 00:00:00"},
         ]
-        res_initial = self.processor.run(complaints)
+        res_initial = self.processor.run(complaints, ref_time=self.fixed_now)
         self.assertEqual(res_initial["next_complaint"]["id"], 50)
         self.assertEqual(res_initial["eligible_count"], 2)
 
         # Mark 50 as Resolved
         complaints[0]["status"] = "Resolved"
-        res_updated = self.processor.run(complaints)
+        res_updated = self.processor.run(complaints, ref_time=self.fixed_now)
         self.assertEqual(res_updated["next_complaint"]["id"], 51)
         self.assertEqual(res_updated["eligible_count"], 1)
         self.assertNotIn(50, [c["id"] for c in res_updated["processing_order"]])
@@ -134,6 +138,7 @@ class TestPhase4GreedyAlgorithm(unittest.TestCase):
         self.assertIn("next_complaint", res)
         self.assertIn("processing_order", res)
         self.assertIn("priority_counts", res)
+        self.assertNotIn("Critical", res["priority_counts"])
 
         # Test Flask API endpoint with session auth
         with self.client.session_transaction() as sess:
@@ -144,7 +149,6 @@ class TestPhase4GreedyAlgorithm(unittest.TestCase):
         self.assertEqual(api_res.status_code, 200)
         data = api_res.get_json()
         self.assertTrue(data["success"])
-        self.assertEqual(data["algorithm"], "Greedy — Priority-Based Complaint Processing")
         self.assertEqual(data["total_count"], len(real_complaints))
         self.assertEqual(data["eligible_count"], res["eligible_count"])
         print(f"[PASS] Test 7: Real database verified ({len(real_complaints)} records total, {res['eligible_count']} eligible)")

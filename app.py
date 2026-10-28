@@ -416,7 +416,7 @@ def api_phase3_sort():
 
 @app.route("/api/dsa/phase3/priority", methods=["GET"])
 def api_phase3_priority():
-    """Phase 3 API: Process Real Complaints by Priority Queue (Critical > High > Medium > Low).
+    """Phase 3 API: Process Real Complaints by Priority Queue (High (1) > Medium (2) > Low (3)).
     Prioritizes active/actionable complaints for emergency field dispatch."""
     try:
         all_comps = [dict(c) for c in db.get_all_complaints()]
@@ -479,7 +479,7 @@ def api_greedy_next_complaint():
     and returns:
       - The single highest-priority eligible complaint to process next.
       - The full recommended processing order of all eligible complaints.
-      - Priority-level counts (Critical / High / Medium / Low / Unknown).
+      - Priority-level counts (High (1) / Medium (2) / Low (3) / Unknown).
       - Eligible vs. ineligible counts.
 
     Greedy strategy: always pick the locally optimal (highest-urgency) choice.

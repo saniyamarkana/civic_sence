@@ -457,6 +457,78 @@
       "solution_image": null,
       "created_at": "2026-10-22 09:18:07",
       "updated_at": "2026-10-22 09:23:34"
+    },
+    {
+      "id": 18,
+      "citizen_id": 2,
+      "title": "Severely Damaged Road with Large Potholes Near Main Bus Stop",
+      "description": "The road near the main bus stop in Area A is severely damaged, with multiple potholes and a broken road surface. The uneven surface makes it difficult for cars, motorcycles, and other vehicles to pass safely. During rainy weather, water collects in the potholes, increasing the risk of accidents. The damaged road also causes traffic congestion during busy hours. I request the concerned municipal department to inspect the location and repair the road as soon as possible to ensure public safety.",
+      "category": "Damaged Road",
+      "location": "West Zone (Adajan)",
+      "priority": "High",
+      "status": "In Progress",
+      "department": "Road Department",
+      "assigned_officer_id": 6,
+      "assigned_officer_name": "Anil Kapoor",
+      "admin_remarks": "please solve this issue",
+      "complaint_image": "1793038809380_Pothole_issue.jpg",
+      "solution_image": null,
+      "created_at": "2026-10-26 23:50:09",
+      "updated_at": "2026-10-27 10:02:53"
+    },
+    {
+      "id": 19,
+      "citizen_id": 2,
+      "title": "Illegal Parking Blocking the Main Road and Causing Traffic Congestion",
+      "description": "Several vehicles are parked illegally along the main road in Area B, blocking part of the road and causing traffic congestion. Pedestrians are also facing difficulties walking safely because vehicles are occupying the roadside space. The problem becomes worse during peak hours. I request the concerned municipal or traffic department to inspect the area and take appropriate action to resolve the parking issue.",
+      "category": "Drainage",
+      "location": "Varachha Zone B",
+      "priority": "Medium",
+      "status": "Resolved",
+      "department": "Water Department",
+      "assigned_officer_id": 7,
+      "assigned_officer_name": "Ramesh Rao",
+      "admin_remarks": "zsd",
+      "complaint_image": "1793039029072_parking_issue.jpg",
+      "solution_image": null,
+      "created_at": "2026-10-26 23:53:49",
+      "updated_at": "2026-10-26 23:54:44"
+    },
+    {
+      "id": 20,
+      "citizen_id": 2,
+      "title": "polqas",
+      "description": "qwertghjkl",
+      "category": "Pothole",
+      "location": "South West (Athwa)",
+      "priority": "Low",
+      "status": "Resolved",
+      "department": "Road Department",
+      "assigned_officer_id": null,
+      "assigned_officer_name": null,
+      "admin_remarks": "Complaint resolved by administrator.",
+      "complaint_image": "1793071738207_drainage_solve.jpg",
+      "solution_image": null,
+      "created_at": "2026-10-27 08:58:58",
+      "updated_at": "2026-10-27 08:59:49"
+    },
+    {
+      "id": 21,
+      "citizen_id": 2,
+      "title": "ssg",
+      "description": "sggs",
+      "category": "Garbage",
+      "location": "Central Zone (Chowk)",
+      "priority": "Low",
+      "status": "Pending",
+      "department": "Sanitation Department",
+      "assigned_officer_id": 5,
+      "assigned_officer_name": "Suresh Verma",
+      "admin_remarks": "asdd",
+      "complaint_image": "1793072119966_water_leak.jpg",
+      "solution_image": null,
+      "created_at": "2026-10-27 09:05:19",
+      "updated_at": "2026-10-27 10:03:01"
     }
   ],
   "complaint_history": [
@@ -819,6 +891,87 @@
       "changed_by": 7,
       "remarks": "Field officer started work (In Progress)",
       "created_at": "2026-10-22 09:23:34"
+    },
+    {
+      "id": 41,
+      "complaint_id": 18,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Road Department",
+      "created_at": "2026-10-26 23:50:09"
+    },
+    {
+      "id": 42,
+      "complaint_id": 18,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 1,
+      "remarks": "Assigned to Field Officer: Anil Kapoor (Road Department)",
+      "created_at": "2026-10-26 23:50:52"
+    },
+    {
+      "id": 43,
+      "complaint_id": 18,
+      "old_status": "Pending",
+      "new_status": "In Progress",
+      "changed_by": 6,
+      "remarks": "Field officer started work (In Progress)",
+      "created_at": "2026-10-26 23:51:20"
+    },
+    {
+      "id": 44,
+      "complaint_id": 19,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Water Department",
+      "created_at": "2026-10-26 23:53:49"
+    },
+    {
+      "id": 45,
+      "complaint_id": 19,
+      "old_status": "Pending",
+      "new_status": "Resolved",
+      "changed_by": 1,
+      "remarks": "Complaint resolved by Ramesh Rao (Water Department)",
+      "created_at": "2026-10-26 23:54:44"
+    },
+    {
+      "id": 46,
+      "complaint_id": 20,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Road Department",
+      "created_at": "2026-10-27 08:58:58"
+    },
+    {
+      "id": 47,
+      "complaint_id": 20,
+      "old_status": "Pending",
+      "new_status": "Resolved",
+      "changed_by": 1,
+      "remarks": "Complaint resolved (Road Department)",
+      "created_at": "2026-10-27 08:59:49"
+    },
+    {
+      "id": 48,
+      "complaint_id": 21,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 2,
+      "remarks": "Complaint registered and assigned to Sanitation Department",
+      "created_at": "2026-10-27 09:05:19"
+    },
+    {
+      "id": 49,
+      "complaint_id": 21,
+      "old_status": "Pending",
+      "new_status": "Pending",
+      "changed_by": 1,
+      "remarks": "Assigned to Field Officer: Suresh Verma (Sanitation Department)",
+      "created_at": "2026-10-27 09:18:28"
     }
   ],
   "feedback": [
@@ -887,6 +1040,22 @@
       "message": "✅ Your complaint '#5 — Drainage Sewage Overflow in Residential Colony' has been resolved! Notes: solve",
       "is_read": 1,
       "created_at": "2026-10-07 23:09:46"
+    },
+    {
+      "id": 7,
+      "citizen_id": 2,
+      "complaint_id": 19,
+      "message": "✅ Your complaint '#19 — Illegal Parking Blocking the Main Road and Causing Traffic Congestion' has been resolved! Notes: zsd",
+      "is_read": 1,
+      "created_at": "2026-10-26 23:54:44"
+    },
+    {
+      "id": 8,
+      "citizen_id": 2,
+      "complaint_id": 20,
+      "message": "✅ Your complaint '#20 — polqas' has been resolved! Notes: Complaint resolved by administrator.",
+      "is_read": 1,
+      "created_at": "2026-10-27 08:59:49"
     }
   ]
 }

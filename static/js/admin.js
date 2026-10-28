@@ -102,7 +102,7 @@ async function loadAdminDashboard() {
           <td style="padding: 10px; font-weight: 600;">${escapeHtml(c.title.substring(0, 24))}</td>
           <td style="padding: 10px; color: var(--text-secondary);">${c.category}</td>
           <td style="padding: 10px; color: var(--text-secondary);">${c.location || '-'}</td>
-          <td style="padding: 10px;"><span class="badge ${c.priority === 'High' ? 'badge-rejected' : 'badge-pending'}">${c.priority}</span></td>
+          <td style="padding: 10px;">${renderAdminPriorityPill(c.priority)}</td>
           <td style="padding: 10px;"><span class="badge badge-${c.status.toLowerCase().replace(' ', '_')}">● ${c.status}</span></td>
         </tr>
       `).join('');
@@ -272,14 +272,12 @@ async function loadAdminComplaints() {
 function renderAdminPriorityPill(prio) {
   const p = (prio || 'Medium').trim();
   const lower = p.toLowerCase();
-  if (lower === 'critical') {
-    return `<span class="prio-badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.55); box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); font-weight: 800;"><span class="prio-dot" style="background: #ef4444; box-shadow: 0 0 8px #ef4444;"></span>Critical</span>`;
-  } else if (lower === 'high') {
-    return `<span class="prio-badge prio-badge-high"><span class="prio-dot prio-dot-high"></span>High</span>`;
+  if (lower === 'high' || lower === 'critical') {
+    return `<span class="prio-badge prio-badge-high"><span class="prio-dot prio-dot-high"></span>1 - High</span>`;
   } else if (lower === 'medium') {
-    return `<span class="prio-badge prio-badge-medium"><span class="prio-dot prio-dot-medium"></span>Medium</span>`;
+    return `<span class="prio-badge prio-badge-medium"><span class="prio-dot prio-dot-medium"></span>2 - Medium</span>`;
   } else {
-    return `<span class="prio-badge prio-badge-low"><span class="prio-dot prio-dot-low"></span>Low</span>`;
+    return `<span class="prio-badge prio-badge-low"><span class="prio-dot prio-dot-low"></span>3 - Low</span>`;
   }
 }
 
@@ -455,8 +453,10 @@ async function openAdminModal(id) {
     // Update Read-only Priority Display Badge
     const prioBadge = document.getElementById('admPriorityBadge');
     if (prioBadge) {
-      prioBadge.className = `badge ${c.priority === 'High' ? 'badge-rejected' : (c.priority === 'Low' ? 'badge-resolved' : 'badge-pending')}`;
-      prioBadge.textContent = c.priority || 'Medium';
+      const p = (c.priority || 'Medium').trim();
+      const pNum = (p.toLowerCase() === 'high' || p.toLowerCase() === 'critical') ? '1 - High' : (p.toLowerCase() === 'low' ? '3 - Low' : '2 - Medium');
+      prioBadge.className = `badge ${(p.toLowerCase() === 'high' || p.toLowerCase() === 'critical') ? 'badge-rejected' : (p.toLowerCase() === 'low' ? 'badge-resolved' : 'badge-pending')}`;
+      prioBadge.textContent = pNum;
     }
 
     // === RESOLVED STATE: hide assignment section, show resolved banner & details ===
@@ -621,61 +621,6 @@ async function saveAdminComplaintChanges() {
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-user-check"></i> Assign &amp; Save';
-    }
-  }
-}
-
-async function resolveComplaintDirectly() {
-  const resolveBtn = document.getElementById('admResolveBtn');
-  if (!currentManagingId) return;
-
-  const department = document.getElementById('admModalDept').value;
-  const officerSelect = document.getElementById('admModalOfficer');
-  const assigned_officer_id = officerSelect && officerSelect.value ? parseInt(officerSelect.value) : null;
-  const selectedOpt = officerSelect ? officerSelect.options[officerSelect.selectedIndex] : null;
-  const assigned_officer_name = (assigned_officer_id && selectedOpt)
-    ? (selectedOpt.getAttribute('data-name') || selectedOpt.textContent.trim())
-    : null;
-  const admin_remarks = document.getElementById('admModalRemarks').value.trim();
-
-  if (resolveBtn) {
-    resolveBtn.disabled = true;
-    resolveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resolving...';
-  }
-
-  try {
-    const payload = {
-      status: 'Resolved',
-      department,
-      admin_remarks: admin_remarks || 'Complaint resolved by administrator.',
-      remarks: `Complaint resolved${assigned_officer_name ? ' by ' + assigned_officer_name : ''} (${department})`
-    };
-    if (assigned_officer_id) {
-      payload.assigned_officer_id = assigned_officer_id;
-      payload.assigned_officer_name = assigned_officer_name;
-    }
-
-    const res = await fetch(`/api/complaints/${currentManagingId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-
-    if (res.ok && data.success) {
-      showToast(`✅ Complaint #${currentManagingId} has been marked as Resolved!`, 'success');
-      closeAdminModal();
-      loadAdminComplaints();
-      loadAdminDashboard();
-    } else {
-      showToast(data.message || 'Failed to resolve complaint.', 'error');
-    }
-  } catch (err) {
-    showToast('Network error while resolving complaint.', 'error');
-  } finally {
-    if (resolveBtn) {
-      resolveBtn.disabled = false;
-      resolveBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mark as Resolved';
     }
   }
 }
@@ -1325,8 +1270,8 @@ async function runRecursiveAlgo(algo) {
 //  CLO3 — CIVIC INTELLIGENCE ALGORITHMIC ENGINE
 // ═══════════════════════════════════════════════════════════════════════════
 
-/* ── Priority weight map (Max-Heap order: Critical > High > Medium > Low) ── */
-const PRIO_WEIGHT = { critical: 4, high: 3, medium: 2, low: 1 };
+/* ── Priority weight map (Max-Heap order: 1 - High > 2 - Medium > 3 - Low) ── */
+const PRIO_WEIGHT = { high: 3, medium: 2, low: 1, critical: 3 };
 
 function getPrioWeight(p) {
   return PRIO_WEIGHT[(p || 'medium').toLowerCase()] || 1;
@@ -1448,7 +1393,7 @@ async function p3RunPriorityWithTable() {
 
     showAlgoStatusRibbon(
       '👑 Max-Heap Priority Processing',
-      `${records.length} complaints sequenced: Critical → High → Medium → Low (Active emergencies first)`,
+      `${records.length} complaints sequenced: High (1) → Medium (2) → Low (3) (Active emergencies first)`,
       '#f59e0b',
       elapsed
     );
@@ -1793,17 +1738,18 @@ async function adminMarkAllRead() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 let _greedyNextComplaintId = null;
+let _greedyChartInstance = null;
 
 function _greedyPriorityBadge(priority) {
   const p = (priority || '').trim();
   const map = {
-    'Critical': { bg: 'rgba(239,68,68,0.18)', color: '#f87171', border: 'rgba(239,68,68,0.45)' },
-    'High':     { bg: 'rgba(249,115,22,0.18)', color: '#fb923c', border: 'rgba(249,115,22,0.45)' },
-    'Medium':   { bg: 'rgba(245,158,11,0.18)', color: '#fbbf24', border: 'rgba(245,158,11,0.45)' },
-    'Low':      { bg: 'rgba(16,185,129,0.18)',  color: '#34d399', border: 'rgba(16,185,129,0.45)' },
+    'High':     { label: '1 - High',   bg: 'rgba(249,115,22,0.18)', color: '#fb923c', border: 'rgba(249,115,22,0.45)' },
+    'Medium':   { label: '2 - Medium', bg: 'rgba(245,158,11,0.18)', color: '#fbbf24', border: 'rgba(245,158,11,0.45)' },
+    'Low':      { label: '3 - Low',    bg: 'rgba(16,185,129,0.18)', color: '#34d399', border: 'rgba(16,185,129,0.45)' },
+    'Critical': { label: '1 - High',   bg: 'rgba(249,115,22,0.18)', color: '#fb923c', border: 'rgba(249,115,22,0.45)' },
   };
-  const s = map[p] || { bg: 'rgba(100,116,139,0.18)', color: '#94a3b8', border: 'rgba(100,116,139,0.35)' };
-  return `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800;background:${s.bg};color:${s.color};border:1px solid ${s.border};">${escapeHtml(p || 'Unknown')}</span>`;
+  const s = map[p] || { label: p || 'Unknown', bg: 'rgba(100,116,139,0.18)', color: '#94a3b8', border: 'rgba(100,116,139,0.35)' };
+  return `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800;background:${s.bg};color:${s.color};border:1px solid ${s.border};">${escapeHtml(s.label)}</span>`;
 }
 
 function _greedyStatusBadge(status) {
@@ -1829,6 +1775,87 @@ function _greedyFormatDate(dateStr) {
   } catch {
     return dateStr;
   }
+}
+
+function renderGreedyScoreChart(orders) {
+  const chartCard = document.getElementById('greedyChartCard');
+  const canvas = document.getElementById('greedyScoreChart');
+  if (!chartCard || !canvas || typeof Chart === 'undefined') return;
+
+  if (!orders || orders.length === 0) {
+    chartCard.style.display = 'none';
+    return;
+  }
+
+  chartCard.style.display = 'block';
+
+  // Limit to top 8 complaints for readability on bar chart
+  const topList = orders.slice(0, 8);
+  const labels = topList.map(c => `#${c.id} - ${(c.title || 'Complaint').substring(0, 16)}...`);
+  const scores = topList.map(c => c.score ?? 0);
+  const colors = topList.map(c => {
+    const p = (c.priority || '').toLowerCase();
+    if (p === 'high' || p === 'critical') return 'rgba(249, 115, 22, 0.85)';
+    if (p === 'medium') return 'rgba(245, 158, 11, 0.85)';
+    return 'rgba(16, 185, 129, 0.85)';
+  });
+  const borderColors = topList.map(c => {
+    const p = (c.priority || '').toLowerCase();
+    if (p === 'high' || p === 'critical') return '#fb923c';
+    if (p === 'medium') return '#fbbf24';
+    return '#34d399';
+  });
+
+  if (_greedyChartInstance) {
+    _greedyChartInstance.destroy();
+    _greedyChartInstance = null;
+  }
+
+  const ctx = canvas.getContext('2d');
+  _greedyChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Priority Score (pts)',
+        data: scores,
+        backgroundColor: colors,
+        borderColor: borderColors,
+        borderWidth: 1.5,
+        borderRadius: 6,
+        maxBarThickness: 32,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const item = topList[context.dataIndex];
+              const p = item.priority || 'Unknown';
+              const rank = (p.toLowerCase() === 'high' ? '1 - High' : (p.toLowerCase() === 'medium' ? '2 - Medium' : '3 - Low'));
+              return ` Score: ${context.parsed.y} pts | Priority: ${rank} | Cat: ${item.category || '-'}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#94a3b8', font: { size: 11, weight: '600' } }
+        },
+        y: {
+          min: 0,
+          max: 100,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#94a3b8', font: { size: 11 } }
+        }
+      }
+    }
+  });
 }
 
 async function runGreedyAlgorithm() {
@@ -1859,18 +1886,19 @@ async function runGreedyAlgorithm() {
     };
 
     setGreedyText('greedyEligibleCount', data.eligible_count ?? 0);
-    setGreedyText('greedyCriticalCount', pc.Critical ?? 0);
     setGreedyText('greedyHighCount', pc.High ?? 0);
     setGreedyText('greedyMediumCount', pc.Medium ?? 0);
     setGreedyText('greedyLowCount', pc.Low ?? 0);
 
     const nextCard = document.getElementById('greedyNextCard');
     const emptyMsg = document.getElementById('greedyEmptyMsg');
+    const chartCard = document.getElementById('greedyChartCard');
     const tableCard = document.getElementById('greedyTableCard');
 
     if (!data.next_complaint) {
       // No eligible complaints
       if (nextCard) nextCard.style.display = 'none';
+      if (chartCard) chartCard.style.display = 'none';
       if (tableCard) tableCard.style.display = 'none';
       if (emptyMsg) emptyMsg.style.display = 'block';
       _greedyNextComplaintId = null;
@@ -1887,18 +1915,23 @@ async function runGreedyAlgorithm() {
       setGreedyText('greedyNextCategory', nc.category || '—');
       setGreedyText('greedyNextLocation', nc.location || '—');
       setGreedyHtml('greedyNextPriority', _greedyPriorityBadge(nc.priority));
+      setGreedyText('greedyNextScore', (nc.score !== undefined ? nc.score + ' pts' : '—'));
       setGreedyHtml('greedyNextStatus', _greedyStatusBadge(nc.status));
       setGreedyText('greedyNextDate', _greedyFormatDate(nc.created_at));
+      setGreedyText('greedyNextExplanationText', nc.explanation || 'Optimal candidate evaluated by Multi-Criteria Greedy Model.');
+
+      // Render score comparison chart
+      const orders = data.processing_order || [];
+      renderGreedyScoreChart(orders);
 
       // Populate processing order table
       const tbody = document.getElementById('greedyTableBody');
-      const orders = data.processing_order || [];
       const tableCount = document.getElementById('greedyTableCount');
       if (tableCount) tableCount.textContent = orders.length + ' complaint' + (orders.length !== 1 ? 's' : '');
 
       if (tbody) {
         if (orders.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#64748b;">No eligible complaints.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#64748b;">No eligible complaints.</td></tr>';
         } else {
           tbody.innerHTML = orders.map((c, i) => {
             const isFirst = (i === 0);
@@ -1909,10 +1942,11 @@ async function runGreedyAlgorithm() {
             return `<tr style="${rowBg}${borderLeft} border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s;" onmouseenter="this.style.background='rgba(6,182,212,0.06)'" onmouseleave="this.style.background='${isFirst ? 'rgba(16,185,129,0.08)' : (i%2===0?'transparent':'rgba(255,255,255,0.015)')}'">
               <td style="padding:12px;text-align:center;font-weight:900;color:${isFirst ? '#10b981' : '#94a3b8'};font-size:${isFirst?'14px':'12px'};">${isFirst ? '<i class=\"fa-solid fa-crown\" style=\"margin-right:3px;\"></i>' : ''}${i + 1}</td>
               <td style="padding:12px;text-align:center;font-weight:800;color:#38bdf8;font-family:var(--font-mono);font-size:13px;">#${c.id}</td>
-              <td style="padding:12px 16px;font-weight:600;color:#e2e8f0;font-size:13px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(c.title || '')}">${escapeHtml(c.title || 'Untitled')}</td>
+              <td style="padding:12px 16px;font-weight:600;color:#e2e8f0;font-size:13px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(c.title || '')}">${escapeHtml(c.title || 'Untitled')}</td>
               <td style="padding:12px 14px;font-size:12px;color:#cbd5e1;">${escapeHtml(c.category || '—')}</td>
               <td style="padding:12px 14px;font-size:12px;color:#94a3b8;">${escapeHtml(c.location || '—')}</td>
               <td style="padding:12px;text-align:center;">${_greedyPriorityBadge(c.priority)}</td>
+              <td style="padding:12px;text-align:center;font-weight:800;color:#10b981;font-family:var(--font-mono);font-size:13px;">${c.score !== undefined ? c.score : '—'}</td>
               <td style="padding:12px;text-align:center;">${_greedyStatusBadge(c.status)}</td>
               <td style="padding:12px 14px;font-size:11px;color:#64748b;">${_greedyFormatDate(c.created_at)}</td>
             </tr>`;

@@ -609,7 +609,7 @@
                   <div style="display: flex; gap: 5px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
                     <span
                       style="font-size: 10px; padding: 2px 8px; border-radius: 5px; background: rgba(249,115,22,0.2); color: #fb923c; font-weight: 800; border: 1px solid rgba(249,115,22,0.4);">High
-                      (3)</span>
+                      (1)</span>
                     <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #64748b;"></i>
                     <span
                       style="font-size: 10px; padding: 2px 8px; border-radius: 5px; background: rgba(245,158,11,0.2); color: #fbbf24; font-weight: 800; border: 1px solid rgba(245,158,11,0.4);">Medium
@@ -617,12 +617,12 @@
                     <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #64748b;"></i>
                     <span
                       style="font-size: 10px; padding: 2px 8px; border-radius: 5px; background: rgba(16,185,129,0.2); color: #34d399; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);">Low
-                      (1)</span>
+                      (3)</span>
                   </div>
 
                   <p style="font-size: 11px; color: #94a3b8; margin: 0 0 14px 0; line-height: 1.5; font-weight: 500;">
-                    Builds a Max-Heap in-memory and sequences all complaints by emergency urgency — Critical first, then
-                    High, Medium, Low.
+                    Builds a Max-Heap in-memory and sequences all complaints by priority — High (1) first, then
+                    Medium (2), Low (3).
                   </p>
                 </div>
 
@@ -1041,9 +1041,9 @@
 
         </section>
 
-        <!-- ════════════════════════════════════════════════════════════════
+        <!-- ================================================================
              TAB 5: PHASE 4 — GREEDY PRIORITY-BASED COMPLAINT PROCESSING
-             ════════════════════════════════════════════════════════════════ -->
+             ================================================================ -->
         <section id="adminTab_greedy" style="display: none;">
 
           <!-- Header Card -->
@@ -1059,7 +1059,7 @@
                     <span style="font-size: 10px; background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.4); padding: 2px 8px; border-radius: 5px; font-weight: 800; text-transform: uppercase;">PHASE 4 — CLO4</span>
                   </h3>
                   <p style="font-size: 12px; color: #94a3b8; margin: 3px 0 0;">
-                    Greedy Algorithm selects the highest-priority eligible complaint at each step &bull; O(N log N) sort-based selection &bull; FIFO tie-breaking
+                    Greedy Algorithm selects the highest-priority eligible complaint at each step &bull; Multi-Criteria Scoring &bull; FIFO tie-breaking
                   </p>
                 </div>
               </div>
@@ -1071,18 +1071,16 @@
             <!-- Priority Legend -->
             <div style="display: flex; gap: 8px; margin-top: 16px; align-items: center; flex-wrap: wrap;">
               <span style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Priority Order:</span>
-              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(239,68,68,0.2); color: #f87171; font-weight: 800; border: 1px solid rgba(239,68,68,0.4);">1. Critical</span>
+              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(249,115,22,0.2); color: #fb923c; font-weight: 800; border: 1px solid rgba(249,115,22,0.4);"><i class="fa-solid fa-1" style="font-size: 9px; margin-right: 4px;"></i> 1 - High</span>
               <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #475569;"></i>
-              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(249,115,22,0.2); color: #fb923c; font-weight: 800; border: 1px solid rgba(249,115,22,0.4);">2. High</span>
+              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(245,158,11,0.2); color: #fbbf24; font-weight: 800; border: 1px solid rgba(245,158,11,0.4);"><i class="fa-solid fa-2" style="font-size: 9px; margin-right: 4px;"></i> 2 - Medium</span>
               <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #475569;"></i>
-              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(245,158,11,0.2); color: #fbbf24; font-weight: 800; border: 1px solid rgba(245,158,11,0.4);">3. Medium</span>
-              <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #475569;"></i>
-              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(16,185,129,0.2); color: #34d399; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);">4. Low</span>
+              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(16,185,129,0.2); color: #34d399; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);"><i class="fa-solid fa-3" style="font-size: 9px; margin-right: 4px;"></i> 3 - Low</span>
             </div>
           </div>
 
           <!-- KPI Summary Stats Row -->
-          <div id="greedyStatsRow" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 22px;">
+          <div id="greedyStatsRow" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px;">
             <div class="glass-card stat-card" style="padding: 16px 20px;">
               <div class="stat-icon-wrapper" style="background: rgba(6,182,212,0.15); color: #06b6d4; width: 36px; height: 36px; font-size: 15px;">
                 <i class="fa-solid fa-clipboard-list"></i>
@@ -1093,21 +1091,12 @@
               </div>
             </div>
             <div class="glass-card stat-card" style="padding: 16px 20px;">
-              <div class="stat-icon-wrapper" style="background: rgba(239,68,68,0.15); color: #f87171; width: 36px; height: 36px; font-size: 15px;">
-                <i class="fa-solid fa-circle-exclamation"></i>
-              </div>
-              <div>
-                <div class="stat-val" id="greedyCriticalCount" style="font-size: 22px; color: #f87171;">—</div>
-                <div class="stat-label">Critical</div>
-              </div>
-            </div>
-            <div class="glass-card stat-card" style="padding: 16px 20px;">
               <div class="stat-icon-wrapper" style="background: rgba(249,115,22,0.15); color: #fb923c; width: 36px; height: 36px; font-size: 15px;">
                 <i class="fa-solid fa-triangle-exclamation"></i>
               </div>
               <div>
                 <div class="stat-val" id="greedyHighCount" style="font-size: 22px; color: #fb923c;">—</div>
-                <div class="stat-label">High</div>
+                <div class="stat-label">1 - High</div>
               </div>
             </div>
             <div class="glass-card stat-card" style="padding: 16px 20px;">
@@ -1116,7 +1105,7 @@
               </div>
               <div>
                 <div class="stat-val" id="greedyMediumCount" style="font-size: 22px; color: #fbbf24;">—</div>
-                <div class="stat-label">Medium</div>
+                <div class="stat-label">2 - Medium</div>
               </div>
             </div>
             <div class="glass-card stat-card" style="padding: 16px 20px;">
@@ -1125,7 +1114,7 @@
               </div>
               <div>
                 <div class="stat-val" id="greedyLowCount" style="font-size: 22px; color: #34d399;">—</div>
-                <div class="stat-label">Low</div>
+                <div class="stat-label">3 - Low</div>
               </div>
             </div>
           </div>
@@ -1134,57 +1123,67 @@
           <div id="greedyNextCard" style="display: none; margin-bottom: 22px;">
             <div class="glass-card" style="padding: 0; overflow: hidden; border: 1.5px solid rgba(16,185,129,0.45); box-shadow: 0 10px 35px rgba(16,185,129,0.15);">
               <!-- Hero Header -->
-              <div style="padding: 18px 24px; background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(6,182,212,0.08) 100%); border-bottom: 1px solid rgba(16,185,129,0.25); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; box-shadow: 0 4px 14px rgba(16,185,129,0.4);">
-                    <i class="fa-solid fa-crown"></i>
-                  </div>
+              <div style="padding: 16px 24px; background: linear-gradient(90deg, rgba(16,185,129,0.18) 0%, rgba(15,23,42,0.6) 100%); border-bottom: 1px solid rgba(16,185,129,0.25); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="display: inline-flex; width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite;"></span>
                   <div>
-                    <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #10b981; font-weight: 800;">Greedy Algorithm Recommendation</div>
-                    <div style="font-size: 17px; font-weight: 800; color: #f8fafc;">Process This Complaint Next</div>
+                    <span style="font-size: 11px; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.8px;">Greedy Optimal Selection</span>
+                    <h4 style="margin: 2px 0 0; font-size: 16px; font-weight: 800; color: #f8fafc;">Top Recommended Complaint to Resolve Next</h4>
                   </div>
                 </div>
                 <div id="greedyNextRank" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 10px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35);">
-                  <span style="font-size: 11px; font-weight: 800; color: #34d399;">#1 in Queue</span>
+                  <span style="font-size: 11px; font-weight: 800; color: #34d399;">#1 Highest Score</span>
                 </div>
               </div>
 
               <!-- Next complaint details -->
               <div style="padding: 20px 24px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
                   <div>
                     <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Complaint ID</div>
                     <div id="greedyNextId" style="font-size: 20px; font-weight: 900; color: #38bdf8; font-family: var(--font-mono);">#—</div>
                   </div>
-                  <div>
+                  <div style="grid-column: span 2;">
                     <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Title</div>
-                    <div id="greedyNextTitle" style="font-size: 14px; font-weight: 700; color: #f1f5f9; line-height: 1.4;">—</div>
+                    <div id="greedyNextTitle" style="font-size: 16px; font-weight: 700; color: #f1f5f9; line-height: 1.3;">—</div>
                   </div>
                   <div>
                     <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Category</div>
-                    <div id="greedyNextCategory" style="font-size: 13px; font-weight: 700; color: #e2e8f0;">—</div>
+                    <div id="greedyNextCategory" style="font-size: 13px; font-weight: 600; color: #cbd5e1;">—</div>
                   </div>
                   <div>
-                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Area / Location</div>
-                    <div id="greedyNextLocation" style="font-size: 13px; font-weight: 700; color: #e2e8f0;">—</div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Location</div>
+                    <div id="greedyNextLocation" style="font-size: 13px; font-weight: 600; color: #94a3b8;">—</div>
                   </div>
                   <div>
                     <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Priority</div>
                     <div id="greedyNextPriority"></div>
                   </div>
                   <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Greedy Score</div>
+                    <div id="greedyNextScore" style="font-size: 18px; font-weight: 900; color: #10b981; font-family: var(--font-mono);">—</div>
+                  </div>
+                  <div>
                     <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Current Status</div>
                     <div id="greedyNextStatus"></div>
                   </div>
                   <div>
-                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Submitted</div>
-                    <div id="greedyNextDate" style="font-size: 13px; font-weight: 700; color: #cbd5e1;">—</div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Submitted On</div>
+                    <div id="greedyNextDate" style="font-size: 12px; color: #94a3b8; font-family: var(--font-mono); margin-top: 3px;">—</div>
                   </div>
-                  <div>
-                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Action</div>
+                  <div style="display: flex; align-items: flex-end;">
                     <button type="button" id="greedyManageBtn" onclick="greedyManageNext()" class="algo-btn algo-btn-cyan" style="padding: 6px 14px; font-size: 11px;">
                       <i class="fa-solid fa-folder-open"></i> View & Manage
                     </button>
+                  </div>
+                </div>
+
+                <!-- Explanation Box -->
+                <div id="greedyNextExplanation" style="margin-top: 16px; padding: 12px 18px; border-radius: 10px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); display: flex; align-items: flex-start; gap: 10px;">
+                  <i class="fa-solid fa-circle-info" style="color: #10b981; margin-top: 3px; font-size: 14px;"></i>
+                  <div style="font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+                    <strong style="color: #34d399; margin-right: 6px;">Why Selected:</strong>
+                    <span id="greedyNextExplanationText">—</span>
                   </div>
                 </div>
               </div>
@@ -1192,12 +1191,31 @@
           </div>
 
           <!-- No eligible message -->
-          <div id="greedyEmptyMsg" style="display: none; text-align: center; padding: 48px 20px;">
-            <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.1)); border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; color: #10b981;">
-              <i class="fa-regular fa-circle-check"></i>
+          <div id="greedyEmptyMsg" class="glass-card" style="display: none; text-align: center; padding: 50px 20px; border-radius: 14px; border: 1px dashed rgba(16,185,129,0.35); margin-bottom: 22px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(16,185,129,0.12); color: #10b981; font-size: 24px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+              <i class="fa-solid fa-check"></i>
             </div>
             <h3 style="font-size: 18px; font-weight: 800; color: #10b981; margin: 0 0 8px;">All Clear!</h3>
             <p style="font-size: 14px; color: #64748b; margin: 0; line-height: 1.6;">No eligible complaints require processing. All complaints are either resolved, rejected, or no complaints exist.</p>
+          </div>
+
+          <!-- Score Comparison Chart Card -->
+          <div id="greedyChartCard" class="glass-card" style="display: none; margin-bottom: 22px; padding: 20px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16,185,129,0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                  <i class="fa-solid fa-chart-column"></i>
+                </div>
+                <div>
+                  <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #f8fafc;">Eligible Complaint Priority Scores</h4>
+                  <p style="margin: 2px 0 0; font-size: 11px; color: #94a3b8;">Score = (Urgency &times; 0.40) + (Category Severity &times; 0.35) + (Waiting Time &times; 0.25)</p>
+                </div>
+              </div>
+              <div style="font-size: 11px; color: #64748b; font-weight: 700;">Score Range: 0 — 100 pts</div>
+            </div>
+            <div style="height: 220px; position: relative;">
+              <canvas id="greedyScoreChart"></canvas>
+            </div>
           </div>
 
           <!-- Recommended Processing Order Table -->
@@ -1205,22 +1223,23 @@
             <div style="padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(15,23,42,0.85); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
               <div style="display: flex; align-items: center; gap: 10px;">
                 <i class="fa-solid fa-list-ol" style="color: #10b981; font-size: 14px;"></i>
-                <span style="font-size: 14px; font-weight: 800; color: #f1f5f9;">Recommended Processing Order</span>
+                <span style="font-size: 14px; font-weight: 800; color: #f8fafc;">Recommended Processing Order</span>
                 <span id="greedyTableCount" style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(16,185,129,0.15); color: #34d399; font-weight: 800; border: 1px solid rgba(16,185,129,0.3);">0 complaints</span>
               </div>
-              <span style="font-size: 11px; color: #64748b; font-weight: 600;"><i class="fa-solid fa-info-circle" style="margin-right: 4px;"></i> Sorted by Greedy Algorithm: highest priority first, oldest first within same priority</span>
+              <span style="font-size: 11px; color: #64748b; font-weight: 600;"><i class="fa-solid fa-info-circle" style="margin-right: 4px;"></i> Sorted by Greedy Algorithm: highest score first (High=1 > Medium=2 > Low=3), oldest first on tie</span>
             </div>
             <div style="width: 100%; overflow-x: auto;">
               <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                 <thead>
                   <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(15,23,42,0.85); color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <th style="padding: 14px 12px; width: 55px; text-align: center;">#</th>
+                    <th style="padding: 14px 12px; width: 55px; text-align: center;">Rank</th>
                     <th style="padding: 14px 12px; width: 65px; text-align: center;">ID</th>
-                    <th style="padding: 14px 16px; min-width: 220px;">Title</th>
+                    <th style="padding: 14px 16px; min-width: 200px;">Title</th>
                     <th style="padding: 14px 14px; width: 120px;">Category</th>
-                    <th style="padding: 14px 14px; width: 160px;">Location</th>
-                    <th style="padding: 14px 12px; width: 100px; text-align: center;">Priority</th>
-                    <th style="padding: 14px 12px; width: 110px; text-align: center;">Status</th>
+                    <th style="padding: 14px 14px; width: 150px;">Location</th>
+                    <th style="padding: 14px 12px; width: 110px; text-align: center;">Priority</th>
+                    <th style="padding: 14px 12px; width: 85px; text-align: center;">Score</th>
+                    <th style="padding: 14px 12px; width: 105px; text-align: center;">Status</th>
                     <th style="padding: 14px 14px; width: 130px;">Submitted</th>
                   </tr>
                 </thead>
@@ -1290,7 +1309,7 @@
           </label>
           <div id="admModalPriorityDisplay"
             style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-            <span id="admPriorityBadge" class="badge">Medium</span>
+            <span id="admPriorityBadge" class="badge">2 - Medium</span>
           </div>
           <input type="hidden" id="admModalPriority">
         </div>
@@ -1385,10 +1404,6 @@
           style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px; flex-wrap: wrap;">
           <button class="btn btn-secondary" onclick="closeAdminModal()">
             <i class="fa-solid fa-xmark"></i> Cancel
-          </button>
-          <button id="admResolveBtn" class="btn" onclick="resolveComplaintDirectly()"
-            style="background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.1)); color: #10b981; border: 1px solid rgba(16,185,129,0.45); font-weight: 800;">
-            <i class="fa-solid fa-circle-check"></i> Mark as Resolved
           </button>
           <button id="admSaveBtn" class="btn btn-primary" onclick="saveAdminComplaintChanges()">
             <i class="fa-solid fa-user-check"></i> Assign &amp; Save
