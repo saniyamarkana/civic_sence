@@ -1,19 +1,19 @@
 """
-Script to generate high-resolution Color and Black-and-White Workflow Diagrams
-for CivicSense Management System.
-Outputs:
-  - project_workflow_color.png
-  - project_workflow_bw.png
+High-Resolution Workflow Diagram Generator for CivicSense Management System.
+Generates:
+  1. project_workflow_color.png  (Modern full-color architecture diagram)
+  2. project_workflow_bw.png     (Clean high-contrast black & white diagram for reports/thesis)
+Also copies them to the system artifact directory.
 """
 
 import os
 import math
+import shutil
 from PIL import Image, ImageDraw, ImageFont
 
 WIDTH = 2400
-HEIGHT = 3200
+HEIGHT = 2860
 
-# Fonts
 FONT_BOLD_TITLE = "C:/Windows/Fonts/segoeuib.ttf"
 FONT_REGULAR    = "C:/Windows/Fonts/segoeui.ttf"
 FONT_MONO       = "C:/Windows/Fonts/consola.ttf"
@@ -24,37 +24,60 @@ def get_font(path, size):
     except:
         return ImageFont.load_default()
 
-def draw_arrow(draw, start, end, color, width=4, arrow_size=16, is_dashed=False):
-    """Draw a line with an arrowhead at the end."""
+def draw_arrow(draw, start, end, color, width=4, arrow_size=15, is_dashed=False):
+    """Draw a vector line with an arrowhead at the target end."""
     x1, y1 = start
     x2, y2 = end
-    
+    dist = math.hypot(x2 - x1, y2 - y1)
+    if dist <= 0:
+        return
+
+    angle = math.atan2(y2 - y1, x2 - x1)
+    base_x = x2 - arrow_size * math.cos(angle)
+    base_y = y2 - arrow_size * math.sin(angle)
+
     if is_dashed:
-        # Draw dashed line
-        total_dist = math.hypot(x2 - x1, y2 - y1)
-        dash_len = 12
-        gap_len = 8
-        if total_dist > 0:
-            dx = (x2 - x1) / total_dist
-            dy = (y2 - y1) / total_dist
-            curr = 0
-            while curr < total_dist - arrow_size:
-                step_end = min(curr + dash_len, total_dist - arrow_size)
-                draw.line([(x1 + dx * curr, y1 + dy * curr), (x1 + dx * step_end, y1 + dy * step_end)], fill=color, width=width)
-                curr += dash_len + gap_len
+        dash_len = 10
+        gap_len = 6
+        dx = (x2 - x1) / dist
+        dy = (y2 - y1) / dist
+        curr = 0
+        limit = dist - arrow_size
+        while curr < limit:
+            step_end = min(curr + dash_len, limit)
+            draw.line([(x1 + dx * curr, y1 + dy * curr), (x1 + dx * step_end, y1 + dy * step_end)], fill=color, width=width)
+            curr += dash_len + gap_len
     else:
-        # Draw solid line up to arrow head base
-        angle = math.atan2(y2 - y1, x2 - x1)
-        base_x = x2 - arrow_size * math.cos(angle)
-        base_y = y2 - arrow_size * math.sin(angle)
         draw.line([(x1, y1), (base_x, base_y)], fill=color, width=width)
 
     # Arrow head
-    angle = math.atan2(y2 - y1, x2 - x1)
     p1 = (x2, y2)
     p2 = (x2 - arrow_size * math.cos(angle - math.pi / 6), y2 - arrow_size * math.sin(angle - math.pi / 6))
     p3 = (x2 - arrow_size * math.cos(angle + math.pi / 6), y2 - arrow_size * math.sin(angle + math.pi / 6))
     draw.polygon([p1, p2, p3], fill=color)
+
+def draw_bridge(draw, start, end, label, color, text_color, bg_color, is_bw=False):
+    """Draw a horizontal connection bridge with a centered label badge."""
+    x1, y1 = start
+    x2, y2 = end
+    mid_x = (x1 + x2) // 2
+    mid_y = (y1 + y2) // 2
+
+    # Line
+    draw_arrow(draw, (x1, y1), (x2, y2), color, width=3 if not is_bw else 4, arrow_size=14)
+
+    # Label box
+    f_badge = get_font(FONT_MONO, 14)
+    # Estimate badge width
+    w = len(label) * 9 + 20
+    h = 24
+    bx1 = mid_x - w // 2
+    by1 = mid_y - h // 2
+    bx2 = mid_x + w // 2
+    by2 = mid_y + h // 2
+
+    draw.rounded_rectangle([bx1, by1, bx2, by2], radius=5, fill=bg_color, outline=color, width=1 if not is_bw else 2)
+    draw.text((mid_x, mid_y), label, font=f_badge, fill=text_color, anchor="mm")
 
 def draw_rounded_card(draw, rect, fill, border_color, border_width=2, radius=12):
     x1, y1, x2, y2 = rect
@@ -62,29 +85,28 @@ def draw_rounded_card(draw, rect, fill, border_color, border_width=2, radius=12)
 
 def render_diagram(mode="color"):
     is_bw = (mode == "bw")
-    
-    # Palette configuration
+
     if is_bw:
         bg_color = (255, 255, 255)
         header_bg = (0, 0, 0)
         header_text = (255, 255, 255)
-        sub_text = (220, 220, 220)
-        lane_hdr_bg = [(20, 20, 20), (40, 40, 40), (60, 60, 60), (80, 80, 80)]
+        sub_text = (230, 230, 230)
+        lane_hdr_bg = [(0, 0, 0), (25, 25, 25), (45, 45, 45), (65, 65, 65)]
         lane_hdr_text = (255, 255, 255)
-        lane_bg = [(250, 250, 250), (245, 245, 245), (250, 250, 250), (245, 245, 245)]
+        lane_bg = [(255, 255, 255), (250, 250, 250), (255, 255, 255), (250, 250, 250)]
         card_fill = (255, 255, 255)
         card_border = (0, 0, 0)
         card_title_fill = (235, 235, 235)
         text_primary = (0, 0, 0)
-        text_secondary = (60, 60, 60)
-        badge_bg = (240, 240, 240)
+        text_secondary = (50, 50, 50)
+        badge_bg = (245, 245, 245)
         badge_border = (0, 0, 0)
         badge_text = (0, 0, 0)
         arrow_color = (0, 0, 0)
         table_hdr_bg = (0, 0, 0)
         table_hdr_text = (255, 255, 255)
         table_border = (0, 0, 0)
-        table_row_alt = (245, 245, 245)
+        table_row_alt = (242, 242, 242)
     else:
         bg_color = (248, 250, 252) # #f8fafc
         header_bg = (15, 23, 42)    # #0f172a
@@ -120,41 +142,39 @@ def render_diagram(mode="color"):
     img = Image.new("RGB", (WIDTH, HEIGHT), bg_color)
     draw = ImageDraw.Draw(img)
 
-    # Load fonts
-    f_title_big   = get_font(FONT_BOLD_TITLE, 52)
-    f_sub_title   = get_font(FONT_REGULAR, 24)
-    f_lane_hdr    = get_font(FONT_BOLD_TITLE, 26)
-    f_card_title  = get_font(FONT_BOLD_TITLE, 22)
-    f_body        = get_font(FONT_REGULAR, 18)
-    f_body_bold   = get_font(FONT_BOLD_TITLE, 18)
-    f_mono_badge  = get_font(FONT_MONO, 16)
-    f_tbl_hdr     = get_font(FONT_BOLD_TITLE, 19)
-    f_tbl_body    = get_font(FONT_REGULAR, 17)
+    # Fonts
+    f_title_big   = get_font(FONT_BOLD_TITLE, 48)
+    f_sub_title   = get_font(FONT_REGULAR, 23)
+    f_lane_hdr    = get_font(FONT_BOLD_TITLE, 25)
+    f_body        = get_font(FONT_REGULAR, 17)
+    f_body_bold   = get_font(FONT_BOLD_TITLE, 17)
+    f_mono_badge  = get_font(FONT_MONO, 15)
+    f_tbl_hdr     = get_font(FONT_BOLD_TITLE, 18)
+    f_tbl_body    = get_font(FONT_REGULAR, 16)
 
-    # 1. Header Banner
-    draw.rectangle([(0, 0), (WIDTH, 170)], fill=header_bg)
+    # 1. Header Banner (y: 0 - 175)
+    draw.rectangle([(0, 0), (WIDTH, 175)], fill=header_bg)
     draw.text((WIDTH//2, 45), "CIVICSENSE MANAGEMENT SYSTEM", font=f_title_big, fill=header_text, anchor="mm")
-    tagline = "END-TO-END MUNICIPAL ARCHITECTURE & INTEGRATED DATA STRUCTURES WORKFLOW" if not is_bw else "SYSTEM WORKFLOW & ARCHITECTURE DIAGRAM (PRINT SPECIFICATION / BLACK & WHITE)"
+    tagline = "END-TO-END MUNICIPAL ARCHITECTURE & INTEGRATED DATA STRUCTURES WORKFLOW" if not is_bw else "PROJECT ARCHITECTURAL WORKFLOW DIAGRAM (PUBLICATION & THESIS BLACK & WHITE SPECIFICATION)"
     draw.text((WIDTH//2, 105), tagline, font=f_sub_title, fill=sub_text, anchor="mm")
     meta = "Full Lifecycle: Citizen Ingestion  ->  Algorithmic Dispatch  ->  Department Triage  ->  Administrative Governance"
-    draw.text((WIDTH//2, 140), meta, font=get_font(FONT_MONO, 16), fill=(56, 189, 248) if not is_bw else (200, 200, 200), anchor="mm")
+    draw.text((WIDTH//2, 142), meta, font=get_font(FONT_MONO, 16), fill=(56, 189, 248) if not is_bw else (200, 200, 200), anchor="mm")
 
-    # Layout Parameters for 4 Swimlanes
+    # 2. Swimlanes Configuration
     lanes = [
         {"name": "1. CITIZEN PORTAL", "sub": "Reporting & Tracking UI", "color_idx": 0},
-        {"name": "2. BACKEND & DISPATCH ENGINE", "sub": "Flask API & DSA Routing", "color_idx": 1},
-        {"name": "3. DEPARTMENT OPERATIONS", "sub": "Triage & Field Execution", "color_idx": 2},
+        {"name": "2. BACKEND CONTROLLER", "sub": "Flask API & DSA Routing", "color_idx": 1},
+        {"name": "3. DEPARTMENT OPS", "sub": "Triage & Field Execution", "color_idx": 2},
         {"name": "4. ADMIN GOVERNANCE", "sub": "Master Oversight & BI", "color_idx": 3}
     ]
 
-    margin_x = 60
-    lane_gap = 28
+    margin_x = 55
+    lane_gap = 26
     num_lanes = 4
     lane_width = (WIDTH - (2 * margin_x) - (num_lanes - 1) * lane_gap) // num_lanes
-    lane_top = 205
-    lane_bottom = 2460
+    lane_top = 210
+    lane_bottom = 1600
 
-    # Draw Swimlane Backgrounds & Headers
     lane_rects = []
     for i, lane in enumerate(lanes):
         lx1 = margin_x + i * (lane_width + lane_gap)
@@ -167,267 +187,216 @@ def render_diagram(mode="color"):
         # Lane Header Box
         draw_rounded_card(draw, (lx1, lane_top, lx2, lane_top + 75), lane_hdr_bg[i], (0, 0, 0) if is_bw else lane_hdr_bg[i], border_width=2 if is_bw else 1, radius=10)
         draw.text((lx1 + lane_width//2, lane_top + 26), lane["name"], font=f_lane_hdr, fill=lane_hdr_text, anchor="mm")
-        draw.text((lx1 + lane_width//2, lane_top + 54), lane["sub"], font=get_font(FONT_REGULAR, 16), fill=(200, 220, 245) if not is_bw else (210, 210, 210), anchor="mm")
+        draw.text((lx1 + lane_width//2, lane_top + 54), lane["sub"], font=get_font(FONT_REGULAR, 15), fill=(210, 230, 255) if not is_bw else (220, 220, 220), anchor="mm")
 
-    # Define Cards in each Lane
-    # Lane 1: Citizen (5 steps)
+    # 3. Cards Definitions (y coordinates aligned per row)
+    card_rows = [
+        {"y": 310, "h": 185},
+        {"y": 525, "h": 185},
+        {"y": 740, "h": 185},
+        {"y": 955, "h": 185},
+        {"y": 1170, "h": 185},
+        {"y": 1385, "h": 185}
+    ]
+
+    # Lane 1: Citizen Cards
     c_cards = [
         {
-            "step": "Step 1.1",
-            "title": "Citizen Auth & Access",
-            "lines": ["- Login / Register account", "- Role check: role == 'citizen'", "- Pre-populated demo accounts"],
-            "dsa": "Array / Hash Table Lookup",
-            "y": 305, "h": 165
+            "step": "STEP 1.1", "title": "Citizen Auth & Access",
+            "lines": ["- Login / Registration endpoint", "- Role verification: 'citizen'", "- Pre-populated demo profiles"],
+            "dsa": "Array / Hash Table Lookup"
         },
         {
-            "step": "Step 1.2",
-            "title": "File Civic Grievance",
-            "lines": ["- Form: Category, Title, Detail", "- Hazard severity & Location Zone", "- Upload photo proof to server"],
-            "dsa": "Multipart Form / File Store",
-            "y": 500, "h": 170
+            "step": "STEP 1.2", "title": "File Civic Grievance",
+            "lines": ["- Category, Title & Description", "- Hazard Severity (High/Med/Low)", "- Upload photo proof to server"],
+            "dsa": "Multipart Form / File Store"
         },
         {
-            "step": "Step 1.3",
-            "title": "Algorithmic Urgency Preview",
-            "lines": ["- Infix: (Priority*3 + Status*2)/5", "- Postfix stack-based evaluation", "- Generates numeric urgency 1-5"],
-            "dsa": "Stack (Shunting-Yard DSA)",
-            "y": 700, "h": 175
+            "step": "STEP 1.3", "title": "Urgency Score Preview",
+            "lines": ["- Infix: (Priority*3 + Status*2)/5", "- Postfix stack-based evaluation", "- Dynamic urgency score (1 to 5)"],
+            "dsa": "Stack (Shunting-Yard DSA)"
         },
         {
-            "step": "Step 1.4",
-            "title": "Vehicle BFS Route Preview",
-            "lines": ["- Computes shortest depot route", "- Level-order traversal across zones", "- Visual route display on map"],
-            "dsa": "Graph (BFS Shortest Path)",
-            "y": 905, "h": 175
+            "step": "STEP 1.4", "title": "Vehicle BFS Route View",
+            "lines": ["- Shortest route from depot", "- Level-order traversal of zones", "- Live visual path highlighting"],
+            "dsa": "Graph (BFS Shortest Path)"
         },
         {
-            "step": "Step 1.5",
-            "title": "Ticket Browsing & History",
-            "lines": ["- Sequential Previous / Next view", "- Dynamic pointer traversal", "- Citizen track ticket status"],
-            "dsa": "Singly Linked List DSA",
-            "y": 1110, "h": 170
+            "step": "STEP 1.5", "title": "Sequential Ticket View",
+            "lines": ["- Sequential Previous / Next view", "- Dynamic pointer traversal", "- Track resolution lifecycle"],
+            "dsa": "Singly Linked List DSA"
         },
         {
-            "step": "Step 1.6",
-            "title": "Citizen Feedback & Rating",
-            "lines": ["- Unlocks when status = 'Resolved'", "- 1 to 5 Star municipal rating", "- Citizen comments & validation"],
-            "dsa": "Rating Aggregator Model",
-            "y": 1310, "h": 170
+            "step": "STEP 1.6", "title": "Citizen Rating & Feedback",
+            "lines": ["- Unlocked upon 'Resolved' status", "- 1 to 5 Star municipal rating", "- Citizen satisfaction feedback"],
+            "dsa": "Rating Aggregator Model"
         }
     ]
 
-    # Lane 2: Backend Controller & Dispatch (5 steps)
+    # Lane 2: Backend Cards
     b_cards = [
         {
-            "step": "Step 2.1",
-            "title": "Flask API Controller",
-            "lines": ["- Restful API endpoint handlers", "- Session management & auth tokens", "- Request sanitation & validation"],
-            "dsa": "Flask Web Micro-framework",
-            "y": 305, "h": 165
+            "step": "STEP 2.1", "title": "Flask API Controller",
+            "lines": ["- RESTful API routing layer", "- Session auth & request hygiene", "- Parameter parsing & validation"],
+            "dsa": "Flask Web Micro-framework"
         },
         {
-            "step": "Step 2.2",
-            "title": "Database Persistence",
+            "step": "STEP 2.2", "title": "Database Engine",
             "lines": ["- JSON file database engine", "- Optional MySQL connector", "- Atomic read/write transactions"],
-            "dsa": "JSON / B-Tree File Record",
-            "y": 500, "h": 170
+            "dsa": "JSON / B-Tree File Record"
         },
         {
-            "step": "Step 2.3",
-            "title": "Shunting-Yard Calculator",
+            "step": "STEP 2.3", "title": "Shunting-Yard Calculator",
             "lines": ["- Infix-to-postfix tokenizer", "- Operator precedence evaluation", "- Urgency score computation"],
-            "dsa": "Stack Infix Engine (Phase 1)",
-            "y": 700, "h": 175
+            "dsa": "Stack Infix Engine (Phase 1)"
         },
         {
-            "step": "Step 2.4",
-            "title": "Zonal Graph Engine",
+            "step": "STEP 2.4", "title": "Zonal Graph Engine",
             "lines": ["- City adjacency list & nodes", "- Depot (Chowk) to destination", "- Queue-based BFS exploration"],
-            "dsa": "Graph Traversal (BFS & DFS)",
-            "y": 905, "h": 175
+            "dsa": "Graph Traversal (BFS & DFS)"
         },
         {
-            "step": "Step 2.5",
-            "title": "Department Router",
+            "step": "STEP 2.5", "title": "Department Router",
             "lines": ["- Map issue category to Dept", "- Sanitation / Road / Water / etc.", "- Push ticket to Dept Priority Heap"],
-            "dsa": "Category Dispatch Hash Table",
-            "y": 1110, "h": 170
+            "dsa": "Category Dispatch Hash Table"
         },
         {
-            "step": "Step 2.6",
-            "title": "State Machine & Audit",
+            "step": "STEP 2.6", "title": "State Machine & Audit",
             "lines": ["- State: Pending->In Progress->Done", "- Log timestamp & operator notes", "- Push previous state to undo stack"],
-            "dsa": "Finite State Machine + Log",
-            "y": 1310, "h": 170
+            "dsa": "Finite State Machine + Log"
         }
     ]
 
-    # Lane 3: Department Operations (6 steps)
+    # Lane 3: Department Cards
     d_cards = [
         {
-            "step": "Step 3.1",
-            "title": "Officer Authentication",
+            "step": "STEP 3.1", "title": "Officer Authentication",
             "lines": ["- Role: 'department'", "- Scope limited to assigned sector", "- 5 Zonal Officers (Road, Water...)"],
-            "dsa": "Role-Based Access Control",
-            "y": 305, "h": 165
+            "dsa": "Role-Based Access Control"
         },
         {
-            "step": "Step 3.2",
-            "title": "Emergency Priority Queue",
+            "step": "STEP 3.2", "title": "Emergency Priority Queue",
             "lines": ["- Complaints queued by urgency", "- Max-Heap root holds top ticket", "- Immediate life-hazard priority"],
-            "dsa": "Priority Queue (Max-Heap)",
-            "y": 500, "h": 170
+            "dsa": "Priority Queue (Max-Heap)"
         },
         {
-            "step": "Step 3.3",
-            "title": "Greedy Task Scheduler",
+            "step": "STEP 3.3", "title": "Greedy Task Scheduler",
             "lines": ["- Score: 0.4*Urg + 0.35*Sev + 0.25*Wait", "- Sorts eligible tickets O(N log N)", "- Optimal greedy selection next"],
-            "dsa": "Greedy Algorithm (Phase 4)",
-            "y": 700, "h": 175
+            "dsa": "Greedy Algorithm (Phase 4)"
         },
         {
-            "step": "Step 3.4",
-            "title": "Field Work & Resolution",
+            "step": "STEP 3.4", "title": "Field Work & Resolution",
             "lines": ["- Dispatch crew & start repair", "- Transition state: 'In Progress'", "- Upload resolution photo proof"],
-            "dsa": "Workflow Progression",
-            "y": 905, "h": 175
+            "dsa": "Workflow Progression"
         },
         {
-            "step": "Step 3.5",
-            "title": "LIFO Action Undo Stack",
+            "step": "STEP 3.5", "title": "LIFO Action Undo Stack",
             "lines": ["- Instant 1-click mistake rollback", "- Pops prior state from stack O(1)", "- Reverts accidental status shifts"],
-            "dsa": "Stack LIFO Undo (Phase 1)",
-            "y": 1110, "h": 170
+            "dsa": "Stack LIFO Undo (Phase 1)"
         },
         {
-            "step": "Step 3.6",
-            "title": "Department Analytics",
+            "step": "STEP 3.6", "title": "Department Analytics",
             "lines": ["- Daily resolved ticket count", "- Officer turnaround time metrics", "- Department backlog health index"],
-            "dsa": "Iterative Metrics Aggregation",
-            "y": 1310, "h": 170
+            "dsa": "Iterative Metrics Aggregation"
         }
     ]
 
-    # Lane 4: Admin Governance (6 steps)
+    # Lane 4: Admin Cards
     a_cards = [
         {
-            "step": "Step 4.1",
-            "title": "Admin Authentication",
+            "step": "STEP 4.1", "title": "Admin Authentication",
             "lines": ["- Role: 'admin' (Municipal HQ)", "- Full read/write CRUD privileges", "- Cross-department supervisory scope"],
-            "dsa": "Central Supervisor Auth",
-            "y": 305, "h": 165
+            "dsa": "Central Supervisor Auth"
         },
         {
-            "step": "Step 4.2",
-            "title": "KPI Master Dashboard",
+            "step": "STEP 4.2", "title": "KPI Master Dashboard",
             "lines": ["- Real-time counters: Total, Active", "- Pending vs. Resolved breakdown", "- High-priority emergency alerts"],
-            "dsa": "O(N) Metric Aggregation",
-            "y": 500, "h": 170
+            "dsa": "O(N) Metric Aggregation"
         },
         {
-            "step": "Step 4.3",
-            "title": "Binary Search Tree (BST)",
+            "step": "STEP 4.3", "title": "Binary Search Tree (BST)",
             "lines": ["- Fast O(log N) ticket lookup", "- Search by Complaint ID / Key", "- In-order sorted list generation"],
-            "dsa": "Binary Search Tree (Phase 3)",
-            "y": 700, "h": 175
+            "dsa": "Binary Search Tree (Phase 3)"
         },
         {
-            "step": "Step 4.4",
-            "title": "Governance Hierarchy Tree",
+            "step": "STEP 4.4", "title": "Governance Hierarchy Tree",
             "lines": ["- Commissioner -> Zonal -> Dept", "- Pre/In/Post-order traversals", "- Models administrative ranks"],
-            "dsa": "Binary Tree (Phase 3)",
-            "y": 905, "h": 175
+            "dsa": "Binary Tree (Phase 3)"
         },
         {
-            "step": "Step 4.5",
-            "title": "Zonal Graph Explorer",
+            "step": "STEP 4.5", "title": "Zonal Graph Explorer",
             "lines": ["- City network BFS level-order view", "- DFS depth exploration of nodes", "- Area connectivity diagnostics"],
-            "dsa": "Graph BFS / DFS Traversal",
-            "y": 1110, "h": 170
+            "dsa": "Graph BFS / DFS Traversal"
         },
         {
-            "step": "Step 4.6",
-            "title": "BI Analytics & Heatmaps",
+            "step": "STEP 4.6", "title": "BI Analytics & Heatmaps",
             "lines": ["- Category-wise pie & bar charts", "- Problem-prone zonal heatmap", "- Citizen satisfaction ratings"],
-            "dsa": "Statistical Analysis Engine",
-            "y": 1310, "h": 170
+            "dsa": "Statistical Analysis Engine"
         }
     ]
 
-    all_lanes_cards = [c_cards, b_cards, d_cards, a_cards]
+    all_lanes = [c_cards, b_cards, d_cards, a_cards]
 
-    # Draw all cards
-    for lane_idx, cards in enumerate(all_lanes_cards):
+    # Render Cards
+    for lane_idx, cards in enumerate(all_lanes):
         lx1, lx2 = lane_rects[lane_idx]
-        card_w = lx2 - lx1 - 32
-        cx1 = lx1 + 16
+        card_w = lx2 - lx1 - 28
+        cx1 = lx1 + 14
         cx2 = cx1 + card_w
 
-        for c in cards:
-            cy1 = c["y"]
-            cy2 = cy1 + c["h"]
+        for r_idx, c in enumerate(cards):
+            cy1 = card_rows[r_idx]["y"]
+            cy2 = cy1 + card_rows[r_idx]["h"]
 
-            # Card box
-            draw_rounded_card(draw, (cx1, cy1, cx2, cy2), card_fill, card_border if not is_bw else (0, 0, 0), border_width=2 if is_bw else 1, radius=10)
+            # Main Card Box
+            draw_rounded_card(draw, (cx1, cy1, cx2, cy2), card_fill, (0, 0, 0) if is_bw else card_border, border_width=2 if is_bw else 1, radius=10)
 
             # Card Header Bar
-            draw_rounded_card(draw, (cx1, cy1, cx2, cy1 + 38), card_title_fill if not is_bw else (225, 225, 225), (0, 0, 0) if is_bw else (226, 232, 240), border_width=1, radius=8)
+            draw_rounded_card(draw, (cx1, cy1, cx2, cy1 + 38), card_title_fill if not is_bw else (230, 230, 230), (0, 0, 0) if is_bw else (226, 232, 240), border_width=1, radius=8)
             draw.text((cx1 + 12, cy1 + 19), c["step"], font=get_font(FONT_BOLD_TITLE, 14), fill=(30, 64, 175) if not is_bw else (0, 0, 0), anchor="lm")
-            draw.text((cx1 + 80, cy1 + 19), c["title"], font=get_font(FONT_BOLD_TITLE, 17), fill=text_primary, anchor="lm")
+            draw.text((cx1 + 84, cy1 + 19), c["title"], font=get_font(FONT_BOLD_TITLE, 17), fill=text_primary, anchor="lm")
 
-            # Content lines
+            # Content Bullet Lines
             cur_y = cy1 + 48
             for line in c["lines"]:
                 draw.text((cx1 + 16, cur_y), line, font=f_body, fill=text_secondary if not is_bw else (30, 30, 30))
                 cur_y += 24
 
-            # DSA Badge Pill at bottom of card
-            badge_h = 26
+            # Bottom DSA Badge Pill
+            badge_h = 28
             badge_y1 = cy2 - badge_h - 10
             badge_y2 = cy2 - 10
             badge_text_str = f"DSA: {c['dsa']}"
-            draw_rounded_card(draw, (cx1 + 14, badge_y1, cx2 - 14, badge_y2), badge_bg, badge_border if not is_bw else (0, 0, 0), border_width=1, radius=6)
+            draw_rounded_card(draw, (cx1 + 14, badge_y1, cx2 - 14, badge_y2), badge_bg, (0, 0, 0) if is_bw else badge_border, border_width=1, radius=6)
             draw.text((cx1 + card_w//2, badge_y1 + badge_h//2), badge_text_str, font=f_mono_badge, fill=badge_text, anchor="mm")
 
-    # Connectors within lanes (Vertical Downward Arrows)
-    for lane_idx, cards in enumerate(all_lanes_cards):
+    # Vertical Flow Arrows between cards inside each lane
+    for lane_idx in range(num_lanes):
         lx1, lx2 = lane_rects[lane_idx]
         cx = lx1 + (lx2 - lx1) // 2
-        for i in range(len(cards) - 1):
-            top_card_bottom = cards[i]["y"] + cards[i]["h"]
-            next_card_top = cards[i+1]["y"]
-            draw_arrow(draw, (cx, top_card_bottom + 4), (cx, next_card_top - 4), arrow_color, width=3 if not is_bw else 4, arrow_size=12)
+        for r_idx in range(5):
+            top_y = card_rows[r_idx]["y"] + card_rows[r_idx]["h"]
+            btm_y = card_rows[r_idx+1]["y"]
+            draw_arrow(draw, (cx, top_y + 4), (cx, btm_y - 4), arrow_color, width=3 if not is_bw else 4, arrow_size=12)
 
-    # Cross-Lane Arrows (Interaction & Data Pipelines)
-    # 1. Citizen files grievance (Step 1.2) -> Backend Controller (Step 2.1)
-    draw_arrow(draw, (lane_rects[0][1] - 16, 585), (lane_rects[1][0] + 16, 585), (2, 132, 199) if not is_bw else (0, 0, 0), width=4, arrow_size=14)
+    # Cross-Lane Communication Bridges (Horizontal Arrows)
+    # Bridge 1: Citizen 1.2 -> Backend 2.2 (Submit Ticket Payload)
+    draw_bridge(draw, (lane_rects[0][1] - 14, 617), (lane_rects[1][0] + 14, 617), "HTTP POST /api/complaints", (2, 132, 199) if not is_bw else (0,0,0), (2, 132, 199) if not is_bw else (0,0,0), (255,255,255), is_bw)
 
-    # 2. Backend Shunting-Yard (Step 2.3) -> Dept Emergency Heap (Step 3.2)
-    draw_arrow(draw, (lane_rects[1][1] - 16, 785), (lane_rects[2][0] + 16, 785), (79, 70, 229) if not is_bw else (0, 0, 0), width=4, arrow_size=14)
+    # Bridge 2: Backend 2.5 -> Dept 3.2 (Route to Department Heap)
+    draw_bridge(draw, (lane_rects[1][1] - 14, 617), (lane_rects[2][0] + 14, 617), "Auto-Triage Max-Heap", (79, 70, 229) if not is_bw else (0,0,0), (79, 70, 229) if not is_bw else (0,0,0), (255,255,255), is_bw)
 
-    # 3. Dept Greedy Scheduler (Step 3.3) -> Field Work Execution (Step 3.4)
-    # 4. Dept Field Work Resolved (Step 3.4) -> Citizen Feedback (Step 1.6) [Feedback Loop Across]
-    # Draw long curved/routed arrow from Dept 3.4 to Citizen 1.6
-    pts_feedback = [
-        (lane_rects[2][0] + 16, 1020),
-        (lane_rects[1][0] - 20, 1020),
-        (lane_rects[1][0] - 20, 1390),
-        (lane_rects[0][1] - 16, 1390)
-    ]
-    # Draw dashed feedback loop
-    draw_arrow(draw, (lane_rects[2][0] + 16, 1000), (lane_rects[1][1] - 16, 1000), (5, 150, 105) if not is_bw else (0, 0, 0), width=3, arrow_size=12, is_dashed=True)
-    draw_arrow(draw, (lane_rects[1][0] + 16, 1000), (lane_rects[0][1] - 16, 1370), (5, 150, 105) if not is_bw else (0, 0, 0), width=3, arrow_size=12, is_dashed=True)
+    # Bridge 3: Dept 3.4 -> Admin 4.2 (Status Updates & KPI)
+    draw_bridge(draw, (lane_rects[2][1] - 14, 617), (lane_rects[3][0] + 14, 617), "Live KPI Sync", (217, 119, 6) if not is_bw else (0,0,0), (217, 119, 6) if not is_bw else (0,0,0), (255,255,255), is_bw)
 
-    # 5. Backend DB & Audit (Step 2.6) -> Admin KPI & BST Search (Step 4.2 / 4.3)
-    draw_arrow(draw, (lane_rects[2][1] - 16, 585), (lane_rects[3][0] + 16, 585), (217, 119, 6) if not is_bw else (0, 0, 0), width=4, arrow_size=14)
-    draw_arrow(draw, (lane_rects[2][1] - 16, 785), (lane_rects[3][0] + 16, 785), (217, 119, 6) if not is_bw else (0, 0, 0), width=4, arrow_size=14)
+    # Bridge 4: Citizen 1.6 Feedback -> Admin 4.6 Analytics
+    draw_bridge(draw, (lane_rects[0][1] - 14, 1477), (lane_rects[3][0] + 14, 1477), "Citizen Star Rating & Review Stream (Feedback Loop)", (5, 150, 105) if not is_bw else (0,0,0), (5, 150, 105) if not is_bw else (0,0,0), (255,255,255), is_bw)
 
-    # Draw Section Banner for DSA Specification Table
-    tbl_top = 1520
+    # 4. DSA Specification Matrix Table (y: 1635 - 2290)
+    tbl_top = 1635
     draw.rectangle([(margin_x, tbl_top), (WIDTH - margin_x, tbl_top + 50)], fill=table_hdr_bg)
     draw.text((WIDTH//2, tbl_top + 25), "CIVICSENSE DATA STRUCTURES & ALGORITHMS (DSA) SPECIFICATION MATRIX", font=f_lane_hdr, fill=table_hdr_text, anchor="mm")
 
-    # Table columns: DSA Name, Type / Mechanism, Application in CivicSense, Time Complexity, Phase
     cols = [
         {"name": "DATA STRUCTURE / ALGORITHM", "w": 460},
         {"name": "CORE MECHANISM & LOGIC", "w": 490},
@@ -439,7 +408,7 @@ def render_diagram(mode="color"):
     th_y1 = tbl_top + 50
     th_y2 = th_y1 + 45
     draw.rectangle([(margin_x, th_y1), (WIDTH - margin_x, th_y2)], fill=(45, 55, 72) if not is_bw else (220, 220, 220))
-    
+
     cur_x = margin_x
     for col in cols:
         draw.text((cur_x + 12, th_y1 + 22), col["name"], font=f_tbl_hdr, fill=(255, 255, 255) if not is_bw else (0, 0, 0), anchor="lm")
@@ -458,40 +427,33 @@ def render_diagram(mode="color"):
         ("10. Iterative & Recursive Suites", "Loop structures vs. Divide-and-conquer calls", "Zonal complaint tallies, factorial weights, binary search", "O(N) iterative / O(log N) rec", "Phase 2: Procedural")
     ]
 
-    row_h = 58
+    row_h = 56
     row_y = th_y2
     for r_idx, row in enumerate(table_data):
         r_bg = (255, 255, 255) if (r_idx % 2 == 0) else (table_row_alt if not is_bw else (245, 245, 245))
         draw.rectangle([(margin_x, row_y), (WIDTH - margin_x, row_y + row_h)], fill=r_bg, outline=table_border if not is_bw else (0, 0, 0), width=1)
-        
+
         cur_x = margin_x
-        # Col 0: Bold name
         draw.text((cur_x + 12, row_y + row_h//2), row[0], font=f_body_bold, fill=text_primary, anchor="lm")
         cur_x += cols[0]["w"]
 
-        # Col 1: Mechanism
         draw.text((cur_x + 12, row_y + row_h//2), row[1], font=f_tbl_body, fill=text_secondary if not is_bw else (40, 40, 40), anchor="lm")
         cur_x += cols[1]["w"]
 
-        # Col 2: Application
         draw.text((cur_x + 12, row_y + row_h//2), row[2], font=f_tbl_body, fill=text_primary, anchor="lm")
         cur_x += cols[2]["w"]
 
-        # Col 3: Complexity (Monospace)
         draw.text((cur_x + 12, row_y + row_h//2), row[3], font=f_mono_badge, fill=(30, 64, 175) if not is_bw else (0, 0, 0), anchor="lm")
         cur_x += cols[3]["w"]
 
-        # Col 4: Phase Badge
         draw.text((cur_x + 12, row_y + row_h//2), row[4], font=get_font(FONT_BOLD_TITLE, 14), fill=(180, 83, 9) if not is_bw else (0, 0, 0), anchor="lm")
-
         row_y += row_h
 
-    # Outer border for the table
     draw.rectangle([(margin_x, tbl_top), (WIDTH - margin_x, row_y)], outline=(0, 0, 0) if is_bw else (71, 85, 105), width=2)
 
-    # Bottom Architecture Summary & Notes Box
-    notes_top = row_y + 28
-    notes_bottom = notes_top + 340
+    # 5. Summary & Lifecycle Notes Card (y: 2325 - 2740)
+    notes_top = 2325
+    notes_bottom = 2740
     draw_rounded_card(draw, (margin_x, notes_top, WIDTH - margin_x, notes_bottom), (255, 255, 255) if is_bw else (241, 245, 249), (0, 0, 0) if is_bw else (203, 213, 225), border_width=2 if is_bw else 1, radius=12)
 
     draw.text((margin_x + 30, notes_top + 35), "SYSTEM DESIGN & WORKFLOW LIFECYCLE SUMMARY", font=get_font(FONT_BOLD_TITLE, 22), fill=text_primary, anchor="lm")
@@ -504,20 +466,26 @@ def render_diagram(mode="color"):
         "5. Governance & BI: Administrators navigate the Municipal Hierarchy Tree, search complaints via BST in O(log N), and monitor real-time city health via the analytics dashboard."
     ]
 
-    b_y = notes_top + 75
+    b_y = notes_top + 80
     for b in summary_bullets:
         draw.text((margin_x + 30, b_y), b, font=get_font(FONT_REGULAR, 18), fill=text_secondary if not is_bw else (20, 20, 20), anchor="lm")
-        b_y += 38
+        b_y += 55
 
-    # Legend / Footer line
-    foot_y = notes_bottom + 35
+    # 6. Footer Text
+    foot_y = 2800
     footer_text = "CivicSense Management System | Academic Project Specification | Python, CustomTkinter, Flask, MySQL/JSON Architecture"
     draw.text((WIDTH//2, foot_y), footer_text, font=get_font(FONT_REGULAR, 16), fill=(100, 116, 139) if not is_bw else (80, 80, 80), anchor="mm")
 
-    # Output file
     out_filename = "project_workflow_color.png" if not is_bw else "project_workflow_bw.png"
     img.save(out_filename, "PNG", dpi=(300, 300))
-    print(f"Saved: {out_filename}")
+    print(f"Successfully generated: {out_filename}")
+
+    # Copy to artifact directory
+    art_dir = r"C:\Users\01\.gemini\antigravity\brain\857430ef-5c93-463d-bef8-01f8e4014854"
+    if os.path.exists(art_dir):
+        dest_path = os.path.join(art_dir, out_filename)
+        shutil.copy2(out_filename, dest_path)
+        print(f"Copied to artifact dir: {dest_path}")
 
 if __name__ == "__main__":
     render_diagram(mode="color")
