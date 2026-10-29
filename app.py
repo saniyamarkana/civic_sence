@@ -5,11 +5,14 @@ Provides Web UI and REST APIs connecting to static JSON database & Python DSA mo
 
 # pyrefly: ignore [missing-import]
 import os
+import time
+import hashlib
 # pyrefly: ignore [missing-import]
 from flask import Flask, render_template, request, jsonify, session, redirect, send_file
 # pyrefly: ignore [missing-import]
 from werkzeug.utils import secure_filename
 from database.database import Database
+from models.ai_verifier import verify_complaint_image, validate_verification_token, validate_image_file
 from dsa.linked_list import LinkedList
 from dsa.stack import Stack
 from dsa.queue import Queue, PriorityQueue
@@ -513,6 +516,89 @@ def api_greedy_next_complaint():
         return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# PHASE 4: GREEDY — Mark selected complaint as "In Progress"
+# Called automatically after runGreedyAlgorithm() selects a complaint.
+# This ensures the next "Find Next Complaint" click picks a DIFFERENT complaint.
+# ──────────────────────────────────────────────────────────────────────────────
+@app.route("/api/dsa/greedy/mark-in-progress", methods=["POST"])
+def api_greedy_mark_in_progress():
+    """
+    Phase 4 Greedy: Mark the greedy-selected complaint as 'In Progress'.
+    This advances the greedy algorithm so the next call picks the next-best complaint.
+
+    Body JSON: { "complaint_id": <int> }
+    Returns: { "success": bool, "message": str, "complaint_id": int, "old_status": str }
+    """
+    if "user_id" not in session or session.get("role") != "admin":
+        return jsonify({"success": False, "message": "Unauthorized — admin access required."}), 401
+
+    try:
+        body = request.get_json(silent=True) or {}
+        cid_raw = body.get("complaint_id")
+        if cid_raw is None:
+            return jsonify({"success": False, "message": "Missing 'complaint_id' in request body."}), 400
+
+        try:
+            cid = int(cid_raw)
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "message": "Invalid complaint_id — must be an integer."}), 400
+
+        # Fetch current complaint to get its status
+        complaint = db.get_complaint(cid)
+        if not complaint:
+            return jsonify({"success": False, "message": f"Complaint #{cid} not found."}), 404
+
+        old_status = complaint.get("status", "Pending")
+
+        # Only advance if still in a greedy-eligible state (Pending or Approved)
+        # Do NOT override already-resolved / rejected / in-progress complaints
+        INELIGIBLE = {"Resolved", "Rejected", "Closed", "Cancelled", "In Progress"}
+        if old_status in INELIGIBLE:
+            return jsonify({
+                "success": True,
+                "message": f"Complaint #{cid} is already '{old_status}' — no change made.",
+                "complaint_id": cid,
+                "old_status": old_status,
+                "new_status": old_status,
+                "changed": False
+            })
+
+        success = db.update_complaint(
+            cid,
+            status="In Progress",
+            changed_by=session["user_id"],
+            remarks=f"Greedy Algorithm selected complaint #{cid} as top priority — marked In Progress for processing."
+        )
+
+        if success:
+            # Also push to DSA action stack if available
+            try:
+                live_stack.push({
+                    "id": cid,
+                    "action": f"Greedy selected #{cid} → In Progress",
+                    "status": "In Progress"
+                })
+            except Exception:
+                pass
+
+            app.logger.info(f"Greedy: Complaint #{cid} marked In Progress by admin {session['user_id']}")
+            return jsonify({
+                "success": True,
+                "message": f"Complaint #{cid} marked as 'In Progress' by Greedy Algorithm.",
+                "complaint_id": cid,
+                "old_status": old_status,
+                "new_status": "In Progress",
+                "changed": True
+            })
+        else:
+            return jsonify({"success": False, "message": f"Failed to update complaint #{cid}."}), 500
+
+    except Exception as e:
+        app.logger.error(f"Error in greedy mark-in-progress: {e}", exc_info=True)
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
+
 @app.route("/api/graph/tree-data", methods=["GET"])
 def api_graph_tree_data():
     """Returns complete Location Graph (Binary Tree) metadata as JSON."""
@@ -568,6 +654,89 @@ def get_complaints():
         app.logger.error(f"Error fetching complaints: {e}")
         return jsonify([])
 
+@app.route("/api/verify-complaint-image", methods=["POST"])
+def api_verify_complaint_image():
+    """
+    AI-Powered Complaint Image Verification and Validation API.
+    Uses Pretrained Computer Vision Neural Net (ONNX) + Gemini Vision (if configured)
+    to verify relevance against the selected category, title, and description.
+    """
+    if "user_id" not in session:
+        return jsonify({"success": False, "status": "error", "message": "Unauthorized. Please log in."}), 401
+
+    try:
+        img_file = (
+            request.files.get("complaint_image")
+            or request.files.get("image")
+            or request.files.get("photo")
+            or request.files.get("file")
+        )
+        category = request.form.get("category", "Garbage")
+        title = request.form.get("title", "")
+        description = request.form.get("description", "")
+
+        if not img_file or not getattr(img_file, "filename", None):
+            return jsonify({
+                "success": False,
+                "status": "error",
+                "message": "Please select a complaint photograph to verify."
+            }), 400
+
+        file_bytes = img_file.read()
+        img_file.seek(0)
+
+        if len(file_bytes) == 0:
+            return jsonify({
+                "success": False,
+                "status": "error",
+                "message": "The selected file is empty. Please select a valid photograph."
+            }), 400
+
+        try:
+            result = verify_complaint_image(file_bytes, category, title, description)
+        except ValueError as ve:
+            return jsonify({
+                "success": False,
+                "status": "error",
+                "message": str(ve)
+            }), 400
+
+        norm_cat = db.normalize_category(category).lower()
+        # Bind verification in server-side session
+        session["pending_ai_verification"] = {
+            "token": result["verification_token"],
+            "image_hash": result["image_hash"],
+            "category": norm_cat,
+            "status": result["status"],
+            "confidence": result["confidence"],
+            "time": time.time()
+        }
+
+        app.logger.info(
+            f"[AI Image Verification] Category: {category} | Status: {result['status']} | "
+            f"Confidence: {result['confidence']} | Model: {result['model_used']}"
+        )
+
+        return jsonify({
+            "success": True,
+            "status": result["status"],  # "verified", "mismatch", "uncertain"
+            "confidence": result["confidence"],
+            "message": result["message"],
+            "model_used": result["model_used"],
+            "detected_objects": result["detected_objects"],
+            "verification_token": result["verification_token"]
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        app.logger.error(f"Error in AI image verification: {e}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "status": "error",
+            "message": f"AI verification error: {str(e)}"
+        }), 500
+
 @app.route("/api/complaints", methods=["POST"])
 def submit_complaint():
     if "user_id" not in session:
@@ -590,6 +759,7 @@ def submit_complaint():
             priority    = data.get("priority", "Medium")
             description = (data.get("description") or "").strip()
             raw_img     = data.get("complaint_image") or data.get("image")
+            client_token = data.get("verification_token")
         else:
             title       = (request.form.get("title") or "").strip()
             category    = request.form.get("category", "Garbage")
@@ -597,11 +767,68 @@ def submit_complaint():
             priority    = request.form.get("priority", "Medium")
             description = (request.form.get("description") or "").strip()
             raw_img     = request.form.get("complaint_image") or request.form.get("image")
+            client_token = request.form.get("verification_token")
+
+        if not client_token:
+            client_token = request.headers.get("X-Verification-Token")
 
         if not title or not location:
             return jsonify({"success": False, "message": "Title and location are required."}), 400
 
         category = db.normalize_category(category)
+
+        # ── 1. Mandatory Image Enforcement ──
+        if not img_file and not raw_img:
+            return jsonify({
+                "success": False,
+                "message": "Complaint photograph is mandatory. Please upload an image and verify it with AI."
+            }), 400
+
+        # Read image bytes for verification and saving
+        submitted_bytes = None
+        if img_file and getattr(img_file, "filename", None):
+            submitted_bytes = img_file.read()
+            img_file.seek(0)
+        elif raw_img:
+            if isinstance(raw_img, str) and "base64," in raw_img:
+                import base64
+                header, encoded = raw_img.split("base64,", 1)
+                submitted_bytes = base64.b64decode(encoded.strip())
+            elif isinstance(raw_img, str) and str(raw_img).strip():
+                clean_raw = str(raw_img).strip()
+                if os.path.exists(os.path.join(UPLOAD_FOLDER_COMPLAINT, clean_raw)):
+                    with open(os.path.join(UPLOAD_FOLDER_COMPLAINT, clean_raw), "rb") as fh:
+                        submitted_bytes = fh.read()
+
+        if not submitted_bytes or len(submitted_bytes) == 0:
+            return jsonify({
+                "success": False,
+                "message": "Complaint photograph is mandatory. Please upload a valid image."
+            }), 400
+
+        # ── 2. Server-side AI Verification Validation (Anti-Bypass & Anti-Tamper) ──
+        session_verif = session.get("pending_ai_verification")
+        is_verified = False
+        ai_confidence = 0.85
+        ai_status = "verified"
+
+        # Check cryptographic token
+        if client_token and validate_verification_token(submitted_bytes, category, client_token, required_status="verified"):
+            is_verified = True
+        # Check session verification binding
+        elif session_verif and session_verif.get("status") == "verified":
+            sub_hash = hashlib.sha256(submitted_bytes).hexdigest()
+            if (session_verif.get("image_hash") == sub_hash
+                and session_verif.get("category") == category.lower()
+                and (time.time() - session_verif.get("time", 0)) < 1800):
+                is_verified = True
+                ai_confidence = session_verif.get("confidence", 0.85)
+
+        if not is_verified:
+            return jsonify({
+                "success": False,
+                "message": f"AI Image Verification required: The uploaded photograph has not been verified for category '{category}'. Please click 'Verify Image with AI' first."
+            }), 400
 
         dept_map = {
             "Garbage": "Sanitation Department",
@@ -615,7 +842,7 @@ def submit_complaint():
         }
         dept = dept_map.get(category, "Sanitation Department")
 
-        # Save complaint image if provided
+        # Save complaint image
         complaint_image_fname = None
         if img_file and getattr(img_file, "filename", None):
             complaint_image_fname = save_upload(img_file, UPLOAD_FOLDER_COMPLAINT)
@@ -627,9 +854,9 @@ def submit_complaint():
                 if os.path.exists(os.path.join(UPLOAD_FOLDER_COMPLAINT, clean_raw)):
                     complaint_image_fname = clean_raw
 
-        app.logger.info(f"Submitting complaint '{title}' with image file: {complaint_image_fname}")
+        app.logger.info(f"Submitting complaint '{title}' with image file: {complaint_image_fname} (AI Verified: {is_verified})")
 
-        # Single-step INSERT with department and complaint_image included
+        # Single-step INSERT with department, complaint_image, and AI verification details included
         cid = db.add_complaint(
             citizen_id=session["user_id"],
             title=title,
@@ -638,12 +865,18 @@ def submit_complaint():
             location=location,
             priority=priority,
             department=dept,
-            complaint_image=complaint_image_fname
+            complaint_image=complaint_image_fname,
+            ai_verified=True,
+            ai_confidence=ai_confidence,
+            ai_status=ai_status
         )
 
         if not cid:
             app.logger.error("add_complaint returned no ID")
             return jsonify({"success": False, "message": "Failed to save complaint. Please try again."}), 500
+
+        # Invalidate pending verification so it cannot be re-used for another ticket
+        session.pop("pending_ai_verification", None)
 
         # ── Backend DSA Operation: Infix -> Postfix Priority Evaluation ──
         score_eval = backend_calc_priority_score(priority, "Pending")
@@ -659,6 +892,8 @@ def submit_complaint():
             "id": cid, "title": title, "category": category,
             "location": location, "priority": priority, "status": "Pending",
             "complaint_image": complaint_image_fname,
+            "ai_verified": True,
+            "ai_confidence": ai_confidence,
             "urgency_score": score_eval["score"],
             "urgency_label": score_eval["label"]
         }
@@ -671,7 +906,8 @@ def submit_complaint():
             "success": True,
             "complaint_id": cid,
             "complaint_image": complaint_image_fname,
-            "message": f"Complaint #{cid} registered successfully!"
+            "ai_verified": True,
+            "message": f"Complaint #{cid} registered and AI-verified successfully!"
         })
 
     except Exception as e:
@@ -749,18 +985,80 @@ def update_complaint(cid):
         if "priority" in data and str(data["priority"]).strip():
             updates["priority"] = str(data["priority"]).strip()
 
-        # Image upload support
+        # Image upload support with AI Verification & Anti-Tamper Enforcement
         img_file = (
             request.files.get("complaint_image")
             or request.files.get("image")
             or request.files.get("photo")
         )
         if img_file and getattr(img_file, "filename", None):
-            saved_img = save_upload(img_file, UPLOAD_FOLDER_COMPLAINT)
-            if saved_img:
+            file_bytes = img_file.read()
+            img_file.seek(0)
+            if len(file_bytes) > 0:
+                target_cat = updates.get("category") or old_complaint.get("category") or "Garbage"
+                target_title = updates.get("title") or old_complaint.get("title") or ""
+                target_desc = updates.get("description") or old_complaint.get("description") or ""
+
+                # 1. Validate image format, integrity & readability
+                try:
+                    validate_image_file(file_bytes)
+                except ValueError as ve:
+                    return jsonify({"success": False, "status": "error", "message": str(ve)}), 400
+
+                # 2. Check cryptographic verification token or execute AI verification
+                token = request.form.get("verification_token") or data.get("verification_token")
+                is_valid = False
+                if token:
+                    is_valid = validate_verification_token(file_bytes, target_cat, token, "verified")
+
+                if is_valid:
+                    ai_res = {
+                        "status": "verified",
+                        "confidence": 0.88,
+                        "model_used": "Pretrained Neural Net (Token-Verified)"
+                    }
+                else:
+                    ai_res = verify_complaint_image(file_bytes, target_cat, target_title, target_desc)
+
+                if ai_res["status"] != "verified":
+                    return jsonify({
+                        "success": False,
+                        "status": ai_res["status"],
+                        "message": ai_res["message"]
+                    }), 400
+
+                saved_img = save_upload(img_file, UPLOAD_FOLDER_COMPLAINT)
+                if not saved_img:
+                    return jsonify({"success": False, "message": "Failed to save uploaded photograph."}), 400
+
                 updates["complaint_image"] = saved_img
+                updates["ai_verified"] = 1
+                updates["ai_confidence"] = float(ai_res.get("confidence", 0.85))
+                updates["ai_status"] = str(ai_res.get("status", "verified"))
         elif "complaint_image" in data and data["complaint_image"]:
             updates["complaint_image"] = data["complaint_image"]
+        elif user_role == "citizen" and "category" in updates and updates["category"] != old_complaint.get("category"):
+            # Category was changed without uploading a new image; verify existing image against new category
+            existing_img_name = old_complaint.get("complaint_image")
+            if existing_img_name:
+                existing_img_path = os.path.join(UPLOAD_FOLDER_COMPLAINT, existing_img_name)
+                if os.path.exists(existing_img_path):
+                    try:
+                        with open(existing_img_path, "rb") as exf:
+                            ex_bytes = exf.read()
+                        new_cat = updates["category"]
+                        ex_res = verify_complaint_image(ex_bytes, new_cat, updates.get("title", ""), updates.get("description", ""))
+                        if ex_res["status"] == "mismatch":
+                            return jsonify({
+                                "success": False,
+                                "status": "mismatch",
+                                "message": f"Category update rejected: Your existing complaint photo does not match the new category '{new_cat}'. Please upload a relevant photograph for {new_cat}."
+                            }), 400
+                        updates["ai_verified"] = 1 if ex_res["status"] == "verified" else 0
+                        updates["ai_confidence"] = float(ex_res.get("confidence", 0.75))
+                        updates["ai_status"] = str(ex_res.get("status", "verified"))
+                    except Exception as ex_err:
+                        app.logger.warning(f"Could not re-verify existing image for category change: {ex_err}")
 
         # Admin / Officer specific fields (only non-citizens can change status/officer directly)
         if user_role != "citizen":
@@ -868,20 +1166,54 @@ def upload_solution_image(cid):
 
 @app.route("/api/complaints/<int:cid>/complaint-image", methods=["POST"])
 def upload_complaint_image(cid):
-    """Upload or attach an issue photo to an existing complaint."""
+    """Upload or attach an issue photo to an existing complaint with AI Verification."""
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    complaint = db.get_complaint(cid)
+    if not complaint:
+        return jsonify({"success": False, "message": "Complaint not found."}), 404
 
     img_file = request.files.get("complaint_image") or request.files.get("image") or request.files.get("file")
     if not img_file:
         return jsonify({"success": False, "message": "No image file provided."}), 400
 
+    file_bytes = img_file.read()
+    img_file.seek(0)
+
+    try:
+        validate_image_file(file_bytes)
+    except ValueError as ve:
+        return jsonify({"success": False, "message": str(ve)}), 400
+
+    cat = complaint.get("category", "Garbage")
+    ai_res = verify_complaint_image(file_bytes, cat, complaint.get("title", ""), complaint.get("description", ""))
+    if ai_res["status"] != "verified":
+        return jsonify({
+            "success": False,
+            "status": ai_res["status"],
+            "message": ai_res["message"]
+        }), 400
+
     fname = save_upload(img_file, UPLOAD_FOLDER_COMPLAINT)
     if not fname:
         return jsonify({"success": False, "message": "Invalid file type. Allowed: png, jpg, jpeg, gif, webp, jfif, avif."}), 400
 
-    db.update_complaint(cid, complaint_image=fname, changed_by=session["user_id"])
-    return jsonify({"success": True, "filename": fname, "message": "Complaint image uploaded successfully."})
+    db.update_complaint(
+        cid,
+        complaint_image=fname,
+        ai_verified=1,
+        ai_confidence=float(ai_res.get("confidence", 0.85)),
+        ai_status=str(ai_res.get("status", "verified")),
+        changed_by=session["user_id"]
+    )
+    return jsonify({
+        "success": True,
+        "filename": fname,
+        "ai_status": ai_res["status"],
+        "confidence": ai_res["confidence"],
+        "message": "Complaint image verified and uploaded successfully."
+    })
 
 @app.route("/api/complaints/<int:cid>/history", methods=["GET"])
 def get_complaint_history(cid):

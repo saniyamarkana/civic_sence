@@ -1,0 +1,2504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal & DSA Lab — CivicSense</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    /* Leaflet dark styling to match CivicSense design */
+    .leaflet-control-layers {
+      background: rgba(15, 23, 42, 0.92) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+    }
+
+    .leaflet-control-layers-expanded {
+      padding: 10px 14px !important;
+    }
+
+    .leaflet-control-layers label {
+      cursor: pointer !important;
+      margin-bottom: 6px !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      color: #e2e8f0 !important;
+    }
+
+    .leaflet-control-zoom {
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .leaflet-control-zoom a {
+      background: rgba(15, 23, 42, 0.85) !important;
+      color: #f1f5f9 !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+      background: rgba(6, 182, 212, 0.85) !important;
+      color: #fff !important;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       PHASE 3: ADVANCED ALGORITHMIC WORKBENCH & VISUAL OUTPUT ENGINE
+       ══════════════════════════════════════════════════════════════════════════ */
+    .algo-workbench {
+      position: relative;
+      background: linear-gradient(145deg, rgba(13, 23, 44, 0.9) 0%, rgba(8, 14, 28, 0.95) 100%);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 18px;
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), 0 0 35px rgba(6, 182, 212, 0.08);
+      overflow: hidden;
+    }
+
+    .algo-workbench::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #06b6d4 25%, #8b5cf6 50%, #f59e0b 75%, transparent);
+    }
+
+    .algo-card {
+      background: linear-gradient(180deg, rgba(18, 28, 51, 0.85) 0%, rgba(11, 19, 36, 0.92) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 18px 20px;
+      transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      min-height: 200px;
+    }
+
+    .algo-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(6, 182, 212, 0.38);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 20px rgba(6, 182, 212, 0.12);
+    }
+
+    .algo-card-accent-cyan::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #06b6d4, #3b82f6);
+    }
+
+    .algo-card-accent-purple::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    }
+
+    .algo-card-accent-amber::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+    }
+
+    .algo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .algo-btn {
+      padding: 9px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 9px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.22s ease;
+      border: none;
+      outline: none;
+      position: relative;
+    }
+
+    .algo-btn:active {
+      transform: scale(0.97);
+    }
+
+    .algo-btn-cyan {
+      background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+    }
+
+    .algo-btn-cyan:hover {
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.55);
+      background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+    }
+
+    .algo-btn-purple {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+    }
+
+    .algo-btn-purple:hover {
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55);
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    }
+
+    .algo-btn-amber {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #0b1324;
+      font-weight: 900;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+
+    .algo-btn-amber:hover {
+      box-shadow: 0 6px 22px rgba(245, 158, 11, 0.55);
+      background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+    }
+
+    .algo-output-panel {
+      position: relative;
+      background: linear-gradient(165deg, rgba(8, 16, 33, 0.96) 0%, rgba(5, 11, 24, 0.98) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      border-radius: 16px;
+      padding: 22px;
+      margin-top: 20px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 35px rgba(56, 189, 248, 0.12);
+      animation: algoFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes algoFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .algo-kpi-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #f1f5f9;
+      white-space: nowrap;
+    }
+
+    .algo-quick-chip {
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      color: #38bdf8;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .algo-quick-chip:hover {
+      background: rgba(6, 182, 212, 0.25);
+      border-color: #06b6d4;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">🛡️</div>
+        <div>
+          <div class="sidebar-brand-name">CivicSense</div>
+          <div class="sidebar-sub">Admin Panel</div>
+        </div>
+      </div>
+
+      <div class="user-badge">
+        <div class="user-avatar" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">👑</div>
+        <div class="user-info">
+          <div class="user-name">{{ user.name }}</div>
+          <div class="user-role" style="color: #f59e0b;">System Administrator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">CORE MANAGEMENT</div>
+        <a class="nav-link active" data-tab="dashboard" onclick="switchAdminTab('dashboard')">
+          <i class="fa-solid fa-chart-pie"></i> Dashboard Overview
+        </a>
+        <a class="nav-link" data-tab="complaints" onclick="switchAdminTab('complaints')">
+          <i class="fa-solid fa-list-check"></i> All Complaints
+        </a>
+        <a class="nav-link" data-tab="users" onclick="switchAdminTab('users')">
+          <i class="fa-solid fa-users-gear"></i> Manage Users
+        </a>
+        <a class="nav-link" data-tab="map" onclick="switchAdminTab('map')">
+          <i class="fa-solid fa-sitemap"></i> Location Graph
+        </a>
+        <a class="nav-link" data-tab="greedy" onclick="switchAdminTab('greedy')">
+          <i class="fa-solid fa-ranking-star"></i> Greedy Priority Processing
+        </a>
+        <a class="nav-link" href="/analytics" target="_blank" style="color: #38bdf8;">
+          <i class="fa-solid fa-chart-pie" style="color: #06b6d4;"></i> Data Analysis Dashboard
+        </a>
+
+        <!-- <div class="nav-section-title">PHASE 1 DSA VISUAL LAB</div>
+        <a class="nav-link" data-tab="dsa_queue" onclick="switchAdminTab('dsa_queue')">
+          <i class="fa-solid fa-arrows-spin"></i> Queue (FIFO / Emergency)
+        </a>
+        <a class="nav-link" data-tab="dsa_stack" onclick="switchAdminTab('dsa_stack')">
+          <i class="fa-solid fa-layer-group"></i> Stack (Undo Engine)
+        </a>
+        <a class="nav-link" data-tab="dsa_ll" onclick="switchAdminTab('dsa_ll')">
+          <i class="fa-solid fa-link"></i> Linked List Chain
+        </a>
+        <a class="nav-link" data-tab="dsa_expr" onclick="switchAdminTab('dsa_expr')">
+          <i class="fa-solid fa-calculator"></i> Expression Parser
+        </a>
+        <a class="nav-link" data-tab="dsa_iter" onclick="switchAdminTab('dsa_iter')">
+          <i class="fa-solid fa-bolt"></i> Iterative Sorting / Search
+        </a>
+        <a class="nav-link" data-tab="dsa_rec" onclick="switchAdminTab('dsa_rec')">
+          <i class="fa-solid fa-sitemap"></i> Recursive Call Tree
+        </a> -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/logout" class="nav-link logout-link">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <h2 class="page-title" id="adminHeaderTitle">
+          <i class="fa-solid fa-chart-pie" style="color: var(--accent-cyan);"></i> Administrative Overview
+        </h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <!-- Admin Notification Bell -->
+          <div class="notif-bell-wrapper" id="adminBellWrapper">
+            <button class="notif-bell-btn" id="adminBellBtn" onclick="toggleAdminNotifDropdown()" title="Notifications">
+              <i class="fa-solid fa-bell"></i>
+              <span class="notif-badge hidden" id="adminBadge">0</span>
+            </button>
+            <div class="notif-dropdown" id="adminNotifDropdown">
+              <div class="notif-header">
+                <h4><i class="fa-solid fa-bell"></i> Resolution Notifications</h4>
+                <button class="notif-mark-all-btn" onclick="adminMarkAllRead()"><i class="fa-solid fa-check-double"></i>
+                  Mark all read</button>
+              </div>
+              <div class="notif-list" id="adminNotifList">
+                <div class="notif-empty">Loading...</div>
+              </div>
+            </div>
+          </div>
+          <a href="/analytics" target="_blank" class="btn btn-sm"
+            style="background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.35); font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; text-decoration: none;"
+            title="Open Data Analysis Dashboard (3 Objectives)">
+            <i class="fa-solid fa-chart-pie"></i> Analytics Dashboard
+          </a>
+          <button class="btn btn-secondary btn-sm" onclick="refreshCurrentAdminTab()">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <!-- ════════════════════════════════════════════════════════════════
+             TAB 1: DASHBOARD
+             ════════════════════════════════════════════════════════════════ -->
+        <section id="adminTab_dashboard">
+          <div class="stats-grid">
+            <div class="glass-card stat-card">
+              <div class="stat-icon-wrapper" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
+                <i class="fa-solid fa-folder-open"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="admTotal">0</div>
+                <div class="stat-label">Total Complaints</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card">
+              <div class="stat-icon-wrapper"
+                style="background: rgba(245, 158, 11, 0.15); color: var(--status-pending);">
+                <i class="fa-solid fa-hourglass"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="admPending">0</div>
+                <div class="stat-label">Pending Action</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card">
+              <div class="stat-icon-wrapper"
+                style="background: rgba(59, 130, 246, 0.15); color: var(--status-progress);">
+                <i class="fa-solid fa-gears"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="admProgress">0</div>
+                <div class="stat-label">In Progress</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card">
+              <div class="stat-icon-wrapper"
+                style="background: rgba(16, 185, 129, 0.15); color: var(--status-resolved);">
+                <i class="fa-solid fa-check-double"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="admResolved">0</div>
+                <div class="stat-label">Resolved</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart & Workload Row -->
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px;">
+            <div class="glass-card" style="padding: 25px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="font-size: 16px; font-weight: 700; margin: 0;">📊 Complaints by Category</h3>
+                <span id="chartCategoryBadge" class="badge badge-approved" style="font-size: 11px;">Active
+                  Categories</span>
+              </div>
+              <div style="height: 250px; position: relative;">
+                <canvas id="categoryChart"></canvas>
+              </div>
+            </div>
+
+            <div class="glass-card" style="padding: 25px;">
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 15px;">🏢 Department Workload</h3>
+              <div id="deptWorkloadList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+          </div>
+
+          <!-- Recent Activity Table -->
+          <div class="glass-card" style="padding: 25px;">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 15px;">🕒 Recent Complaints Activity</h3>
+            <div style="overflow-x: hidden; width: 100%;">
+              <table
+                style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                    <th style="padding: 10px;">ID</th>
+                    <th style="padding: 10px;">Issue</th>
+                    <th style="padding: 10px;">Category</th>
+                    <th style="padding: 10px;">Location</th>
+                    <th style="padding: 10px;">Priority</th>
+                    <th style="padding: 10px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recentComplaintsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             TAB 2: ALL COMPLAINTS MANAGEMENT
+             ════════════════════════════════════════════════════════════════ -->
+        <section id="adminTab_complaints" style="display: none;">
+
+          <!-- ════════════════════════════════════════════════════════════════
+               PHASE 3 – INTELLIGENT ALGORITHMIC PROCESSING ENGINE (CLO3)
+               ════════════════════════════════════════════════════════════════ -->
+          <div class="algo-workbench">
+            <!-- Executive Header -->
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div
+                  style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, rgba(6,182,212,0.22), rgba(139,92,246,0.22)); border: 1px solid rgba(6,182,212,0.4); display: flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 18px; box-shadow: 0 0 15px rgba(6,182,212,0.25);">
+                  <i class="fa-solid fa-microchip"></i>
+                </div>
+                <div>
+                  <h3
+                    style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px; letter-spacing: -0.2px;">
+                    Civic Intelligence Algorithmic Engine
+                    <span
+                      style="font-size: 10px; background: rgba(6,182,212,0.18); color: #38bdf8; border: 1px solid rgba(6,182,212,0.4); padding: 2px 7px; border-radius: 5px; font-weight: 800; text-transform: uppercase;">CLO3
+                      LAB</span>
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3 Processing Tool Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+
+              <!-- 1. Search Complaints Box -->
+              <div class="algo-card algo-card-accent-cyan">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span
+                      style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 7px;">
+                      <i class="fa-solid fa-magnifying-glass" style="color: #06b6d4;"></i> Search Complaint
+                    </span>
+                    <span class="algo-badge"
+                      style="background: rgba(6,182,212,0.15); color: #38bdf8; border: 1px solid rgba(6,182,212,0.35);">
+                      O(1) &ndash; O(N)
+                    </span>
+                  </div>
+
+                  <label for="p3SearchId"
+                    style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 6px;">
+                    Target Complaint ID:
+                  </label>
+                  <div style="position: relative; margin-bottom: 16px;">
+                    <span
+                      style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #06b6d4; font-family: var(--font-mono); font-weight: 800; font-size: 13px;">#</span>
+                    <input type="number" id="p3SearchId" class="form-control" placeholder="e.g. 14, 15, 16"
+                      style="width: 100%; padding: 8px 12px 8px 30px; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 8px; font-weight: 700; font-family: var(--font-mono);"
+                      onkeyup="if(event.key==='Enter') p3RunSearch('binary')">
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" id="p3LinearBtn" onclick="p3RunSearch('linear')" class="algo-btn algo-btn-cyan"
+                    style="flex: 1;">
+                    <i class="fa-solid fa-bars-staggered"></i> Linear
+                  </button>
+                  <button type="button" id="p3BinaryBtn" onclick="p3RunSearch('binary')"
+                    class="algo-btn algo-btn-purple" style="flex: 1;">
+                    <i class="fa-solid fa-bolt"></i> Binary
+                  </button>
+                </div>
+
+                <!-- Applied flash banner -->
+                <div id="searchAppliedFlash" style="display:none; margin-top:10px; text-align:center; font-size:11px; font-weight:700; color:#38bdf8; animation: algoFadeIn 0.4s ease;">
+                  <i class="fa-solid fa-table-list" style="margin-right:5px;"></i>
+                  Showing searched complaint in table ↓
+                </div>
+              </div>
+
+              <!-- 2. Sort Complaints Box -->
+              <div class="algo-card algo-card-accent-purple">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span
+                      style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 7px;">
+                      <i class="fa-solid fa-arrow-down-up-across-line" style="color: #a855f7;"></i> Recursive Sort
+                    </span>
+                    <span class="algo-badge"
+                      style="background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.35);">
+                      O(N log N)
+                    </span>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                      <label for="p3SortField"
+                        style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Sort
+                        By:</label>
+                      <select id="p3SortField" class="form-control"
+                        style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; font-size: 12px; font-weight: 600;">
+                        <option value="id">Complaint ID</option>
+                        <option value="priority">Priority Score</option>
+                        <option value="category">Category</option>
+                        <option value="location">Ward Location</option>
+                        <option value="status">Status</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Algorithm:</label>
+                      <div
+                        style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.85); color: #a78bfa; border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; font-size: 12px; font-weight: 600;">
+                        <i class="fa-solid fa-code-merge" style="margin-right: 6px;"></i>Merge Sort [Stable]
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom: 14px;">
+                    <label for="p3SortOrder"
+                      style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Order
+                      Direction:</label>
+                    <select id="p3SortOrder" class="form-control"
+                      style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; font-size: 12px; font-weight: 600;">
+                      <option value="asc">&utrif; Ascending (Low to High / A &rarr; Z)</option>
+                      <option value="desc">&dtrif; Descending (High to Low / Z &rarr; A)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="button" id="p3SortBtn" onclick="p3RunSort()" class="algo-btn algo-btn-purple"
+                  style="width: 100%; padding: 10px 16px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">
+                  <i class="fa-solid fa-code-merge"></i> Merge Sort
+                </button>
+
+                <!-- Applied flash banner -->
+                <div id="sortAppliedFlash" style="display:none; margin-top:10px; text-align:center; font-size:11px; font-weight:700; color:#c084fc; animation: algoFadeIn 0.4s ease;">
+                  <i class="fa-solid fa-table-list" style="margin-right:5px;"></i>
+                  Sorted in main table ↓
+                </div>
+              </div>
+
+              <!-- 3. Priority Based Processing Box -->
+              <div class="algo-card algo-card-accent-amber">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span
+                      style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 7px;">
+                      <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Priority Based Processing
+                    </span>
+                    <span class="algo-badge"
+                      style="background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4);">
+                      MAX-HEAP
+                    </span>
+                  </div>
+
+                  <!-- Priority legend -->
+                  <div style="display: flex; gap: 5px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+                    <span
+                      style="font-size: 10px; padding: 2px 8px; border-radius: 5px; background: rgba(249,115,22,0.2); color: #fb923c; font-weight: 800; border: 1px solid rgba(249,115,22,0.4);">High
+                      (1)</span>
+                    <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #64748b;"></i>
+                    <span
+                      style="font-size: 10px; padding: 2px 8px; border-radius: 5px; background: rgba(245,158,11,0.2); color: #fbbf24; font-weight: 800; border: 1px solid rgba(245,158,11,0.4);">Medium
+                      (2)</span>
+                    <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #64748b;"></i>
+                    <span
+                      style="font-size: 10px; padding: 2px 8px; border-radius: 5px; background: rgba(16,185,129,0.2); color: #34d399; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);">Low
+                      (3)</span>
+                  </div>
+
+                  <p style="font-size: 11px; color: #94a3b8; margin: 0 0 14px 0; line-height: 1.5; font-weight: 500;">
+                    Builds a Max-Heap in-memory and sequences all complaints by priority — High (1) first, then
+                    Medium (2), Low (3).
+                  </p>
+                </div>
+
+                <button type="button" id="p3PriorityBtn" onclick="p3RunPriorityWithTable()"
+                  class="algo-btn algo-btn-amber"
+                  style="width: 100%; padding: 10px 16px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">
+                  <i class="fa-solid fa-bolt"></i> Process by Priority
+                </button>
+
+                <!-- Applied flash banner -->
+                <div id="priorityAppliedFlash" style="display:none; margin-top:10px; text-align:center; font-size:11px; font-weight:700; color:#fbbf24; animation: algoFadeIn 0.4s ease;">
+                  <i class="fa-solid fa-table-list" style="margin-right:5px;"></i>
+                  Applied to main table — scroll down ↓
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Active Algorithm Status Ribbon (Applies directly to Main Table) -->
+            <div id="admAlgoStatusRibbon"
+              style="display: none; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9)); border: 1px solid rgba(6, 182, 212, 0.4); border-radius: 12px; padding: 12px 18px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.35); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+              <div id="admAlgoStatusContent"
+                style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #f8fafc; flex-wrap: wrap;">
+              </div>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="resetAdminComplaintsOrder()"
+                style="padding: 6px 14px; font-size: 12px; font-weight: 800; border-radius: 8px; border: 1px solid rgba(255,255,255,0.18); display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                <i class="fa-solid fa-rotate-left"></i> Reset Table View
+              </button>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div class="glass-card"
+              style="padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+              <div style="display: flex; gap: 12px; align-items: center; flex: 1; min-width: 280px;">
+                <div style="position: relative; flex: 1;">
+                  <i class="fa-solid fa-magnifying-glass"
+                    style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 12px;"></i>
+                  <input type="text" id="admCompSearch" class="form-control"
+                    placeholder="Filter by ID, title, category, location..." style="padding-left: 36px; width: 100%;"
+                    oninput="filterAdminComplaints()">
+                </div>
+                <select id="admCompStatusFilter" class="form-control" style="width: 160px; flex-shrink: 0;"
+                  onchange="filterAdminComplaints()">
+                  <option value="All">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+              <div id="admCompCounter"
+                style="font-size: 12px; font-weight: 700; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-list-check" style="color: #06b6d4;"></i> All Complaints Database
+              </div>
+            </div>
+
+            <!-- Master Complaints Data Grid (Main Table) -->
+            <div id="mainComplaintsTableCard" class="glass-card"
+              style="padding: 0; overflow: hidden; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.35); transition: border-color 0.4s ease, box-shadow 0.4s ease;">
+              <div style="width: 100%; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                  <thead>
+                    <tr
+                      style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(15, 23, 42, 0.85); color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                      <th style="padding: 14px 12px; width: 65px; text-align: center;"># ID</th>
+                      <th style="padding: 14px 16px; min-width: 250px;">Complaint &amp; Issue Details</th>
+                      <th style="padding: 14px 14px; width: 175px;">Ward Location</th>
+                      <th style="padding: 14px 12px; width: 120px; text-align: center;">Priority</th>
+                      <th style="padding: 14px 12px; width: 125px; text-align: center;">Status</th>
+                      <th style="padding: 14px 14px; width: 95px; text-align: center;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminComplaintsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             TAB 3: USER MANAGEMENT
+             ════════════════════════════════════════════════════════════════ -->
+        <section id="adminTab_users" style="display: none;">
+          <!-- Top Stats Cards for User Accounts -->
+          <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px;">
+            <div class="glass-card stat-card" style="padding: 18px 22px;">
+              <div class="stat-icon-wrapper" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
+                <i class="fa-solid fa-users"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="userStatTotal"
+                  style="color: var(--accent-cyan); font-size: 24px; font-weight: 800;">0</div>
+                <div class="stat-label">Total Accounts</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card" style="padding: 18px 22px;">
+              <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                <i class="fa-solid fa-user-group"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="userStatCitizen" style="color: #10b981; font-size: 24px; font-weight: 800;">0
+                </div>
+                <div class="stat-label">Citizens</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card" style="padding: 18px 22px;">
+              <div class="stat-icon-wrapper" style="background: rgba(59, 130, 246, 0.15); color: #38bdf8;">
+                <i class="fa-solid fa-building-user"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="userStatDept" style="color: #38bdf8; font-size: 24px; font-weight: 800;">0
+                </div>
+                <div class="stat-label">Department Officers</div>
+              </div>
+            </div>
+
+            <div class="glass-card stat-card" style="padding: 18px 22px;">
+              <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                <i class="fa-solid fa-crown"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="userStatAdmin" style="color: #f59e0b; font-size: 24px; font-weight: 800;">0
+                </div>
+                <div class="stat-label">Administrators</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls Toolbar: Search & Filter Pills & Add User -->
+          <div class="glass-card" style="padding: 18px 22px; margin-bottom: 20px;">
+            <div
+              style="display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px;">
+              <div style="flex: 1; min-width: 280px; position: relative;">
+                <input type="text" id="userSearch" class="form-control"
+                  placeholder="🔍 Search users by name, email, role, department..." oninput="filterUsers()">
+              </div>
+              <div>
+                <button class="btn btn-primary" onclick="openAddUserModal()"
+                  style="display: flex; align-items: center; gap: 8px; padding: 10px 18px;">
+                  <i class="fa-solid fa-user-plus"></i> Add New User
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Filter Pill Tabs -->
+            <div class="filter-pill-bar">
+              <button class="filter-pill active" data-filter="All" onclick="setUserFilter('All')">
+                All Users <span class="pill-count" id="userPillAll">0</span>
+              </button>
+              <button class="filter-pill" data-filter="citizen" onclick="setUserFilter('citizen')">
+                👤 Citizens <span class="pill-count" id="userPillCitizen">0</span>
+              </button>
+              <button class="filter-pill" data-filter="department" onclick="setUserFilter('department')">
+                🏢 Department <span class="pill-count" id="userPillDept">0</span>
+              </button>
+              <button class="filter-pill" data-filter="admin" onclick="setUserFilter('admin')">
+                👑 Admins <span class="pill-count" id="userPillAdmin">0</span>
+              </button>
+              <button class="filter-pill" data-filter="active" onclick="setUserFilter('active')">
+                ● Active <span class="pill-count" id="userPillActive">0</span>
+              </button>
+              <button class="filter-pill" data-filter="blocked" onclick="setUserFilter('blocked')">
+                ● Blocked <span class="pill-count" id="userPillBlocked">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Attractive Modern User Table View -->
+          <div class="glass-card" style="padding: 0; overflow-x: auto; border-radius: 16px;">
+            <table style="width: 100%; min-width: 950px; border-collapse: collapse; text-align: left; font-size: 13px;">
+              <thead>
+                <tr
+                  style="background: rgba(14, 21, 38, 0.85); border-bottom: 1px solid rgba(6, 182, 212, 0.2); color: var(--text-muted); font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
+                  <th style="padding: 16px 18px; width: 75px;">ID</th>
+                  <th style="padding: 16px 18px; width: 22%;">User</th>
+                  <th style="padding: 16px 18px; width: 24%;">Email Address</th>
+                  <th style="padding: 16px 18px; width: 17%;">Role &amp; Permissions</th>
+                  <th style="padding: 16px 18px; width: 15%;">Department</th>
+                  <th style="padding: 16px 18px; width: 10%;">Status</th>
+                  <th style="padding: 16px 18px; width: 12%; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <!-- ════════════════════════════════════════════════════════════════
+             TAB 4: LOCATION GRAPH — BINARY TREE & BFS LEVEL-ORDER TRAVERSAL
+             ════════════════════════════════════════════════════════════════ -->
+        <section id="adminTab_map" style="display: none;">
+
+          <!-- ── GRAPH CARD ─────────────────────────────────────────────── -->
+          <div
+            style="border-radius: 20px; background: linear-gradient(135deg, #0a1628 0%, #0f2040 50%, #0a1628 100%); border: 1px solid rgba(6, 182, 212, 0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05); overflow: hidden; margin-bottom: 20px;">
+
+            <!-- Header Bar -->
+            <div
+              style="padding: 20px 28px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div
+                  style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, rgba(6,182,212,0.3), rgba(59,130,246,0.3)); border: 1px solid rgba(6,182,212,0.5); display: flex; align-items: center; justify-content: center; font-size: 17px; color: #06b6d4;">
+                  <i class="fa-solid fa-diagram-project"></i>
+                </div>
+                <div>
+                  <div style="font-size: 18px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px;">Location Graph
+                  </div>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 1px;">Binary Tree &bull; BFS Level-Order
+                    Traversal &bull; Click any node to view complaints</div>
+                </div>
+              </div>
+
+              <!-- Legend Pills -->
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span
+                  style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #06b6d4;"></span> Core Zone
+                </span>
+                <span
+                  style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; background: rgba(100,116,139,0.12); border: 1px solid rgba(100,116,139,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #64748b;"></span> Sub Zone
+                </span>
+                <span
+                  style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #f59e0b; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b;"></span> Selected
+                </span>
+              </div>
+            </div>
+
+            <!-- BFS Traversal & Search Controller Toolbar -->
+            <div
+              style="padding: 14px 24px; background: rgba(10, 18, 35, 0.85); border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <label for="adminBfsSearchSelect"
+                  style="font-size: 11px; font-weight: 800; color: #06b6d4; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-sitemap"></i> Start Node:
+                </label>
+                <select id="adminBfsSearchSelect" onchange="adminOnStartNodeChange(this.value)"
+                  style="background: #1e293b; color: #f8fafc; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; outline: none; cursor: pointer; min-width: 230px;">
+                  <option value="">-- Select Location to Start BFS --</option>
+                  <option value="Central Zone (Chowk)">Central Zone (Chowk) [Root - L0]</option>
+                  <option value="West Zone (Adajan)">West Zone (Adajan) [Child - L1]</option>
+                  <option value="Varachha Zone A">Varachha Zone A [Child - L1]</option>
+                  <option value="North Zone (Katargam)">North Zone (Katargam) [Child - L2]</option>
+                  <option value="South West (Athwa)">South West (Athwa) [Child - L2]</option>
+                  <option value="South Zone (Udhana)">South Zone (Udhana) [Child - L2]</option>
+                  <option value="Varachha Zone B">Varachha Zone B [Child - L2]</option>
+                  <option value="Shakti Nagar">Shakti Nagar [Leaf - L3]</option>
+                  <option value="South East (Dindoli)">South East (Dindoli) [Leaf - L3]</option>
+                </select>
+
+                <button type="button" class="btn btn-sm btn-primary" onclick="adminRunBfsSearch()"
+                  style="padding: 7px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(6,182,212,0.3);">
+                  <i class="fa-solid fa-play"></i> Start BFS from this Node
+                </button>
+
+                <button type="button" class="btn btn-sm btn-success" onclick="openAddNodeModal()"
+                  style="padding: 7px 14px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; background: #10b981; border: none; color: #fff; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                  <i class="fa-solid fa-plus"></i> Add Node
+                </button>
+
+                <button type="button" class="btn btn-sm btn-secondary" onclick="adminResetBfs()"
+                  style="padding: 7px 12px; font-size: 12px; color: #94a3b8;" title="Reset Graph Colors">
+                  <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+              </div>
+
+              <!-- Live Traversal Status Banner -->
+              <div id="adminBfsStatusStrip"
+                style="font-size: 12px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span id="adminBfsBadge"
+                  style="padding: 3px 8px; border-radius: 6px; background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 10px; font-weight: 800;">READY</span>
+                <span id="adminBfsMsg">Pick a node above or click "Run Full BFS Traversal" to explore
+                  level-by-level</span>
+              </div>
+            </div>
+
+            <!-- Real-time FIFO Queue & Visited State Display -->
+            <div id="adminBfsQueueBar"
+              style="display: none; padding: 10px 24px; background: rgba(8, 14, 28, 0.95); border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-size: 11px; align-items: center; gap: 16px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #38bdf8; font-weight: 800; text-transform: uppercase;"><i
+                    class="fa-solid fa-layer-group"></i> FIFO Queue:</span>
+                <span id="adminBfsQueueItems" style="color: #f1f5f9; font-family: monospace; font-weight: 700;">[
+                  ]</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #10b981; font-weight: 800; text-transform: uppercase;"><i
+                    class="fa-solid fa-check"></i> Visited:</span>
+                <span id="adminBfsVisitedItems" style="color: #f1f5f9; font-family: monospace; font-weight: 700;">[
+                  ]</span>
+              </div>
+            </div>
+
+            <!-- SVG Canvas -->
+            <div
+              style="position: relative; height: 420px; background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 70%); overflow: hidden;">
+              <!-- subtle grid lines -->
+              <svg style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.04;"
+                xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#06b6d4" stroke-width="0.5" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid)" />
+              </svg>
+
+              <!-- Main Graph SVG -->
+              <svg id="locationGraphSvg" style="width: 100%; height: 100%;" viewBox="0 0 900 420"
+                preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  <filter id="glowCyan" x="-60%" y="-60%" width="220%" height="220%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feFlood flood-color="#06b6d4" flood-opacity="0.8" result="color" />
+                    <feComposite in="color" in2="blur" operator="in" result="glow" />
+                    <feMerge>
+                      <feMergeNode in="glow" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  <filter id="glowAmber" x="-60%" y="-60%" width="220%" height="220%">
+                    <feGaussianBlur stdDeviation="5" result="blur" />
+                    <feFlood flood-color="#f59e0b" flood-opacity="0.9" result="color" />
+                    <feComposite in="color" in2="blur" operator="in" result="glow" />
+                    <feMerge>
+                      <feMergeNode in="glow" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  <filter id="glowGreen" x="-60%" y="-60%" width="220%" height="220%">
+                    <feGaussianBlur stdDeviation="5" result="blur" />
+                    <feFlood flood-color="#10b981" flood-opacity="0.9" result="color" />
+                    <feComposite in="color" in2="blur" operator="in" result="glow" />
+                    <feMerge>
+                      <feMergeNode in="glow" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  <marker id="arrowCyan" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L6,3 z" fill="rgba(6,182,212,0.6)" />
+                  </marker>
+                </defs>
+                <g id="svgWaysGroup"></g>
+                <g id="svgPointsGroup"></g>
+              </svg>
+            </div>
+          </div>
+
+          <!-- ── COMPLAINT PANEL ────────────────────────────────────────── -->
+          <div
+            style="border-radius: 16px; background: rgba(15,23,42,0.9); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 30px rgba(0,0,0,0.4); overflow: hidden;">
+
+            <!-- State 1: Nothing selected -->
+            <div id="noZoneSelectedView" style="text-align: center; padding: 48px 20px;">
+              <div
+                style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(59,130,246,0.1)); border: 1px solid rgba(6,182,212,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; color: #06b6d4;">
+                <i class="fa-solid fa-map-pin"></i>
+              </div>
+              <h3 style="font-size: 16px; font-weight: 800; color: #e2e8f0; margin: 0 0 8px;">Click a Node on the Graph
+              </h3>
+              <p style="font-size: 13px; color: #475569; margin: 0; line-height: 1.6;">Select any zone to see the
+                <strong style="color: #94a3b8;">Area Name</strong> and <strong style="color: #94a3b8;">Complaint
+                  Names</strong> registered for that zone.
+              </p>
+            </div>
+
+            <!-- State 2: Zone selected -->
+            <div id="zoneSelectedView" style="display: none;">
+
+              <!-- Zone Header -->
+              <div
+                style="padding: 20px 24px 16px; background: linear-gradient(90deg, rgba(6,182,212,0.08) 0%, transparent 100%); border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div id="nodeZoneBadge"
+                    style="min-width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.15)); border: 2px solid rgba(6,182,212,0.5); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #38bdf8; box-shadow: 0 0 20px rgba(6,182,212,0.25); padding: 0 8px; letter-spacing: 0.3px;">
+                    Zone A
+                  </div>
+                  <div>
+                    <div
+                      style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #475569; font-weight: 700; margin-bottom: 4px;">
+                      📍 Area Name</div>
+                    <div id="nodeAreaName" style="font-size: 22px; font-weight: 900; color: #ffffff; line-height: 1.2;">
+                      Central Zone (Chowk)</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span id="nodeComplaintCountBadge"
+                    style="font-size: 14px; font-weight: 800; color: #f59e0b; background: rgba(245,158,11,0.15); border: 1.5px solid rgba(245,158,11,0.35); padding: 8px 18px; border-radius: 22px;">
+                    0 Complaints
+                  </span>
+                </div>
+              </div>
+
+              <!-- Complaint List -->
+              <div style="padding: 18px 24px;">
+                <div
+                  style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-list-check" style="color: #06b6d4;"></i>
+                  Complaint Names in This Area
+                </div>
+                <div id="nodeComplaintsList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                <div id="nodeComplaintsEmpty"
+                  style="display: none; padding: 30px; text-align: center; background: rgba(16,185,129,0.04); border-radius: 12px; border: 1px dashed rgba(16,185,129,0.2); margin-top: 4px;">
+                  <i class="fa-regular fa-circle-check"
+                    style="font-size: 28px; color: #10b981; margin-bottom: 10px; display: block;"></i>
+                  <div style="font-size: 14px; font-weight: 700; color: #10b981; margin-bottom: 4px;">All Clear!</div>
+                  <div style="font-size: 12px; color: #64748b;">No complaints registered for this area.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================================================================
+             TAB 5: PHASE 4 — GREEDY PRIORITY-BASED COMPLAINT PROCESSING
+             ================================================================ -->
+        <section id="adminTab_greedy" style="display: none;">
+
+          <!-- Header Card -->
+          <div class="algo-workbench" style="margin-bottom: 22px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, rgba(16,185,129,0.22), rgba(245,158,11,0.22)); border: 1px solid rgba(16,185,129,0.45); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 20px; box-shadow: 0 0 20px rgba(16,185,129,0.25);">
+                  <i class="fa-solid fa-ranking-star"></i>
+                </div>
+                <div>
+                  <h3 style="font-size: 18px; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 10px; letter-spacing: -0.2px;">
+                    Greedy Priority Processing
+                    <span style="font-size: 10px; background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.4); padding: 2px 8px; border-radius: 5px; font-weight: 800; text-transform: uppercase;">PHASE 4 — CLO4</span>
+                  </h3>
+                  <p style="font-size: 12px; color: #94a3b8; margin: 3px 0 0;">
+                    Greedy Algorithm selects the highest-priority eligible complaint at each step &bull; Multi-Criteria Scoring &bull; FIFO tie-breaking
+                  </p>
+                </div>
+              </div>
+              <button type="button" id="greedyRunBtn" onclick="runGreedyAlgorithm()" class="algo-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; box-shadow: 0 4px 18px rgba(16,185,129,0.4); padding: 11px 22px; font-size: 13px; font-weight: 800; letter-spacing: 0.3px;">
+                <i class="fa-solid fa-bolt"></i> Find Next Complaint
+              </button>
+            </div>
+
+            <!-- Priority Legend -->
+            <div style="display: flex; gap: 8px; margin-top: 16px; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Priority Order:</span>
+              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(249,115,22,0.2); color: #fb923c; font-weight: 800; border: 1px solid rgba(249,115,22,0.4);"><i class="fa-solid fa-1" style="font-size: 9px; margin-right: 4px;"></i> 1 - High</span>
+              <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #475569;"></i>
+              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(245,158,11,0.2); color: #fbbf24; font-weight: 800; border: 1px solid rgba(245,158,11,0.4);"><i class="fa-solid fa-2" style="font-size: 9px; margin-right: 4px;"></i> 2 - Medium</span>
+              <i class="fa-solid fa-angle-right" style="font-size: 9px; color: #475569;"></i>
+              <span style="font-size: 10px; padding: 3px 10px; border-radius: 6px; background: rgba(16,185,129,0.2); color: #34d399; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);"><i class="fa-solid fa-3" style="font-size: 9px; margin-right: 4px;"></i> 3 - Low</span>
+            </div>
+          </div>
+
+          <!-- KPI Summary Stats Row -->
+          <div id="greedyStatsRow" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px;">
+            <div class="glass-card stat-card" style="padding: 16px 20px;">
+              <div class="stat-icon-wrapper" style="background: rgba(6,182,212,0.15); color: #06b6d4; width: 36px; height: 36px; font-size: 15px;">
+                <i class="fa-solid fa-clipboard-list"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="greedyEligibleCount" style="font-size: 22px;">—</div>
+                <div class="stat-label">Eligible Pending</div>
+              </div>
+            </div>
+            <div class="glass-card stat-card" style="padding: 16px 20px;">
+              <div class="stat-icon-wrapper" style="background: rgba(249,115,22,0.15); color: #fb923c; width: 36px; height: 36px; font-size: 15px;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="greedyHighCount" style="font-size: 22px; color: #fb923c;">—</div>
+                <div class="stat-label">1 - High</div>
+              </div>
+            </div>
+            <div class="glass-card stat-card" style="padding: 16px 20px;">
+              <div class="stat-icon-wrapper" style="background: rgba(245,158,11,0.15); color: #fbbf24; width: 36px; height: 36px; font-size: 15px;">
+                <i class="fa-solid fa-flag"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="greedyMediumCount" style="font-size: 22px; color: #fbbf24;">—</div>
+                <div class="stat-label">2 - Medium</div>
+              </div>
+            </div>
+            <div class="glass-card stat-card" style="padding: 16px 20px;">
+              <div class="stat-icon-wrapper" style="background: rgba(16,185,129,0.15); color: #34d399; width: 36px; height: 36px; font-size: 15px;">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <div class="stat-val" id="greedyLowCount" style="font-size: 22px; color: #34d399;">—</div>
+                <div class="stat-label">3 - Low</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Recommended Complaint Hero Card -->
+          <div id="greedyNextCard" style="display: none; margin-bottom: 22px;">
+            <div class="glass-card" style="padding: 0; overflow: hidden; border: 1.5px solid rgba(16,185,129,0.45); box-shadow: 0 10px 35px rgba(16,185,129,0.15);">
+              <!-- Hero Header -->
+              <div style="padding: 16px 24px; background: linear-gradient(90deg, rgba(16,185,129,0.18) 0%, rgba(15,23,42,0.6) 100%); border-bottom: 1px solid rgba(16,185,129,0.25); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="display: inline-flex; width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite;"></span>
+                  <div>
+                    <span style="font-size: 11px; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.8px;">Greedy Optimal Selection</span>
+                    <h4 style="margin: 2px 0 0; font-size: 16px; font-weight: 800; color: #f8fafc;">Top Recommended Complaint to Resolve Next</h4>
+                  </div>
+                </div>
+                <div id="greedyNextRank" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 10px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35);">
+                  <span style="font-size: 11px; font-weight: 800; color: #34d399;">#1 Highest Score</span>
+                </div>
+              </div>
+
+              <!-- Next complaint details -->
+              <div style="padding: 20px 24px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+                  <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Complaint ID</div>
+                    <div id="greedyNextId" style="font-size: 20px; font-weight: 900; color: #38bdf8; font-family: var(--font-mono);">#—</div>
+                  </div>
+                  <div style="grid-column: span 2;">
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Title</div>
+                    <div id="greedyNextTitle" style="font-size: 16px; font-weight: 700; color: #f1f5f9; line-height: 1.3;">—</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Category</div>
+                    <div id="greedyNextCategory" style="font-size: 13px; font-weight: 600; color: #cbd5e1;">—</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Location</div>
+                    <div id="greedyNextLocation" style="font-size: 13px; font-weight: 600; color: #94a3b8;">—</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Priority</div>
+                    <div id="greedyNextPriority"></div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Greedy Score</div>
+                    <div id="greedyNextScore" style="font-size: 18px; font-weight: 900; color: #10b981; font-family: var(--font-mono);">—</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Current Status</div>
+                    <div id="greedyNextStatus"></div>
+                  </div>
+                  <div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Submitted On</div>
+                    <div id="greedyNextDate" style="font-size: 12px; color: #94a3b8; font-family: var(--font-mono); margin-top: 3px;">—</div>
+                  </div>
+                  <div style="display: flex; align-items: flex-end;">
+                    <button type="button" id="greedyManageBtn" onclick="greedyManageNext()" class="algo-btn algo-btn-cyan" style="padding: 6px 14px; font-size: 11px;">
+                      <i class="fa-solid fa-folder-open"></i> View & Manage
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Explanation Box -->
+                <div id="greedyNextExplanation" style="margin-top: 16px; padding: 12px 18px; border-radius: 10px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); display: flex; align-items: flex-start; gap: 10px;">
+                  <i class="fa-solid fa-circle-info" style="color: #10b981; margin-top: 3px; font-size: 14px;"></i>
+                  <div style="font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+                    <strong style="color: #34d399; margin-right: 6px;">Why Selected:</strong>
+                    <span id="greedyNextExplanationText">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No eligible message -->
+          <div id="greedyEmptyMsg" class="glass-card" style="display: none; text-align: center; padding: 50px 20px; border-radius: 14px; border: 1px dashed rgba(16,185,129,0.35); margin-bottom: 22px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(16,185,129,0.12); color: #10b981; font-size: 24px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+              <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 800; color: #10b981; margin: 0 0 8px;">All Clear!</h3>
+            <p style="font-size: 14px; color: #64748b; margin: 0; line-height: 1.6;">No eligible complaints require processing. All complaints are either resolved, rejected, or no complaints exist.</p>
+          </div>
+
+          <!-- Score Comparison Chart Card -->
+          <div id="greedyChartCard" class="glass-card" style="display: none; margin-bottom: 22px; padding: 20px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16,185,129,0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                  <i class="fa-solid fa-chart-column"></i>
+                </div>
+                <div>
+                  <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #f8fafc;">Eligible Complaint Priority Scores</h4>
+                  <p style="margin: 2px 0 0; font-size: 11px; color: #94a3b8;">Score = (Urgency &times; 0.40) + (Category Severity &times; 0.35) + (Waiting Time &times; 0.25)</p>
+                </div>
+              </div>
+              <div style="font-size: 11px; color: #64748b; font-weight: 700;">Score Range: 0 — 100 pts</div>
+            </div>
+            <div style="height: 220px; position: relative;">
+              <canvas id="greedyScoreChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Recommended Processing Order Table -->
+          <div id="greedyTableCard" class="glass-card" style="display: none; padding: 0; overflow: hidden; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+            <div style="padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(15,23,42,0.85); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-list-ol" style="color: #10b981; font-size: 14px;"></i>
+                <span style="font-size: 14px; font-weight: 800; color: #f8fafc;">Recommended Processing Order</span>
+                <span id="greedyTableCount" style="font-size: 11px; padding: 2px 8px; border-radius: 6px; background: rgba(16,185,129,0.15); color: #34d399; font-weight: 800; border: 1px solid rgba(16,185,129,0.3);">0 complaints</span>
+              </div>
+              <span style="font-size: 11px; color: #64748b; font-weight: 600;"><i class="fa-solid fa-info-circle" style="margin-right: 4px;"></i> Sorted by Greedy Algorithm: highest score first (High=1 > Medium=2 > Low=3), oldest first on tie</span>
+            </div>
+            <div style="width: 100%; overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                <thead>
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(15,23,42,0.85); color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <th style="padding: 14px 12px; width: 55px; text-align: center;">Rank</th>
+                    <th style="padding: 14px 12px; width: 65px; text-align: center;">ID</th>
+                    <th style="padding: 14px 16px; min-width: 200px;">Title</th>
+                    <th style="padding: 14px 14px; width: 120px;">Category</th>
+                    <th style="padding: 14px 14px; width: 150px;">Location</th>
+                    <th style="padding: 14px 12px; width: 110px; text-align: center;">Priority</th>
+                    <th style="padding: 14px 12px; width: 85px; text-align: center;">Score</th>
+                    <th style="padding: 14px 12px; width: 105px; text-align: center;">Status</th>
+                    <th style="padding: 14px 14px; width: 130px;">Submitted</th>
+                  </tr>
+                </thead>
+                <tbody id="greedyTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Admin Manage Complaint Modal -->
+  <div id="adminManageModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card"
+      style="width: 100%; max-width: 620px; padding: 30px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
+
+      <!-- Header -->
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+        <h3 id="admModalTitle" style="font-size: 19px; font-weight: 800; color: var(--text-primary);">🗂️ Manage
+          Complaint</h3>
+        <button class="btn btn-sm btn-secondary" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Citizen Info Banner (Read-only) -->
+      <div id="admModalCitizenInfo"
+        style="background: rgba(6,182,212,0.08); border: 1px solid var(--accent-cyan); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;">
+      </div>
+
+      <!-- Description Display (Read-only) -->
+      <div id="admModalDescWrap" style="margin-bottom: 16px; display: none;">
+        <div
+          style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">
+          Issue Description</div>
+        <div id="admModalDesc"
+          style="background: var(--bg-input); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; color: var(--text-primary); line-height: 1.5;">
+        </div>
+      </div>
+
+      <!-- Complaint Photo Thumbnail (Read-only) -->
+      <div id="admModalImages" style="display: none; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;"></div>
+
+      <!-- Status & Priority Row (READ-ONLY FOR ADMIN) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🔄 Current Status</span>
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;"><i
+                class="fa-solid fa-lock"></i> Read-only</span>
+          </label>
+          <div id="admModalStatusDisplay"
+            style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+            <span id="admStatusBadge" class="badge">Pending</span>
+          </div>
+          <input type="hidden" id="admModalStatus">
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>⚡ Priority Level</span>
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;"><i
+                class="fa-solid fa-lock"></i> Read-only</span>
+          </label>
+          <div id="admModalPriorityDisplay"
+            style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+            <span id="admPriorityBadge" class="badge">2 - Medium</span>
+          </div>
+          <input type="hidden" id="admModalPriority">
+        </div>
+      </div>
+
+      <!-- Resolved Banner & Details (shown only when complaint is already Resolved) -->
+      <div id="admResolvedBanner" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+        <div
+          style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.45); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;">
+          <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 24px; flex-shrink: 0;"></i>
+          <div>
+            <div style="font-weight: 800; color: #10b981; font-size: 14px;">Complaint Solved &amp; Closed</div>
+            <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">This complaint has been marked as resolved.
+              Field officer assignment is closed.</div>
+          </div>
+        </div>
+
+        <!-- Solved Details Summary Card -->
+        <div
+          style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+            <div>
+              <span
+                style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Handled
+                Department</span>
+              <div id="admResolvedDeptText" style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-top: 3px;">
+                -</div>
+            </div>
+            <div>
+              <span
+                style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Field
+                Officer In-Charge</span>
+              <div id="admResolvedOfficerText"
+                style="font-size: 13px; font-weight: 700; color: #f59e0b; margin-top: 3px;">-</div>
+            </div>
+          </div>
+          <div id="admResolvedRemarksWrap"
+            style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: 8px;">
+            <span
+              style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Resolution
+              Remarks / Log</span>
+            <div id="admResolvedRemarksText"
+              style="font-size: 12px; color: #cbd5e1; margin-top: 3px; font-style: italic;">No additional remarks.</div>
+          </div>
+        </div>
+
+        <!-- Solution Proof Image Preview -->
+        <div id="admResolvedProofWrap"
+          style="display: none; background: rgba(14,21,38,0.7); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; padding: 12px 14px;">
+          <div
+            style="font-size: 11px; font-weight: 700; color: #10b981; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-camera-retro"></i> Field Officer Resolution Proof Photo
+          </div>
+          <div id="admResolvedProofContainer"></div>
+        </div>
+      </div>
+
+      <!-- Assignment Section (hidden when Resolved) -->
+      <div id="admAssignSection">
+        <!-- Department (EDITABLE BY ADMIN) -->
+        <div class="form-group">
+          <label class="form-label" style="color: var(--accent-cyan); font-weight: 700;">🏢 Assign Department *</label>
+          <select id="admModalDept" class="form-control" onchange="loadOfficersForDept(this.value)">
+            <option value="Sanitation Department">Sanitation Department</option>
+            <option value="Road Department">Road Department</option>
+            <option value="Water Department">Water Department</option>
+            <option value="Electricity Department">Electricity Department</option>
+            <option value="Traffic Department">Traffic Department</option>
+          </select>
+        </div>
+
+        <!-- Officer Assignment (EDITABLE BY ADMIN) -->
+        <div class="form-group">
+          <label class="form-label" style="color: var(--accent-cyan); font-weight: 700;">👷 Assign Field Officer</label>
+          <select id="admModalOfficer" class="form-control">
+            <option value="">-- Select an Officer --</option>
+          </select>
+          <div id="officerLoadStatus" style="font-size: 11px; color: var(--text-muted); margin-top: 4px;"></div>
+        </div>
+
+        <!-- Remarks / Instructions (EDITABLE BY ADMIN) -->
+        <div class="form-group">
+          <label class="form-label" style="color: var(--accent-cyan); font-weight: 700;">📝 Admin Remarks /
+            Instructions</label>
+          <textarea id="admModalRemarks" class="form-control"
+            placeholder="e.g. Please inspect ASAP, dispatch crew, and upload proof of resolution photo."
+            style="height: 85px;"></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div
+          style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="closeAdminModal()">
+            <i class="fa-solid fa-xmark"></i> Cancel
+          </button>
+          <button id="admSaveBtn" class="btn btn-primary" onclick="saveAdminComplaintChanges()">
+            <i class="fa-solid fa-user-check"></i> Assign &amp; Save
+          </button>
+        </div>
+      </div>
+
+      <!-- Resolved Footer Buttons (shown only when Resolved) -->
+      <div id="admResolvedFooter"
+        style="display: none; justify-content: flex-end; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+        <button class="btn btn-secondary" onclick="closeAdminModal()">
+          <i class="fa-solid fa-xmark"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add User Modal -->
+  <div id="addUserModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 480px; padding: 30px;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0;">
+          <i class="fa-solid fa-user-plus" style="color: var(--accent-cyan);"></i> Create User Account
+        </h3>
+        <button class="btn btn-sm btn-secondary" onclick="closeAddUserModal()"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" id="newUserName" class="form-control" placeholder="e.g. Rahul Sharma" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address *</label>
+        <input type="email" id="newUserEmail" class="form-control" placeholder="e.g. rahul@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Role *</label>
+        <select id="newUserRole" class="form-control" onchange="onNewUserRoleChange(this.value)">
+          <option value="department" selected>🏢 Department Officer</option>
+          <option value="admin">👑 Administrator</option>
+        </select>
+      </div>
+
+      <!-- Department Selector (Shown when Role is Department Officer) -->
+      <div class="form-group" id="newUserDeptGroup" style="display: block;">
+        <label class="form-label">Assign Department *</label>
+        <select id="newUserDept" class="form-control">
+          <option value="Sanitation Department">Sanitation Department</option>
+          <option value="Road Department">Road Department</option>
+          <option value="Water Department">Water Department</option>
+          <option value="Electricity Department">Electricity Department</option>
+          <option value="Traffic Department">Traffic Department</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <input type="password" id="newUserPass" class="form-control" placeholder="Minimum 4 characters" required>
+      </div>
+
+      <div
+        style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+        <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
+        <button type="button" id="createUserSubmitBtn" class="btn btn-primary" onclick="saveNewUser()">
+          <i class="fa-solid fa-check"></i> Create Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Change Modal for Admin -->
+  <div id="changeRoleModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 440px; padding: 28px;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-primary); margin: 0;">
+          <i class="fa-solid fa-user-shield" style="color: var(--accent-cyan);"></i> Change User Role
+        </h3>
+        <button class="btn btn-sm btn-secondary" onclick="closeRoleModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p id="changeRoleUserInfo" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 18px;"></p>
+
+      <div class="form-group">
+        <label class="form-label">Select New Role *</label>
+        <select id="changeRoleSelect" class="form-control" onchange="onChangeRoleSelect(this.value)">
+          <option value="citizen">👤 Citizen</option>
+          <option value="department">🏢 Department Officer</option>
+          <option value="admin">👑 Administrator</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="changeRoleDeptGroup" style="display: none;">
+        <label class="form-label">Assign Department *</label>
+        <select id="changeRoleDept" class="form-control">
+          <option value="Sanitation Department">Sanitation Department</option>
+          <option value="Road Department">Road Department</option>
+          <option value="Water Department">Water Department</option>
+          <option value="Electricity Department">Electricity Department</option>
+          <option value="Traffic Department">Traffic Department</option>
+        </select>
+      </div>
+
+      <div
+        style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+        <button type="button" class="btn btn-secondary" onclick="closeRoleModal()">Cancel</button>
+        <button type="button" id="confirmRoleBtn" class="btn btn-primary" onclick="confirmRoleChange()">
+          <i class="fa-solid fa-floppy-disk"></i> Update Role
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       Add Node to Location Graph Modal
+       ════════════════════════════════════════════════════════════════ -->
+  <!-- ════════════════════════════════════════════════════════════════
+       Add Node to Location Graph Modal (State-of-the-Art Visual Design)
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="adminAddNodeModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(12px); z-index: 1050; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card"
+      style="width: 100%; max-width: 860px; padding: 28px 32px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.35); box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(16,185,129,0.15); max-height: 92vh; overflow-y: auto;">
+
+      <!-- Modal Header -->
+      <div
+        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div
+            style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(6,182,212,0.25)); border: 1.5px solid rgba(16,185,129,0.5); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #10b981; box-shadow: 0 0 16px rgba(16,185,129,0.25);">
+            <i class="fa-solid fa-diagram-project"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 0.3px; margin: 0;">Add Node to
+              Location Graph</h3>
+            <p style="font-size: 12px; color: #94a3b8; margin: 3px 0 0;">Expand the Binary Tree &amp; BFS Routing
+              Governance Network with real-time visual preview</p>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="closeAddNodeModal()" type="button"
+          style="border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; padding: 0;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Form Body - 2 Columns Grid -->
+      <form id="adminAddNodeForm" onsubmit="submitAddNodeForm(event)">
+        <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px; align-items: stretch;">
+
+          <!-- LEFT COLUMN: Form Inputs -->
+          <div>
+            <!-- Location / Area Name -->
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label"
+                style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-location-dot" style="color: #10b981;"></i> Location / Ward Name *
+              </label>
+              <input type="text" id="addNodeAreaName" class="form-control"
+                placeholder="e.g. Palanpur Canal Road, Pandesara GIDC" required
+                style="background: #111a2e; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; color: #f8fafc; padding: 10px 14px; font-size: 13px;"
+                oninput="updateAddNodePreview()">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <!-- Zone Code / Tag -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label"
+                  style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-tag" style="color: #06b6d4;"></i> Zone Code *
+                </label>
+                <input type="text" id="addNodeZoneCode" class="form-control" placeholder="e.g. Zone J" required
+                  style="background: #111a2e; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; color: #f8fafc; padding: 10px 14px; font-size: 13px;"
+                  oninput="updateAddNodePreview()">
+              </div>
+
+              <!-- Ward Category / Role -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label"
+                  style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-city" style="color: #f59e0b;"></i> Ward Classification
+                </label>
+                <select id="addNodeRole" class="form-control"
+                  style="background: #111a2e; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; color: #f8fafc; padding: 10px 14px; font-size: 13px;"
+                  onchange="updateAddNodePreview()">
+                  <option value="Residential Ward" selected>Residential Ward</option>
+                  <option value="Commercial District">Commercial District</option>
+                  <option value="Industrial Cluster">Industrial Cluster</option>
+                  <option value="Peripheral Extension">Peripheral Extension</option>
+                  <option value="Waterfront Hub">Waterfront Hub</option>
+                  <option value="Civic Healthcare Hub">Civic Healthcare Hub</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Parent Connection Node -->
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label"
+                style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
+                <span style="display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-sitemap" style="color: #38bdf8;"></i> Connected Parent Node in Tree *
+                </span>
+                <span style="font-size: 11px; color: #94a3b8; font-weight: 500;">Branches from this node</span>
+              </label>
+              <select id="addNodeParentSelect" class="form-control" required
+                style="background: #111a2e; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px; color: #f8fafc; padding: 10px 14px; font-size: 13px;"
+                onchange="updateAddNodePreview()">
+                <!-- Populated dynamically -->
+              </select>
+
+              <!-- Quick Connect Chips -->
+              <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                <span style="font-size: 10.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Quick
+                  Link:</span>
+                <button type="button" class="btn btn-sm" onclick="quickSelectParent('Central Zone (Chowk)')"
+                  style="padding: 2px 8px; font-size: 11px; background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 6px;">Chowk
+                  (Root)</button>
+                <button type="button" class="btn btn-sm" onclick="quickSelectParent('West Zone (Adajan)')"
+                  style="padding: 2px 8px; font-size: 11px; background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); border-radius: 6px;">Adajan
+                  (W)</button>
+                <button type="button" class="btn btn-sm" onclick="quickSelectParent('Varachha Zone A')"
+                  style="padding: 2px 8px; font-size: 11px; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 6px;">Varachha
+                  A</button>
+              </div>
+            </div>
+
+            <!-- Branch / Side Selector -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label"
+                style="font-size: 12px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-code-branch" style="color: #a855f7;"></i> Binary Tree Branch Placement
+              </label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <label id="labelBranchAuto"
+                  style="cursor: pointer; background: rgba(6,182,212,0.15); border: 1.5px solid #06b6d4; border-radius: 10px; padding: 10px; text-align: center; font-size: 11.5px; font-weight: 700; color: #f8fafc; transition: all 0.2s;">
+                  <input type="radio" name="addNodeBranch" value="auto" checked onchange="onBranchRadioChange()"
+                    style="display:none;">
+                  <i class="fa-solid fa-wand-magic-sparkles"
+                    style="color:#06b6d4; display:block; margin-bottom:4px; font-size:13px;"></i>
+                  Auto Branch
+                </label>
+                <label id="labelBranchLeft"
+                  style="cursor: pointer; background: #111a2e; border: 1.5px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; text-align: center; font-size: 11.5px; font-weight: 700; color: #94a3b8; transition: all 0.2s;">
+                  <input type="radio" name="addNodeBranch" value="left" onchange="onBranchRadioChange()"
+                    style="display:none;">
+                  <i class="fa-solid fa-arrow-left"
+                    style="color:#10b981; display:block; margin-bottom:4px; font-size:13px;"></i>
+                  Left Child (L)
+                </label>
+                <label id="labelBranchRight"
+                  style="cursor: pointer; background: #111a2e; border: 1.5px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; text-align: center; font-size: 11.5px; font-weight: 700; color: #94a3b8; transition: all 0.2s;">
+                  <input type="radio" name="addNodeBranch" value="right" onchange="onBranchRadioChange()"
+                    style="display:none;">
+                  <i class="fa-solid fa-arrow-right"
+                    style="color:#f59e0b; display:block; margin-bottom:4px; font-size:13px;"></i>
+                  Right Child (R)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Visual Topology Mini-Canvas -->
+          <div
+            style="background: rgba(10, 18, 35, 0.95); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div
+                  style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-sitemap"></i> Live Topology Preview
+                </div>
+                <span id="addNodePreviewLevelBadge"
+                  style="background: rgba(6,182,212,0.18); border: 1px solid rgba(6,182,212,0.4); color: #38bdf8; padding: 3px 10px; border-radius: 20px; font-weight: 800; font-size: 11px;">
+                  Level 1
+                </span>
+              </div>
+
+              <!-- Mini SVG Topology Canvas -->
+              <div
+                style="position: relative; height: 190px; background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.08) 0%, transparent 80%); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.12); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <svg id="addNodeMiniSvg" viewBox="0 0 340 190" style="width: 100%; height: 100%;">
+                  <defs>
+                    <marker id="miniArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                      <path d="M0,0 L0,6 L6,3 z" fill="#10b981" />
+                    </marker>
+                    <filter id="miniGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <!-- Dynamic Branch Path -->
+                  <path id="miniSvgBranchPath" d="M 170 50 C 170 95, 170 95, 170 140" stroke="#10b981"
+                    stroke-width="2.5" stroke-dasharray="5 3" fill="none" marker-end="url(#miniArrow)" />
+
+                  <!-- Parent Node (Top) -->
+                  <g id="miniSvgParentGroup" transform="translate(170, 45)" style="cursor: default;">
+                    <circle cx="0" cy="0" r="26" fill="#1e293b" stroke="#06b6d4" stroke-width="2.5" />
+                    <text id="miniSvgParentZone" x="0" y="-4" text-anchor="middle" fill="#38bdf8" font-size="10"
+                      font-weight="900" font-family="system-ui, sans-serif">Zone A</text>
+                    <text id="miniSvgParentLabel" x="0" y="8" text-anchor="middle" fill="#cbd5e1" font-size="8.5"
+                      font-weight="700" font-family="system-ui, sans-serif">Chowk</text>
+                  </g>
+
+                  <!-- New Candidate Node (Bottom) -->
+                  <g id="miniSvgChildGroup" transform="translate(170, 140)" filter="url(#miniGlow)">
+                    <circle cx="0" cy="0" r="27" fill="#0f2027" stroke="#10b981" stroke-width="3" />
+                    <circle cx="0" cy="0" r="33" fill="none" stroke="rgba(16,185,129,0.35)" stroke-width="1.5"
+                      stroke-dasharray="4 3" />
+                    <text id="miniSvgChildZone" x="0" y="-4" text-anchor="middle" fill="#10b981" font-size="10"
+                      font-weight="900" font-family="system-ui, sans-serif">Zone J</text>
+                    <text id="miniSvgChildLabel" x="0" y="8" text-anchor="middle" fill="#f8fafc" font-size="8"
+                      font-weight="800" font-family="system-ui, sans-serif">New Ward</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Live Topology Details Summary -->
+            <div
+              style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; margin-top: 12px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #94a3b8;">Branch Mode:</span>
+                <span id="miniSvgBranchText" style="color: #10b981; font-weight: 700;">Auto Intelligent Branch</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #94a3b8;">Hierarchy Route:</span>
+                <span id="miniSvgPathText"
+                  style="color: #f1f5f9; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">Chowk
+                  &rarr; New Ward</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #94a3b8;">Parent Anchor:</span>
+                <span id="miniSvgParentNameText"
+                  style="color: #38bdf8; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">Central
+                  Zone (Chowk)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 18px; margin-top: 22px;">
+          <div style="font-size: 11.5px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-circle-info" style="color: #06b6d4;"></i> Automatically connects to adjacency graph
+            &amp; BFS routing.
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="button" class="btn btn-secondary" onclick="closeAddNodeModal()"
+              style="padding: 9px 18px; font-size: 13px; font-weight: 700;">
+              Cancel
+            </button>
+            <button type="submit" id="submitAddNodeBtn" class="btn btn-success"
+              style="padding: 9px 24px; font-size: 13px; font-weight: 800; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 18px rgba(16,185,129,0.4); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+              <i class="fa-solid fa-plus"></i> Confirm &amp; Add Node
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Image Lightbox -->
+  <div class="img-lightbox" id="imgLightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Full image">
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    window.CURRENT_ADMIN_ID = parseInt("{{ user.id if user else '' }}", 10) || null;
+    window.CURRENT_ADMIN_EMAIL = "{{ user.email if user else '' }}";
+    window.CURRENT_ADMIN_NAME = "{{ user.name if user else '' }}";
+  </script>
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/admin.js"></script>
+  <script>
+    document.addEventListener('click', function (e) {
+      const wrapper = document.getElementById('adminBellWrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        const dd = document.getElementById('adminNotifDropdown');
+        if (dd) dd.classList.remove('open');
+      }
+    });
+  </script>
+
+  <!-- ── Civic Area Location Network Point-Way Graph & BFS Traversal Script ── -->
+  <script>
+    let _allComplaintsData = [];
+    let _mapNodesData = [];
+    let _mapEdgesData = [];
+    let _selectedZoneName = null;
+
+    // Helper to get safe HTML ID from area name
+    function safeId(name) {
+      return (name || '').replace(/[^a-zA-Z0-9]/g, '_');
+    }
+
+    // Helper to get short label for an area
+    function getShortLabel(areaName) {
+      const node = _mapNodesData.find(n => n.area === areaName);
+      return node ? (node.short_label || node.code || areaName) : areaName;
+    }
+
+    // Helper to match complaint location to one of the 8 Surat zones
+    function matchComplaintToZone(c, nodes) {
+      const loc = (c.location || '').trim();
+      const locLower = loc.toLowerCase();
+      for (const n of nodes) {
+        if (loc === n.area || locLower === n.area.toLowerCase()) return n.area;
+      }
+      for (const n of nodes) {
+        if (locLower.includes(n.area.toLowerCase())) return n.area;
+      }
+      if (locLower.includes('adajan') || locLower.includes('area a')) return 'West Zone (Adajan)';
+      if (locLower.includes('katargam') || locLower.includes('area c')) return 'North Zone (Katargam)';
+      if (locLower.includes('sarthana') || locLower.includes('varachha zone b')) return 'Varachha Zone B';
+      if (locLower.includes('varachha') || locLower.includes('area b')) return 'Varachha Zone A';
+      if (locLower.includes('athwa') || locLower.includes('area d')) return 'South West (Athwa)';
+      if (locLower.includes('udhana') || locLower.includes('udhna') || locLower.includes('pandesara')) return 'South Zone (Udhana)';
+      if (locLower.includes('dindoli') || locLower.includes('limbayat')) return 'South East (Dindoli)';
+      return 'Central Zone (Chowk)';
+    }
+
+    function loadAreaMap() {
+      // Step 1: Immediately fetch graph structure and render — no dependency on complaints
+      fetch('/api/graph/map-data')
+        .then(r => r.json())
+        .then(mapData => {
+          _mapNodesData = mapData.nodes || [];
+          _mapEdgesData = mapData.edges || [];
+
+          // Initialize complaint counts to zero so graph renders immediately
+          _mapNodesData.forEach(n => { n.complaint_count = 0; });
+          renderPointWayGraph(_mapNodesData, _mapEdgesData);
+
+          // Populate BFS search dropdown
+          const searchSel = document.getElementById('adminBfsSearchSelect');
+          if (searchSel && _mapNodesData.length > 0) {
+            searchSel.innerHTML = '<option value="">-- Select Location to Search --</option>' +
+              _mapNodesData.map(n => `<option value="${escapeHtml(n.area)}">${escapeHtml(n.area)} [${n.role || 'Node'} - L${n.level || 0}]</option>`).join('');
+          }
+
+          if (_selectedZoneName) selectZone(_selectedZoneName);
+
+          // Step 2: Background enrich with complaint counts (non-blocking)
+          fetch('/api/complaints')
+            .then(r => r.json())
+            .then(complaints => {
+              _allComplaintsData = complaints || [];
+              const zoneCounts = {};
+              _mapNodesData.forEach(n => { zoneCounts[n.area] = 0; });
+              _allComplaintsData.forEach(c => {
+                const matched = matchComplaintToZone(c, _mapNodesData);
+                zoneCounts[matched] = (zoneCounts[matched] || 0) + 1;
+              });
+              _mapNodesData.forEach(n => { n.complaint_count = zoneCounts[n.area] || 0; });
+              // Re-render with complaint count badges
+              renderPointWayGraph(_mapNodesData, _mapEdgesData);
+              if (_selectedZoneName) selectZone(_selectedZoneName);
+            })
+            .catch(() => { /* silently skip if complaints API unavailable */ });
+        })
+        .catch(err => console.error('Location Graph init error:', err));
+    }
+
+    function renderPointWayGraph(nodes, edges) {
+      const waysGroup = document.getElementById('svgWaysGroup');
+      const pointsGroup = document.getElementById('svgPointsGroup');
+      if (!waysGroup || !pointsGroup) return;
+
+      // 1. Draw Ways (Transit Edges)
+      waysGroup.innerHTML = edges.map(edge => {
+        const u = nodes.find(n => n.area === edge.from);
+        const v = nodes.find(n => n.area === edge.to);
+        if (!u || !v) return '';
+
+        const edgeId = `edge_${safeId(u.area)}_${safeId(v.area)}`;
+        // Core diamond edges get higher visual weight
+        const isCoreDiamond = (u.zone && ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(u.zone)) &&
+          (v.zone && ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(v.zone));
+        const strokeColor = isCoreDiamond ? '#475569' : '#334155';
+        const strokeWidth = isCoreDiamond ? '3.5' : '2.5';
+
+        return `
+          <g class="graph-way-element">
+            <line id="${edgeId}" data-u="${escapeHtml(u.area)}" data-v="${escapeHtml(v.area)}"
+                  x1="${u.x}" y1="${u.y}" x2="${v.x}" y2="${v.y}"
+                  stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round"
+                  style="transition: all 0.35s ease;" />
+          </g>
+        `;
+      }).join('');
+
+      // 2. Draw Points (Location Nodes)
+      pointsGroup.innerHTML = nodes.map(node => {
+        const count = node.complaint_count || 0;
+        const countCol = count >= 3 ? '#ef4444' : count >= 1 ? '#f59e0b' : '#10b981';
+        const nodeId = `node_${safeId(node.area)}`;
+        const isSelected = _selectedZoneName === node.area;
+        const isCore = ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(node.zone);
+        const strokeColor = isSelected ? '#f59e0b' : (isCore ? '#06b6d4' : '#64748b');
+        const haloColor = isSelected ? 'rgba(245, 158, 11, 0.4)' : 'transparent';
+        const radius = isCore ? 26 : 22;
+
+        return `
+          <g id="${nodeId}" class="graph-point-group" data-area="${escapeHtml(node.area)}"
+             onclick="selectZone('${escapeHtml(node.area)}')"
+             style="cursor: pointer; transition: transform 0.2s ease;">
+
+            <!-- Selection / Traversal Pulse Halo -->
+            <circle class="point-halo" cx="${node.x}" cy="${node.y}" r="${radius + 10}"
+                    fill="${haloColor}" stroke="${isSelected ? '#f59e0b' : 'transparent'}" stroke-width="2.5"
+                    style="transition: all 0.3s ease;" />
+
+            <!-- Main Point Circle -->
+            <circle class="point-circle" cx="${node.x}" cy="${node.y}" r="${radius}"
+                    fill="#1e293b" stroke="${strokeColor}" stroke-width="${isCore ? '3' : '2.5'}"
+                    style="transition: all 0.3s ease;" />
+
+            <!-- Zone Name Inside Point Circle (e.g. Zone A, Zone B) -->
+            <text class="point-zone-text" x="${node.x}" y="${node.y + 4.5}" text-anchor="middle"
+                  fill="#f8fafc" font-size="${isCore ? '11' : '10'}" font-weight="800" font-family="system-ui, sans-serif"
+                  style="pointer-events: none;">
+              ${escapeHtml(node.zone || node.code || 'Zone')}
+            </text>
+
+            <!-- Area Label Text Below Point -->
+            <text class="point-label" x="${node.x}" y="${node.y + radius + 16}" text-anchor="middle"
+                  fill="${isSelected ? '#38bdf8' : '#cbd5e1'}" font-size="11" font-weight="700" font-family="system-ui, sans-serif"
+                  style="pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.85);">
+              ${escapeHtml(node.short_label || node.area)}
+            </text>
+
+            <!-- Top-Right Complaint Counter Badge -->
+            <g class="point-badge" transform="translate(${node.x + radius - 9}, ${node.y - radius + 4})" style="pointer-events: none;">
+              <circle cx="0" cy="0" r="9" fill="${countCol}" stroke="#0b1324" stroke-width="1.8" />
+              <text x="0" y="3" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="800" font-family="system-ui, sans-serif">
+                ${count}
+              </text>
+            </g>
+          </g>
+        `;
+      }).join('');
+    }
+
+    function selectZone(zoneName) {
+      _selectedZoneName = zoneName;
+
+      // 1. Reset all node circles and halos
+      _mapNodesData.forEach(n => {
+        const el = document.getElementById(`node_${safeId(n.area)}`);
+        if (el) {
+          const isCore = ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(n.zone);
+          const circle = el.querySelector('.point-circle');
+          const halo = el.querySelector('.point-halo');
+          const label = el.querySelector('.point-label');
+          if (circle) {
+            circle.setAttribute('stroke', isCore ? '#06b6d4' : '#64748b');
+            circle.setAttribute('stroke-width', isCore ? '3' : '2.5');
+          }
+          if (halo) {
+            halo.setAttribute('fill', 'transparent');
+            halo.setAttribute('stroke', 'transparent');
+          }
+          if (label) {
+            label.setAttribute('fill', '#cbd5e1');
+          }
+        }
+      });
+
+      // 2. Highlight clicked node with Amber ring and halo
+      const targetEl = document.getElementById(`node_${safeId(zoneName)}`);
+      if (targetEl) {
+        const circle = targetEl.querySelector('.point-circle');
+        const halo = targetEl.querySelector('.point-halo');
+        const label = targetEl.querySelector('.point-label');
+        if (circle) {
+          circle.setAttribute('stroke', '#f59e0b');
+          circle.setAttribute('stroke-width', '3.5');
+        }
+        if (halo) {
+          halo.setAttribute('fill', 'rgba(245, 158, 11, 0.45)');
+          halo.setAttribute('stroke', '#f59e0b');
+        }
+        if (label) {
+          label.setAttribute('fill', '#f59e0b');
+        }
+      }
+
+      // 3. Find node info
+      const node = _mapNodesData.find(n => n.area === zoneName) || { area: zoneName, zone: 'Zone', code: 'ZN' };
+
+      // 4. Filter complaints for this area
+      const areaComplaints = _allComplaintsData.filter(c => matchComplaintToZone(c, _mapNodesData) === zoneName);
+
+      // 5. Update UI: Show Area Name and Complaint Names
+      const noSelView = document.getElementById('noZoneSelectedView');
+      const selView = document.getElementById('zoneSelectedView');
+      if (noSelView) noSelView.style.display = 'none';
+      if (selView) selView.style.display = 'block';
+
+      const badgeEl = document.getElementById('nodeZoneBadge');
+      if (badgeEl) badgeEl.textContent = node.zone || node.code || 'Zone';
+
+      const areaNameEl = document.getElementById('nodeAreaName');
+      if (areaNameEl) areaNameEl.textContent = `${node.zone ? node.zone + ' — ' : ''}${node.area}`;
+
+      const countBadge = document.getElementById('nodeComplaintCountBadge');
+      if (countBadge) {
+        countBadge.textContent = `${areaComplaints.length} Complaint${areaComplaints.length === 1 ? '' : 's'}`;
+        countBadge.style.color = areaComplaints.length > 0 ? '#f59e0b' : '#10b981';
+        countBadge.style.borderColor = areaComplaints.length > 0 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)';
+        countBadge.style.background = areaComplaints.length > 0 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+      }
+
+      const listEl = document.getElementById('nodeComplaintsList');
+      const emptyEl = document.getElementById('nodeComplaintsEmpty');
+
+      if (!areaComplaints.length) {
+        if (listEl) listEl.innerHTML = '';
+        if (emptyEl) emptyEl.style.display = 'block';
+      } else {
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (listEl) {
+          listEl.innerHTML = areaComplaints.map(c => {
+            const stCol = c.status === 'Resolved' ? '#10b981' : c.status === 'Pending' ? '#f59e0b' : '#3b82f6';
+            return `
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 14px 18px; border-radius: 10px; transition: all 0.2s ease;">
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                  <span style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent-cyan);">#${c.id}</span>
+                  <span style="font-size: 15px; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(c.title)}">
+                    ${escapeHtml(c.title)}
+                  </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 11px; padding: 4px 12px; border-radius: 20px; background: ${stCol}22; color: ${stCol}; font-weight: 700; border: 1px solid ${stCol}44;">
+                    ${escapeHtml(c.status || 'Pending')}
+                  </span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // BFS Traversal & Search Controller in Admin Location Graph
+    // ══════════════════════════════════════════════════════════════════════════
+    let _bfsRunning = false;
+    let _bfsTimer = null;
+
+    function adminResetBfs() {
+      if (_bfsTimer) {
+        clearInterval(_bfsTimer);
+        _bfsTimer = null;
+      }
+      _bfsRunning = false;
+
+      // 1. Reset all node circles, halos, and labels
+      _mapNodesData.forEach(n => {
+        const el = document.getElementById(`node_${safeId(n.area)}`);
+        if (el) {
+          const isCore = ['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(n.zone);
+          const circle = el.querySelector('.point-circle');
+          const halo = el.querySelector('.point-halo');
+          const label = el.querySelector('.point-label');
+          if (circle) {
+            circle.setAttribute('fill', '#1e293b');
+            circle.setAttribute('stroke', isCore ? '#06b6d4' : '#64748b');
+            circle.setAttribute('stroke-width', isCore ? '3' : '2.5');
+          }
+          if (halo) {
+            halo.setAttribute('fill', 'transparent');
+            halo.setAttribute('stroke', 'transparent');
+          }
+          if (label) {
+            label.setAttribute('fill', '#cbd5e1');
+          }
+        }
+      });
+
+      // 2. Reset all edges
+      _mapEdgesData.forEach(e => {
+        const u = _mapNodesData.find(n => n.area === e.from);
+        const v = _mapNodesData.find(n => n.area === e.to);
+        const isCore = u && v && (['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(u.zone)) &&
+          (['Zone A', 'Zone B', 'Zone C', 'Zone D'].includes(v.zone));
+        const defCol = isCore ? '#475569' : '#334155';
+        const defWidth = isCore ? '3.5' : '2.5';
+
+        const e1 = document.getElementById(`edge_${safeId(e.from)}_${safeId(e.to)}`);
+        const e2 = document.getElementById(`edge_${safeId(e.to)}_${safeId(e.from)}`);
+        if (e1) { e1.setAttribute('stroke', defCol); e1.setAttribute('stroke-width', defWidth); }
+        if (e2) { e2.setAttribute('stroke', defCol); e2.setAttribute('stroke-width', defWidth); }
+      });
+
+      // 3. Reset UI badges and queue bar
+      const badge = document.getElementById('adminBfsBadge');
+      const msg = document.getElementById('adminBfsMsg');
+      const qBar = document.getElementById('adminBfsQueueBar');
+      if (badge) {
+        badge.textContent = 'READY';
+        badge.style.background = 'rgba(56,189,248,0.15)';
+        badge.style.color = '#38bdf8';
+      }
+      if (msg) msg.textContent = 'Pick a node above or click "Run Full BFS Traversal" to explore level-by-level';
+      if (qBar) qBar.style.display = 'none';
+
+      if (_selectedZoneName) {
+        selectZone(_selectedZoneName);
+      }
+    }
+
+    function adminRunFullBfs() {
+      adminExecuteBfs('Central Zone (Chowk)');
+    }
+
+    function adminOnStartNodeChange(nodeName) {
+      if (nodeName) {
+        adminExecuteBfs(nodeName);
+      }
+    }
+
+    async function openAddNodeModal() {
+      const modal = document.getElementById('adminAddNodeModal');
+      if (!modal) return;
+
+      // Ensure map data is loaded before opening modal
+      if (!_mapNodesData || _mapNodesData.length === 0) {
+        try {
+          const r = await fetch('/api/graph/map-data');
+          const mapData = await r.json();
+          _mapNodesData = mapData.nodes || [];
+          _mapEdgesData = mapData.edges || [];
+          _mapNodesData.forEach(n => { n.complaint_count = 0; });
+        } catch (e) { /* continue with empty if fetch fails */ }
+      }
+
+      // Populate Parent Dropdown from current nodes
+      const parentSelect = document.getElementById('addNodeParentSelect');
+      if (parentSelect) {
+        if (_mapNodesData && _mapNodesData.length > 0) {
+          parentSelect.innerHTML = _mapNodesData.map(n => {
+            const isSelected = (_selectedZoneName === n.area) || (!_selectedZoneName && n.level === 0);
+            return `<option value="${escapeHtml(n.area)}" ${isSelected ? 'selected' : ''}>${escapeHtml(n.area)} [${n.role || 'Node'} · L${n.level || 0}]</option>`;
+          }).join('');
+        } else {
+          parentSelect.innerHTML = '<option value="Central Zone (Chowk)">Central Zone (Chowk) [Root Node · L0]</option>';
+        }
+      }
+
+      // Suggest next zone code
+      const existingZones = new Set((_mapNodesData || []).map(n => n.zone));
+      let nextZone = 'Zone J';
+      for (let i = 65; i <= 90; i++) {
+        const candidate = 'Zone ' + String.fromCharCode(i);
+        if (!existingZones.has(candidate)) { nextZone = candidate; break; }
+      }
+      const zoneInput = document.getElementById('addNodeZoneCode');
+      if (zoneInput) zoneInput.value = nextZone;
+      const nameInput = document.getElementById('addNodeAreaName');
+      if (nameInput) nameInput.value = '';
+
+      // Reset branch selection to auto
+      const autoRadio = document.querySelector('input[name="addNodeBranch"][value="auto"]');
+      if (autoRadio) autoRadio.checked = true;
+      onBranchRadioChange();
+      updateAddNodePreview();
+
+      modal.style.display = 'flex';
+      setTimeout(() => { if (nameInput) nameInput.focus(); }, 120);
+    }
+
+    function quickSelectParent(areaName) {
+      const sel = document.getElementById('addNodeParentSelect');
+      if (!sel) return;
+      // Try to select the matching option
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === areaName) {
+          sel.selectedIndex = i;
+          break;
+        }
+      }
+      updateAddNodePreview();
+    }
+
+    function closeAddNodeModal() {
+      const modal = document.getElementById('adminAddNodeModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function onBranchRadioChange() {
+      const radios = document.getElementsByName('addNodeBranch');
+      let val = 'auto';
+      for (const r of radios) {
+        if (r.checked) { val = r.value; break; }
+      }
+
+      const lAuto = document.getElementById('labelBranchAuto');
+      const lLeft = document.getElementById('labelBranchLeft');
+      const lRight = document.getElementById('labelBranchRight');
+
+      if (lAuto) {
+        lAuto.style.background = val === 'auto' ? 'rgba(6,182,212,0.15)' : '#111a2e';
+        lAuto.style.borderColor = val === 'auto' ? '#06b6d4' : 'rgba(255,255,255,0.12)';
+        lAuto.style.color = val === 'auto' ? '#f8fafc' : '#94a3b8';
+      }
+      if (lLeft) {
+        lLeft.style.background = val === 'left' ? 'rgba(16,185,129,0.15)' : '#111a2e';
+        lLeft.style.borderColor = val === 'left' ? '#10b981' : 'rgba(255,255,255,0.12)';
+        lLeft.style.color = val === 'left' ? '#f8fafc' : '#94a3b8';
+      }
+      if (lRight) {
+        lRight.style.background = val === 'right' ? 'rgba(245,158,11,0.15)' : '#111a2e';
+        lRight.style.borderColor = val === 'right' ? '#f59e0b' : 'rgba(255,255,255,0.12)';
+        lRight.style.color = val === 'right' ? '#f8fafc' : '#94a3b8';
+      }
+
+      updateAddNodePreview();
+    }
+
+    function updateAddNodePreview() {
+      const name = (document.getElementById('addNodeAreaName')?.value || '').trim() || 'New Ward';
+      const parent = document.getElementById('addNodeParentSelect')?.value || 'Central Zone (Chowk)';
+      const zone = (document.getElementById('addNodeZoneCode')?.value || '').trim() || 'Zone ?';
+
+      const parentNode = (_mapNodesData || []).find(n => n.area === parent);
+      const parentLevel = parentNode ? (parentNode.level || 0) : 0;
+      const newLevel = Math.min(parentLevel + 1, 3);
+      const parentShort = parentNode ? (parentNode.short_label || parentNode.area.split(' ')[0]) : (parent.split(' ')[0]);
+      const parentZone = parentNode ? (parentNode.zone || parentNode.code || 'Zone A') : 'Zone A';
+
+      const radios = document.getElementsByName('addNodeBranch');
+      let branch = 'auto';
+      for (const r of radios) { if (r.checked) { branch = r.value; break; } }
+
+      // ── Update Level Badge ──
+      const badgeEl = document.getElementById('addNodePreviewLevelBadge');
+      if (badgeEl) badgeEl.textContent = `Level ${newLevel}`;
+
+      // ── Update Mini SVG ──
+      // Branch path: left curves to (90,140), right to (250,140), auto stays center (170,140)
+      let childX = 170;
+      let branchLabel = 'Auto Intelligent Branch';
+      let pathStroke = '#10b981';
+      if (branch === 'left') { childX = 90; branchLabel = 'Left Child Slot (L)'; pathStroke = '#10b981'; }
+      if (branch === 'right') { childX = 250; branchLabel = 'Right Child Slot (R)'; pathStroke = '#f59e0b'; }
+
+      // Curve control: arc from parent center (170,45) to child position
+      const pathD = `M 170 45 C 170 95, ${childX} 95, ${childX} 140`;
+      const branchPath = document.getElementById('miniSvgBranchPath');
+      if (branchPath) {
+        branchPath.setAttribute('d', pathD);
+        branchPath.setAttribute('stroke', pathStroke);
+        // Update arrowhead color
+        const miniArrow = document.getElementById('miniArrow');
+        if (miniArrow) { const p = miniArrow.querySelector('path'); if (p) p.setAttribute('fill', pathStroke); }
+      }
+
+      // Move child node group to new X position
+      const childGroup = document.getElementById('miniSvgChildGroup');
+      if (childGroup) childGroup.setAttribute('transform', `translate(${childX}, 140)`);
+
+      // Update parent node labels
+      const pZone = document.getElementById('miniSvgParentZone');
+      if (pZone) pZone.textContent = parentZone;
+      const pLabel = document.getElementById('miniSvgParentLabel');
+      if (pLabel) pLabel.textContent = parentShort.substring(0, 10);
+
+      // Update child node labels
+      const cZone = document.getElementById('miniSvgChildZone');
+      if (cZone) { cZone.textContent = zone.substring(0, 8); cZone.setAttribute('fill', pathStroke); }
+      const cLabel = document.getElementById('miniSvgChildLabel');
+      if (cLabel) cLabel.textContent = name.substring(0, 12);
+
+      // Update info summary below SVG
+      const branchTextEl = document.getElementById('miniSvgBranchText');
+      if (branchTextEl) { branchTextEl.textContent = branchLabel; branchTextEl.style.color = pathStroke; }
+      const pathTextEl = document.getElementById('miniSvgPathText');
+      if (pathTextEl) pathTextEl.textContent = `${parentShort} → ${name.substring(0, 12)}`;
+      const parentNameEl = document.getElementById('miniSvgParentNameText');
+      if (parentNameEl) parentNameEl.textContent = parent;
+    }
+
+    async function submitAddNodeForm(e) {
+      e.preventDefault();
+      const name = (document.getElementById('addNodeAreaName').value || '').trim();
+      const parent = document.getElementById('addNodeParentSelect').value;
+      const zoneCode = (document.getElementById('addNodeZoneCode').value || '').trim();
+      const role = document.getElementById('addNodeRole').value;
+
+      const radios = document.getElementsByName('addNodeBranch');
+      let branch = 'auto';
+      for (const r of radios) { if (r.checked) { branch = r.value; break; } }
+
+      if (!name) {
+        showToast('Please provide a location name.', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('submitAddNodeBtn');
+      const origHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
+
+      try {
+        const res = await fetch('/api/graph/add-node', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            node_name: name,
+            neighbor: parent,
+            zone_code: zoneCode,
+            branch: branch,
+            role: role,
+            description: `${role} connected under ${parent}`
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(data.message || `Location '${name}' added successfully!`, 'success');
+          closeAddNodeModal();
+
+          // Refresh the location graph
+          loadAreaMap();
+
+          // Select and highlight the newly added node after graph reload
+          setTimeout(() => {
+            selectZone(name);
+            const searchSel = document.getElementById('adminBfsSearchSelect');
+            if (searchSel) searchSel.value = name;
+          }, 350);
+        } else {
+          showToast(data.message || 'Failed to add node to graph.', 'error');
+        }
+      } catch (err) {
+        showToast('Network error while adding node.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+
+    function adminAddNodePrompt() {
+      openAddNodeModal();
+    }
+
+    function adminRunBfsSearch() {
+      const selected = document.getElementById('adminBfsSearchSelect').value;
+      if (!selected) {
+        if (typeof showToast === 'function') {
+          showToast('Please select a start location from the dropdown first.', 'warning');
+        } else {
+          alert('Please select a start location from the dropdown first.');
+        }
+        return;
+      }
+      adminExecuteBfs(selected);
+    }
+
+    function adminExecuteBfs(startNode) {
+      adminResetBfs();
+      _bfsRunning = true;
+      const start = startNode || 'Central Zone (Chowk)';
+
+      const qBar = document.getElementById('adminBfsQueueBar');
+      const badge = document.getElementById('adminBfsBadge');
+      const msg = document.getElementById('adminBfsMsg');
+      const qItems = document.getElementById('adminBfsQueueItems');
+      const vItems = document.getElementById('adminBfsVisitedItems');
+
+      if (qBar) qBar.style.display = 'flex';
+      if (badge) {
+        badge.textContent = 'EXPLORING';
+        badge.style.background = 'rgba(245,158,11,0.2)';
+        badge.style.color = '#f59e0b';
+      }
+      if (msg) msg.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Starting BFS at <strong>${escapeHtml(start)}</strong> (First Node)...`;
+
+      // Select zone to display its complaints right away
+      selectZone(start);
+
+      // Start BFS directly from the selected node!
+      const url = `/api/graph/bfs?start=${encodeURIComponent(start)}`;
+
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          const steps = data.steps || [];
+          let stepIndex = 0;
+
+          _bfsTimer = setInterval(() => {
+            if (stepIndex >= steps.length) {
+              clearInterval(_bfsTimer);
+              _bfsTimer = null;
+              _bfsRunning = false;
+
+              if (badge) {
+                badge.textContent = 'COMPLETED';
+                badge.style.background = 'rgba(16,185,129,0.2)';
+                badge.style.color = '#10b981';
+              }
+              const visitedNames = (data.visited || []).map(s => getShortLabel(s)).join(' &rarr; ');
+              if (msg) {
+                msg.innerHTML = `&check; <strong style="color:#10b981;">BFS Completed from "${escapeHtml(start)}"!</strong> Traversal sequence: <span style="color:#38bdf8;font-weight:700;">${visitedNames}</span>`;
+              }
+              return;
+            }
+
+            const step = steps[stepIndex];
+            const visiting = step.visiting;
+
+            // Update realtime Queue & Visited state
+            if (qItems) {
+              qItems.textContent = (step.queue_state && step.queue_state.length > 0)
+                ? `[ ${step.queue_state.map(s => getShortLabel(s)).join(', ')} ]`
+                : '[ empty ]';
+            }
+            if (vItems) {
+              vItems.textContent = (step.visited_state && step.visited_state.length > 0)
+                ? step.visited_state.map(s => getShortLabel(s)).join(' → ')
+                : '[ none ]';
+            }
+            if (msg) {
+              msg.innerHTML = step.message || `Visiting ${escapeHtml(visiting)}...`;
+            }
+
+            // Highlight currently visiting node
+            const nodeEl = document.getElementById(`node_${safeId(visiting)}`);
+            if (nodeEl) {
+              const circle = nodeEl.querySelector('.point-circle');
+              const halo = nodeEl.querySelector('.point-halo');
+              const label = nodeEl.querySelector('.point-label');
+              const isFirstNode = (visiting === start);
+              if (circle) {
+                circle.setAttribute('fill', isFirstNode ? '#1e3a5f' : '#0f2b48');
+                circle.setAttribute('stroke', isFirstNode ? '#f59e0b' : '#38bdf8');
+                circle.setAttribute('stroke-width', isFirstNode ? '4' : '3.5');
+              }
+              if (halo) {
+                halo.setAttribute('fill', isFirstNode ? 'rgba(245, 158, 11, 0.45)' : 'rgba(56, 189, 248, 0.35)');
+                halo.setAttribute('stroke', isFirstNode ? '#f59e0b' : '#38bdf8');
+              }
+              if (label) {
+                label.setAttribute('fill', isFirstNode ? '#f59e0b' : '#38bdf8');
+              }
+            }
+
+            // Light up edges to newly discovered children
+            if (step.discovered && step.discovered.length > 0) {
+              step.discovered.forEach(disc => {
+                const e1 = document.getElementById(`edge_${safeId(visiting)}_${safeId(disc)}`);
+                const e2 = document.getElementById(`edge_${safeId(disc)}_${safeId(visiting)}`);
+                if (e1) { e1.setAttribute('stroke', '#06b6d4'); e1.setAttribute('stroke-width', '3.5'); }
+                if (e2) { e2.setAttribute('stroke', '#06b6d4'); e2.setAttribute('stroke-width', '3.5'); }
+              });
+            }
+
+            stepIndex++;
+          }, 600);
+        })
+        .catch(err => {
+          console.error('BFS execution error:', err);
+          if (msg) msg.innerHTML = `<span style="color:#ef4444;">Error executing BFS: ${err.message}</span>`;
+          _bfsRunning = false;
+        });
+    }
+
+    // ── Eagerly preload graph map data on page ready (background) ──
+    // This ensures _mapNodesData is populated even before the user visits the Map tab.
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!_mapNodesData || _mapNodesData.length === 0) {
+        fetch('/api/graph/map-data')
+          .then(r => r.json())
+          .then(mapData => {
+            _mapNodesData = mapData.nodes || [];
+            _mapEdgesData = mapData.edges || [];
+            _mapNodesData.forEach(n => { n.complaint_count = 0; });
+          })
+          .catch(() => { });
+      }
+    });
+  </script>
+
+</body>
+
+</html>

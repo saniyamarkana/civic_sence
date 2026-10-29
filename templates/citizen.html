@@ -239,22 +239,40 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label">6. Attach Issue Photo (Optional)</label>
+                <label class="form-label">6. Attach Issue Photo (Mandatory) *</label>
                 <div class="img-upload-zone" id="complaintImgZone">
-                  <input type="file" id="complaintImgInput" name="complaint_image" accept="image/*" onchange="previewComplaintImg(this)">
+                  <input type="file" id="complaintImgInput" name="complaint_image" accept="image/*" onchange="previewComplaintImg(this)" required>
                   <div class="upload-icon"><i class="fa-solid fa-camera"></i></div>
                   <span class="upload-label">Click or drag to attach a photo</span>
-                  <span class="upload-hint">PNG, JPG, WEBP up to 10MB</span>
+                  <span class="upload-hint">PNG, JPG, WEBP, AVIF up to 15MB (Required for AI Verification)</span>
                 </div>
                 <div id="complaintImgPreview" style="display:none;" class="img-preview-wrap">
                   <img id="complaintImgPreviewImg" src="" alt="Preview">
-                  <button class="remove-img-btn" onclick="removeComplaintImg()" type="button"><i class="fa-solid fa-xmark"></i></button>
+                  <button class="remove-img-btn" onclick="removeComplaintImg()" type="button" title="Remove / Replace Image"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- AI Verification Section -->
+                <div id="aiVerificationSection" style="display: none; margin-top: 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 14px 18px;">
+                  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" id="aiVerifyBtn" class="btn btn-secondary btn-sm" onclick="runAiVerification()" style="background: rgba(6, 182, 212, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-weight: 700; padding: 9px 18px;">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Verify Image with AI
+                    </button>
+                    <button type="button" id="aiReplaceBtn" class="btn btn-secondary btn-sm" onclick="triggerReplaceImage()" style="display: none; padding: 9px 16px; border: 1px solid var(--border-color);">
+                      <i class="fa-solid fa-repeat"></i> Choose Another Image
+                    </button>
+                    <span id="aiVerifyLoading" style="display: none; color: var(--accent-cyan); font-size: 13px; font-weight: 600;">
+                      <i class="fa-solid fa-spinner fa-spin"></i> AI is analyzing your complaint image...
+                    </span>
+                  </div>
+
+                  <!-- AI Verification Result Banner -->
+                  <div id="aiVerifyResult" style="display: none; margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.5;"></div>
                 </div>
               </div>
 
               <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px;">
                 <button type="button" class="btn btn-secondary" onclick="switchTab('complaints')">Cancel</button>
-                <button type="submit" class="btn btn-primary" style="padding: 14px 28px;">
+                <button type="submit" id="submitComplaintBtn" class="btn btn-primary" style="display: none; padding: 14px 28px;" title="Submit your AI-verified complaint">
                   <i class="fa-solid fa-paper-plane"></i> Submit Complaint
                 </button>
               </div>
@@ -386,7 +404,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
           <div class="form-group">
             <label class="form-label">Category</label>
-            <select id="editCategory" class="form-control">
+            <select id="editCategory" class="form-control" onchange="onEditCategoryChange()">
               <option value="Garbage">🗑️ Garbage</option>
               <option value="Pothole">🕳️ Pothole</option>
               <option value="Water Leakage">💧 Water Leak</option>
@@ -437,7 +455,31 @@
               <span style="font-size: 11px; color: var(--text-muted);">Choose a new image file to replace it.</span>
             </div>
           </div>
-          <input type="file" id="editPhotoInput" accept="image/*" class="form-control">
+          <input type="file" id="editPhotoInput" accept="image/*" class="form-control" onchange="previewEditComplaintImg(this)">
+
+          <!-- New Photo Preview Wrap -->
+          <div id="editNewPhotoPreviewWrap" style="display: none; margin-top: 10px; position: relative; width: 100%; max-height: 180px; border-radius: 8px; overflow: hidden; border: 1px solid var(--accent-cyan);">
+            <img id="editNewPhotoPreviewImg" src="" alt="New photo preview" style="width: 100%; max-height: 180px; object-fit: cover; display: block;">
+            <button type="button" onclick="cancelEditNewPhoto()" style="position: absolute; top: 8px; right: 8px; background: rgba(239, 68, 68, 0.85); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;" title="Remove new photo"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <!-- Edit AI Verification Section -->
+          <div id="editAiVerificationSection" style="display: none; margin-top: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 14px 18px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <button type="button" id="editAiVerifyBtn" class="btn btn-secondary btn-sm" onclick="runEditAiVerification()" style="background: rgba(6, 182, 212, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-weight: 700; padding: 9px 18px;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Verify Image with AI
+              </button>
+              <button type="button" id="editAiReplaceBtn" class="btn btn-secondary btn-sm" onclick="document.getElementById('editPhotoInput').click()" style="display: none; padding: 9px 16px; border: 1px solid var(--border-color);">
+                <i class="fa-solid fa-repeat"></i> Choose Another Image
+              </button>
+              <span id="editAiVerifyLoading" style="display: none; color: var(--accent-cyan); font-size: 13px; font-weight: 600;">
+                <i class="fa-solid fa-spinner fa-spin"></i> AI is analyzing your complaint image...
+              </span>
+            </div>
+
+            <!-- AI Verification Result Banner -->
+            <div id="editAiVerifyResult" style="display: none; margin-top: 12px; padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.5;"></div>
+          </div>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 16px;">

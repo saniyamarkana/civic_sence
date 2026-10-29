@@ -7,6 +7,11 @@ let selectedCategory = 'Garbage';
 let selectedPriority = 'Medium';
 let currentRating = 5;
 let attachedComplaintFile = null;
+let aiVerificationState = {
+  verified: false,
+  token: null,
+  category: null
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   loadCitizenComplaints();
@@ -100,6 +105,11 @@ function renderComplaints(data) {
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px;">
+          ${c.ai_verified ? `
+            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); font-weight: 700;" title="Verified by AI Image Recognition Engine">
+              <i class="fa-solid fa-shield-check"></i> AI Verified
+            </span>
+          ` : ''}
           <span class="badge ${c.priority === 'High' ? 'badge-rejected' : (c.priority === 'Medium' ? 'badge-pending' : 'badge-resolved')}">
             ${c.priority} Priority
           </span>
@@ -160,9 +170,15 @@ function filterComplaints() {
 
 // ─────────────────────────── Complaint Wizard Submissions ───────────────────────────
 function selectCategory(cat, el) {
+  const previousCategory = selectedCategory;
   selectedCategory = cat;
   document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
   if (el) el.classList.add('selected');
+
+  // If category changed after a previous AI verification, invalidate it to enforce integrity
+  if (aiVerificationState.verified && previousCategory !== cat) {
+    invalidateAiVerification(`Category changed to "${cat}". Please click "Verify Image with AI" to re-verify your image for the new category.`);
+  }
 }
 
 function selectPriority(prio, el) {
@@ -171,16 +187,260 @@ function selectPriority(prio, el) {
   if (el) el.classList.add('selected');
 }
 
+function invalidateAiVerification(reasonMsg = null) {
+  aiVerificationState = {
+    verified: false,
+    token: null,
+    category: null
+  };
+
+  const submitBtn = document.getElementById('submitComplaintBtn');
+  if (submitBtn) {
+    submitBtn.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.title = 'Please upload and verify an image with AI first';
+  }
+
+  const resultBox = document.getElementById('aiVerifyResult');
+  const replaceBtn = document.getElementById('aiReplaceBtn');
+  if (replaceBtn) replaceBtn.style.display = 'none';
+
+  if (resultBox) {
+    if (reasonMsg) {
+      resultBox.style.display = 'block';
+      resultBox.style.background = 'rgba(245, 158, 11, 0.15)';
+      resultBox.style.border = '1px solid #f59e0b';
+      resultBox.style.color = '#fde68a';
+      resultBox.innerHTML = `
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b; margin-top: 2px;"></i>
+          <div>
+            <strong>Re-Verification Required:</strong> ${reasonMsg}
+          </div>
+        </div>
+      `;
+    } else {
+      resultBox.style.display = 'none';
+      resultBox.innerHTML = '';
+    }
+  }
+
+  const verifyBtn = document.getElementById('aiVerifyBtn');
+  if (verifyBtn) {
+    verifyBtn.disabled = false;
+    verifyBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Verify Image with AI';
+  }
+}
+
+function triggerReplaceImage() {
+  const input = document.getElementById('complaintImgInput');
+  if (input) input.click();
+}
+
+async function runAiVerification() {
+  const imgInput = document.getElementById('complaintImgInput');
+  const fileToVerify = (imgInput && imgInput.files && imgInput.files[0]) || attachedComplaintFile;
+
+  if (!fileToVerify) {
+    showToast('Please attach or drop a complaint photograph first.', 'warning');
+    return;
+  }
+
+  const title = document.getElementById('reportTitle') ? document.getElementById('reportTitle').value.trim() : '';
+  const desc = document.getElementById('reportDesc') ? document.getElementById('reportDesc').value.trim() : '';
+  const verifyBtn = document.getElementById('aiVerifyBtn');
+  const loadingSpan = document.getElementById('aiVerifyLoading');
+  const resultBox = document.getElementById('aiVerifyResult');
+  const replaceBtn = document.getElementById('aiReplaceBtn');
+  const submitBtn = document.getElementById('submitComplaintBtn');
+
+  if (verifyBtn) verifyBtn.disabled = true;
+  if (loadingSpan) loadingSpan.style.display = 'inline-block';
+  if (resultBox) resultBox.style.display = 'none';
+  if (replaceBtn) replaceBtn.style.display = 'none';
+  if (submitBtn) submitBtn.disabled = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('complaint_image', fileToVerify);
+    formData.append('category', selectedCategory);
+    formData.append('title', title);
+    formData.append('description', desc);
+
+    const res = await fetch('/api/verify-complaint-image', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      if (data.status === 'verified') {
+        // Successful verification
+        aiVerificationState = {
+          verified: true,
+          token: data.verification_token,
+          category: selectedCategory
+        };
+
+        if (submitBtn) {
+          submitBtn.style.display = 'inline-flex';
+          submitBtn.disabled = false;
+          submitBtn.title = 'Image verified. You can now submit your complaint!';
+        }
+
+        if (resultBox) {
+          resultBox.style.display = 'block';
+          resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
+          resultBox.style.border = '1px solid #10b981';
+          resultBox.style.color = '#a7f3d0';
+          resultBox.innerHTML = `
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 16px; margin-top: 2px;"></i>
+              <div>
+                <strong>Image Verified:</strong> The uploaded image appears relevant to your selected complaint category (<strong>${selectedCategory}</strong>). You can now submit your complaint.
+                <div style="font-size: 11px; margin-top: 4px; opacity: 0.85;">
+                  <i class="fa-solid fa-microchip"></i> Engine: ${data.model_used} &bull; Confidence: ${(data.confidence * 100).toFixed(0)}%
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        showToast('Image verified successfully with AI!', 'success');
+
+      } else if (data.status === 'mismatch') {
+        // Category mismatch (e.g. dog image for pothole)
+        aiVerificationState = { verified: false, token: null, category: null };
+        if (submitBtn) {
+          submitBtn.style.display = 'none';
+          submitBtn.disabled = true;
+        }
+        if (replaceBtn) replaceBtn.style.display = 'inline-block';
+
+        const detected = (data.detected_objects && data.detected_objects.length > 0)
+          ? data.detected_objects.join(', ')
+          : 'unrelated object';
+
+        if (resultBox) {
+          resultBox.style.display = 'block';
+          resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+          resultBox.style.border = '1px solid #ef4444';
+          resultBox.style.color = '#fca5a5';
+          resultBox.innerHTML = `
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; font-size: 16px; margin-top: 2px;"></i>
+              <div>
+                <strong>Image Verification Failed:</strong> The uploaded image does not appear to match the selected complaint category, <strong>${selectedCategory}</strong>.
+                <div style="margin-top: 4px;">Detected: <em>${detected}</em>. Please upload a relevant photograph of the ${selectedCategory} issue.</div>
+                <div style="font-size: 11px; margin-top: 5px; opacity: 0.85;">
+                  <i class="fa-solid fa-microchip"></i> Verified by: ${data.model_used}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        showToast(`Image does not match ${selectedCategory}. Please upload a relevant photo.`, 'error');
+
+      } else {
+        // Uncertain result
+        aiVerificationState = { verified: false, token: null, category: null };
+        if (submitBtn) {
+          submitBtn.style.display = 'none';
+          submitBtn.disabled = true;
+        }
+        if (replaceBtn) replaceBtn.style.display = 'inline-block';
+
+        if (resultBox) {
+          resultBox.style.display = 'block';
+          resultBox.style.background = 'rgba(245, 158, 11, 0.15)';
+          resultBox.style.border = '1px solid #f59e0b';
+          resultBox.style.color = '#fde68a';
+          resultBox.innerHTML = `
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <i class="fa-solid fa-circle-question" style="color: #f59e0b; font-size: 16px; margin-top: 2px;"></i>
+              <div>
+                <strong>Verification Inconclusive:</strong> Unable to verify this image confidently. Please upload a clearer photograph showing the reported problem, or try another photo.
+                <div style="font-size: 11px; margin-top: 4px; opacity: 0.85;">
+                  Confidence: ${(data.confidence * 100).toFixed(0)}% &bull; Model: ${data.model_used}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        showToast('Unable to verify image confidently. Please upload a clearer photograph.', 'warning');
+      }
+    } else {
+      // Error message from server
+      aiVerificationState = { verified: false, token: null, category: null };
+      if (submitBtn) {
+        submitBtn.style.display = 'none';
+        submitBtn.disabled = true;
+      }
+      if (replaceBtn) replaceBtn.style.display = 'inline-block';
+
+      if (resultBox) {
+        resultBox.style.display = 'block';
+        resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+        resultBox.style.border = '1px solid #ef4444';
+        resultBox.style.color = '#fca5a5';
+        resultBox.innerHTML = `
+          <div style="display: flex; gap: 8px; align-items: flex-start;">
+            <i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 16px; margin-top: 2px;"></i>
+            <div>
+              <strong>Validation Error:</strong> ${data.message || 'Unable to process image.'}
+            </div>
+          </div>
+        `;
+      }
+      showToast(data.message || 'Image verification failed.', 'error');
+    }
+  } catch (err) {
+    console.error('AI Verification error:', err);
+    if (resultBox) {
+      resultBox.style.display = 'block';
+      resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+      resultBox.style.border = '1px solid #ef4444';
+      resultBox.style.color = '#fca5a5';
+      resultBox.innerHTML = `
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; font-size: 16px; margin-top: 2px;"></i>
+          <div>
+            <strong>Service Notice:</strong> Could not connect to AI verification service. Please retry.
+          </div>
+        </div>
+      `;
+    }
+    showToast('Failed to connect to AI verification service. Please retry.', 'error');
+  } finally {
+    if (verifyBtn) verifyBtn.disabled = false;
+    if (loadingSpan) loadingSpan.style.display = 'none';
+  }
+}
+
 async function submitNewComplaint(e) {
   e.preventDefault();
   const title = document.getElementById('reportTitle').value.trim();
   const location = document.getElementById('reportLocation').value.trim();
   const description = document.getElementById('reportDesc').value.trim();
   const imgInput = document.getElementById('complaintImgInput');
-  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const submitBtn = document.getElementById('submitComplaintBtn') || e.target.querySelector('button[type="submit"]');
 
   if (!title || !location) {
     showToast('Please fill in title and location.', 'error');
+    return;
+  }
+
+  // 1. Mandatory Image Check
+  const fileToUpload = (imgInput && imgInput.files && imgInput.files[0]) || attachedComplaintFile;
+  if (!fileToUpload) {
+    showToast('Complaint photograph is mandatory. Please upload an image.', 'error');
+    return;
+  }
+
+  // 2. Client-side AI Verification Check
+  if (!aiVerificationState.verified || aiVerificationState.category !== selectedCategory) {
+    showToast(`AI Verification required: Please click "Verify Image with AI" for category "${selectedCategory}" first.`, 'warning');
+    const aiSec = document.getElementById('aiVerificationSection');
+    if (aiSec) aiSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
 
@@ -190,30 +450,28 @@ async function submitNewComplaint(e) {
   }
 
   try {
-    // Use FormData so we can include the image file
     const formData = new FormData();
     formData.append('title', title);
     formData.append('category', selectedCategory);
     formData.append('location', location);
     formData.append('priority', selectedPriority);
     formData.append('description', description);
-
-    // Get image from file input or tracked dropped/pasted file
-    const fileToUpload = (imgInput && imgInput.files && imgInput.files[0]) || attachedComplaintFile;
-    if (fileToUpload) {
-      formData.append('complaint_image', fileToUpload);
+    formData.append('complaint_image', fileToUpload);
+    if (aiVerificationState.token) {
+      formData.append('verification_token', aiVerificationState.token);
     }
 
     const res = await fetch('/api/complaints', {
       method: 'POST',
-      body: formData  // No Content-Type header — browser automatically sets boundary
+      body: formData
     });
     const data = await res.json();
 
     if (data.success) {
-      showToast(data.message || 'Complaint submitted successfully!', 'success');
+      showToast(data.message || 'Complaint registered and AI-verified successfully!', 'success');
       document.getElementById('newComplaintForm').reset();
       removeComplaintImg();
+      invalidateAiVerification();
       await loadCitizenComplaints();
       switchTab('complaints');
     } else {
@@ -223,7 +481,8 @@ async function submitNewComplaint(e) {
     showToast('Server communication error while submitting complaint.', 'error');
   } finally {
     if (submitBtn) {
-      submitBtn.disabled = false;
+      submitBtn.style.display = aiVerificationState.verified ? 'inline-flex' : 'none';
+      submitBtn.disabled = !aiVerificationState.verified;
       submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Complaint';
     }
   }
@@ -235,16 +494,23 @@ function previewComplaintImg(input) {
   if (!file) return;
   attachedComplaintFile = file;
 
+  // Invalidate previous verification whenever image changes
+  invalidateAiVerification();
+
   const previewWrap = document.getElementById('complaintImgPreview');
   const previewImg = document.getElementById('complaintImgPreviewImg');
-  if (!previewWrap || !previewImg) return;
+  if (previewWrap && previewImg) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImg.src = e.target.result;
+      previewWrap.style.display = 'inline-block';
+    };
+    reader.readAsDataURL(file);
+  }
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    previewImg.src = e.target.result;
-    previewWrap.style.display = 'inline-block';
-  };
-  reader.readAsDataURL(file);
+  // Show the AI verification section
+  const aiSection = document.getElementById('aiVerificationSection');
+  if (aiSection) aiSection.style.display = 'block';
 }
 
 function removeComplaintImg() {
@@ -255,6 +521,10 @@ function removeComplaintImg() {
   if (previewWrap) previewWrap.style.display = 'none';
   const previewImg = document.getElementById('complaintImgPreviewImg');
   if (previewImg) previewImg.src = '';
+
+  invalidateAiVerification();
+  const aiSection = document.getElementById('aiVerificationSection');
+  if (aiSection) aiSection.style.display = 'none';
 }
 
 function setupImageDropZone() {
@@ -659,7 +929,14 @@ function closeLightbox() {
   if (lb) lb.classList.remove('open');
 }
 
-// ─────────────────────────── Edit / Update Complaint Modal ───────────────────────────
+// ─────────────────────────── Edit / Update Complaint Modal with AI Verification ───────────────────────────
+let editAiVerificationState = {
+  verified: false,
+  token: null,
+  category: null,
+  newFileSelected: false
+};
+
 async function openEditComplaintModal(cid) {
   let c = citizenComplaints.find(item => item.id == cid);
   if (!c) {
@@ -719,8 +996,39 @@ function populateEditModal(c) {
     photoImg.src = '';
   }
 
+  // Reset file input & new photo preview
   const fileInput = document.getElementById('editPhotoInput');
   if (fileInput) fileInput.value = '';
+
+  const newPrev = document.getElementById('editNewPhotoPreviewWrap');
+  if (newPrev) newPrev.style.display = 'none';
+
+  // Reset Edit AI Verification State
+  editAiVerificationState = {
+    verified: false,
+    token: null,
+    category: c.category || 'Garbage',
+    newFileSelected: false
+  };
+
+  const aiSec = document.getElementById('editAiVerificationSection');
+  if (aiSec) aiSec.style.display = 'none';
+
+  const aiRes = document.getElementById('editAiVerifyResult');
+  if (aiRes) {
+    aiRes.style.display = 'none';
+    aiRes.innerHTML = '';
+  }
+
+  const replaceBtn = document.getElementById('editAiReplaceBtn');
+  if (replaceBtn) replaceBtn.style.display = 'none';
+
+  const submitBtn = document.getElementById('editSubmitBtn');
+  if (submitBtn) {
+    submitBtn.style.display = 'inline-flex';
+    submitBtn.disabled = false;
+    submitBtn.title = 'Save Changes';
+  }
 
   document.getElementById('editComplaintModal').style.display = 'flex';
 }
@@ -728,6 +1036,298 @@ function populateEditModal(c) {
 function closeEditModal() {
   const modal = document.getElementById('editComplaintModal');
   if (modal) modal.style.display = 'none';
+  editAiVerificationState = {
+    verified: false,
+    token: null,
+    category: null,
+    newFileSelected: false
+  };
+}
+
+function previewEditComplaintImg(input) {
+  if (!input || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const prevWrap = document.getElementById('editNewPhotoPreviewWrap');
+    const prevImg = document.getElementById('editNewPhotoPreviewImg');
+    if (prevImg) prevImg.src = e.target.result;
+    if (prevWrap) prevWrap.style.display = 'block';
+
+    const category = document.getElementById('editCategory') ? document.getElementById('editCategory').value : 'Garbage';
+
+    editAiVerificationState = {
+      verified: false,
+      token: null,
+      category: category,
+      newFileSelected: true
+    };
+
+    // Require AI verification before enabling Save Changes button
+    const submitBtn = document.getElementById('editSubmitBtn');
+    if (submitBtn) {
+      submitBtn.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.title = 'Please verify your updated image with AI first';
+    }
+
+    const aiSec = document.getElementById('editAiVerificationSection');
+    if (aiSec) aiSec.style.display = 'block';
+
+    const aiRes = document.getElementById('editAiVerifyResult');
+    if (aiRes) {
+      aiRes.style.display = 'none';
+      aiRes.innerHTML = '';
+    }
+
+    const replaceBtn = document.getElementById('editAiReplaceBtn');
+    if (replaceBtn) replaceBtn.style.display = 'none';
+
+    const verifyBtn = document.getElementById('editAiVerifyBtn');
+    if (verifyBtn) {
+      verifyBtn.disabled = false;
+      verifyBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Verify Image with AI';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function cancelEditNewPhoto() {
+  const input = document.getElementById('editPhotoInput');
+  if (input) input.value = '';
+
+  const prevWrap = document.getElementById('editNewPhotoPreviewWrap');
+  if (prevWrap) prevWrap.style.display = 'none';
+
+  const aiSec = document.getElementById('editAiVerificationSection');
+  if (aiSec) aiSec.style.display = 'none';
+
+  const aiRes = document.getElementById('editAiVerifyResult');
+  if (aiRes) {
+    aiRes.style.display = 'none';
+    aiRes.innerHTML = '';
+  }
+
+  editAiVerificationState = {
+    verified: false,
+    token: null,
+    category: null,
+    newFileSelected: false
+  };
+
+  const submitBtn = document.getElementById('editSubmitBtn');
+  if (submitBtn) {
+    submitBtn.style.display = 'inline-flex';
+    submitBtn.disabled = false;
+    submitBtn.title = 'Save Changes';
+  }
+}
+
+function onEditCategoryChange() {
+  const newCat = document.getElementById('editCategory').value;
+  if (editAiVerificationState.newFileSelected) {
+    if (editAiVerificationState.verified && editAiVerificationState.category !== newCat) {
+      editAiVerificationState.verified = false;
+      editAiVerificationState.token = null;
+
+      const submitBtn = document.getElementById('editSubmitBtn');
+      if (submitBtn) {
+        submitBtn.style.display = 'none';
+        submitBtn.disabled = true;
+      }
+
+      const aiRes = document.getElementById('editAiVerifyResult');
+      if (aiRes) {
+        aiRes.style.display = 'block';
+        aiRes.style.background = 'rgba(245, 158, 11, 0.15)';
+        aiRes.style.border = '1px solid #f59e0b';
+        aiRes.style.color = '#fde68a';
+        aiRes.innerHTML = `
+          <div style="display: flex; gap: 8px; align-items: flex-start;">
+            <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b; margin-top: 2px;"></i>
+            <div>
+              <strong>Category Changed to ${escapeHtml(newCat)}:</strong> Please re-verify your photograph with AI for the new category before saving changes.
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+}
+
+async function runEditAiVerification() {
+  const input = document.getElementById('editPhotoInput');
+  if (!input || !input.files || !input.files[0]) {
+    showToast('Please select a photograph to verify.', 'warning');
+    return;
+  }
+  const file = input.files[0];
+  const category = document.getElementById('editCategory') ? document.getElementById('editCategory').value : 'Garbage';
+  const title = document.getElementById('editTitle') ? document.getElementById('editTitle').value.trim() : '';
+  const desc = document.getElementById('editDescription') ? document.getElementById('editDescription').value.trim() : '';
+
+  const verifyBtn = document.getElementById('editAiVerifyBtn');
+  const loadingSpan = document.getElementById('editAiVerifyLoading');
+  const resultBox = document.getElementById('editAiVerifyResult');
+  const replaceBtn = document.getElementById('editAiReplaceBtn');
+  const submitBtn = document.getElementById('editSubmitBtn');
+
+  if (verifyBtn) verifyBtn.disabled = true;
+  if (loadingSpan) loadingSpan.style.display = 'inline-block';
+  if (resultBox) resultBox.style.display = 'none';
+  if (replaceBtn) replaceBtn.style.display = 'none';
+  if (submitBtn) submitBtn.disabled = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('complaint_image', file);
+    formData.append('category', category);
+    formData.append('title', title);
+    formData.append('description', desc);
+
+    const res = await fetch('/api/verify-complaint-image', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      if (data.status === 'verified') {
+        editAiVerificationState = {
+          verified: true,
+          token: data.verification_token,
+          category: category,
+          newFileSelected: true
+        };
+
+        if (submitBtn) {
+          submitBtn.style.display = 'inline-flex';
+          submitBtn.disabled = false;
+          submitBtn.title = 'Image verified. You can now save your changes!';
+        }
+
+        if (resultBox) {
+          resultBox.style.display = 'block';
+          resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
+          resultBox.style.border = '1px solid #10b981';
+          resultBox.style.color = '#a7f3d0';
+          resultBox.innerHTML = `
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 16px; margin-top: 2px;"></i>
+              <div>
+                <strong>Image Verified:</strong> The updated image appears relevant to the complaint category (<strong>${escapeHtml(category)}</strong>). You can now save your changes.
+                <div style="font-size: 11px; margin-top: 4px; opacity: 0.85;">
+                  <i class="fa-solid fa-microchip"></i> Engine: ${escapeHtml(data.model_used || 'Pretrained Neural Net')} &bull; Confidence: ${(data.confidence * 100).toFixed(0)}%
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        showToast('Updated image verified successfully with AI!', 'success');
+
+      } else if (data.status === 'mismatch') {
+        editAiVerificationState = { verified: false, token: null, category: null, newFileSelected: true };
+        if (submitBtn) {
+          submitBtn.style.display = 'none';
+          submitBtn.disabled = true;
+        }
+        if (replaceBtn) replaceBtn.style.display = 'inline-block';
+
+        const detected = (data.detected_objects && data.detected_objects.length > 0)
+          ? data.detected_objects.join(', ')
+          : 'unrelated object';
+
+        if (resultBox) {
+          resultBox.style.display = 'block';
+          resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+          resultBox.style.border = '1px solid #ef4444';
+          resultBox.style.color = '#fca5a5';
+          resultBox.innerHTML = `
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; font-size: 16px; margin-top: 2px;"></i>
+              <div>
+                <strong>Image Verification Failed:</strong> The uploaded image does not appear to match the selected category, <strong>${escapeHtml(category)}</strong>.
+                <div style="margin-top: 4px;">Detected: <em>${escapeHtml(detected)}</em>. Please upload a relevant photograph of the ${escapeHtml(category)} issue.</div>
+                <div style="font-size: 11px; margin-top: 5px; opacity: 0.85;">
+                  <i class="fa-solid fa-microchip"></i> Verified by: ${escapeHtml(data.model_used || 'AI Engine')}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        showToast(`Image does not match ${category}. Please upload a relevant photo.`, 'error');
+
+      } else {
+        // Inconclusive / uncertain
+        editAiVerificationState = { verified: false, token: null, category: null, newFileSelected: true };
+        if (submitBtn) {
+          submitBtn.style.display = 'none';
+          submitBtn.disabled = true;
+        }
+        if (replaceBtn) replaceBtn.style.display = 'inline-block';
+
+        if (resultBox) {
+          resultBox.style.display = 'block';
+          resultBox.style.background = 'rgba(245, 158, 11, 0.15)';
+          resultBox.style.border = '1px solid #f59e0b';
+          resultBox.style.color = '#fde68a';
+          resultBox.innerHTML = `
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <i class="fa-solid fa-circle-question" style="color: #f59e0b; font-size: 16px; margin-top: 2px;"></i>
+              <div>
+                <strong>Verification Inconclusive:</strong> Unable to verify this image confidently. Please upload a clearer photograph showing the reported problem, or try another photo.
+                <div style="font-size: 11px; margin-top: 4px; opacity: 0.85;">
+                  Confidence: ${(data.confidence * 100).toFixed(0)}% &bull; Model: ${escapeHtml(data.model_used || 'AI Engine')}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        showToast('Unable to verify image confidently. Please upload a clearer photograph.', 'warning');
+      }
+    } else {
+      editAiVerificationState = { verified: false, token: null, category: null, newFileSelected: true };
+      if (submitBtn) {
+        submitBtn.style.display = 'none';
+        submitBtn.disabled = true;
+      }
+      if (replaceBtn) replaceBtn.style.display = 'inline-block';
+
+      if (resultBox) {
+        resultBox.style.display = 'block';
+        resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+        resultBox.style.border = '1px solid #ef4444';
+        resultBox.style.color = '#fca5a5';
+        resultBox.innerHTML = `
+          <div style="display: flex; gap: 8px; align-items: flex-start;">
+            <i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 16px; margin-top: 2px;"></i>
+            <div>
+              <strong>Validation Error:</strong> ${escapeHtml(data.message || 'Unable to process image.')}
+            </div>
+          </div>
+        `;
+      }
+      showToast(data.message || 'Image verification failed.', 'error');
+    }
+  } catch (err) {
+    console.error('Edit AI Verification error:', err);
+    if (resultBox) {
+      resultBox.style.display = 'block';
+      resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+      resultBox.style.border = '1px solid #ef4444';
+      resultBox.style.color = '#fca5a5';
+      resultBox.innerHTML = `
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; margin-top: 2px;"></i>
+          <div><strong>Network / Server Error:</strong> Could not reach AI verification service. Please try again.</div>
+        </div>
+      `;
+    }
+    showToast('AI verification service could not be reached.', 'error');
+  } finally {
+    if (verifyBtn) verifyBtn.disabled = false;
+    if (loadingSpan) loadingSpan.style.display = 'none';
+  }
 }
 
 async function submitEditComplaint(e) {
@@ -747,6 +1347,12 @@ async function submitEditComplaint(e) {
     return;
   }
 
+  // If a new photo has been selected, ensure AI verification has succeeded
+  if (editAiVerificationState.newFileSelected && !editAiVerificationState.verified) {
+    showToast('Please verify your updated photograph with AI before saving changes.', 'warning');
+    return;
+  }
+
   const formData = new FormData();
   formData.append('title', title);
   formData.append('category', category);
@@ -756,6 +1362,9 @@ async function submitEditComplaint(e) {
 
   if (photoInput && photoInput.files && photoInput.files.length > 0) {
     formData.append('complaint_image', photoInput.files[0]);
+    if (editAiVerificationState.token) {
+      formData.append('verification_token', editAiVerificationState.token);
+    }
   }
 
   if (submitBtn) {

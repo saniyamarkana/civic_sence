@@ -1793,11 +1793,15 @@ function renderGreedyScoreChart(orders) {
   const topList = orders.slice(0, 8);
   const labels = topList.map(c => `#${c.id} - ${(c.title || 'Complaint').substring(0, 16)}...`);
   const scores = topList.map(c => c.score ?? 0);
+  // Build gradient fills for each bar
+  const ctx0 = canvas.getContext('2d');
   const colors = topList.map(c => {
     const p = (c.priority || '').toLowerCase();
-    if (p === 'high' || p === 'critical') return 'rgba(249, 115, 22, 0.85)';
-    if (p === 'medium') return 'rgba(245, 158, 11, 0.85)';
-    return 'rgba(16, 185, 129, 0.85)';
+    const grad = ctx0.createLinearGradient(0, 0, 0, 220);
+    if (p === 'high' || p === 'critical') { grad.addColorStop(0, 'rgba(249,115,22,0.92)'); grad.addColorStop(1, 'rgba(239,68,68,0.55)'); }
+    else if (p === 'medium') { grad.addColorStop(0, 'rgba(245,158,11,0.92)'); grad.addColorStop(1, 'rgba(251,191,36,0.55)'); }
+    else { grad.addColorStop(0, 'rgba(16,185,129,0.92)'); grad.addColorStop(1, 'rgba(52,211,153,0.55)'); }
+    return grad;
   });
   const borderColors = topList.map(c => {
     const p = (c.priority || '').toLowerCase();
@@ -1934,21 +1938,28 @@ async function runGreedyAlgorithm() {
           tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#64748b;">No eligible complaints.</td></tr>';
         } else {
           tbody.innerHTML = orders.map((c, i) => {
+            const rank = i + 1;
             const isFirst = (i === 0);
+            const rankBadgeClass = rank === 1 ? 'greedy-rank-1' : rank === 2 ? 'greedy-rank-2' : rank === 3 ? 'greedy-rank-3' : 'greedy-rank-n';
+            const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
             const rowBg = isFirst
-              ? 'background: linear-gradient(90deg, rgba(16,185,129,0.08) 0%, transparent 100%);'
-              : (i % 2 === 0 ? '' : 'background: rgba(255,255,255,0.015);');
-            const borderLeft = isFirst ? 'border-left: 3px solid #10b981;' : '';
-            return `<tr style="${rowBg}${borderLeft} border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s;" onmouseenter="this.style.background='rgba(6,182,212,0.06)'" onmouseleave="this.style.background='${isFirst ? 'rgba(16,185,129,0.08)' : (i%2===0?'transparent':'rgba(255,255,255,0.015)')}'">
-              <td style="padding:12px;text-align:center;font-weight:900;color:${isFirst ? '#10b981' : '#94a3b8'};font-size:${isFirst?'14px':'12px'};">${isFirst ? '<i class=\"fa-solid fa-crown\" style=\"margin-right:3px;\"></i>' : ''}${i + 1}</td>
-              <td style="padding:12px;text-align:center;font-weight:800;color:#38bdf8;font-family:var(--font-mono);font-size:13px;">#${c.id}</td>
-              <td style="padding:12px 16px;font-weight:600;color:#e2e8f0;font-size:13px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(c.title || '')}">${escapeHtml(c.title || 'Untitled')}</td>
-              <td style="padding:12px 14px;font-size:12px;color:#cbd5e1;">${escapeHtml(c.category || '—')}</td>
-              <td style="padding:12px 14px;font-size:12px;color:#94a3b8;">${escapeHtml(c.location || '—')}</td>
-              <td style="padding:12px;text-align:center;">${_greedyPriorityBadge(c.priority)}</td>
-              <td style="padding:12px;text-align:center;font-weight:800;color:#10b981;font-family:var(--font-mono);font-size:13px;">${c.score !== undefined ? c.score : '—'}</td>
-              <td style="padding:12px;text-align:center;">${_greedyStatusBadge(c.status)}</td>
-              <td style="padding:12px 14px;font-size:11px;color:#64748b;">${_greedyFormatDate(c.created_at)}</td>
+              ? 'background: linear-gradient(90deg, rgba(16,185,129,0.09) 0%, rgba(6,182,212,0.04) 100%);border-left:3px solid #10b981;'
+              : (i % 2 === 0 ? '' : 'background: rgba(255,255,255,0.016);');
+            const hoverBg = isFirst ? 'rgba(16,185,129,0.12)' : 'rgba(56,189,248,0.07)';
+            const leaveBg = isFirst ? 'rgba(16,185,129,0.09)' : (i%2===0?'transparent':'rgba(255,255,255,0.016)');
+            const scoreColor = (c.score >= 80) ? '#10b981' : (c.score >= 50) ? '#fbbf24' : '#94a3b8';
+            return `<tr style="${rowBg} border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.22s;" onmouseenter="this.style.background='${hoverBg}'" onmouseleave="this.style.background='${leaveBg}'">
+              <td style="padding:14px;text-align:center;">
+                <span class="greedy-rank-badge ${rankBadgeClass}" style="${rank<=3?'':'font-size:11px;'}">${rankEmoji}</span>
+              </td>
+              <td style="padding:14px 12px;text-align:center;font-weight:900;color:#38bdf8;font-family:monospace;font-size:13px;">#${c.id}</td>
+              <td style="padding:14px 18px;font-weight:600;color:#e2e8f0;font-size:13px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(c.title || '')}">${escapeHtml(c.title || 'Untitled')}</td>
+              <td style="padding:14px;font-size:12px;color:#cbd5e1;">${escapeHtml(c.category || '—')}</td>
+              <td style="padding:14px;font-size:12px;color:#94a3b8;">${escapeHtml(c.location || '—')}</td>
+              <td style="padding:14px;text-align:center;">${_greedyPriorityBadge(c.priority)}</td>
+              <td style="padding:14px;text-align:center;font-weight:900;color:${scoreColor};font-family:monospace;font-size:14px;">${c.score !== undefined ? c.score : '—'}</td>
+              <td style="padding:14px;text-align:center;">${_greedyStatusBadge(c.status)}</td>
+              <td style="padding:14px;font-size:11px;color:#64748b;">${_greedyFormatDate(c.created_at)}</td>
             </tr>`;
           }).join('');
         }
@@ -1957,6 +1968,35 @@ async function runGreedyAlgorithm() {
 
     if (typeof showToast === 'function') {
       showToast(`Greedy Algorithm executed — ${data.eligible_count} eligible complaint${data.eligible_count !== 1 ? 's' : ''} analyzed.`, 'success');
+    }
+
+    // ── Auto-mark the selected complaint as In Progress so next click picks different complaint
+    if (data.next_complaint) {
+      try {
+        const markRes = await fetch('/api/dsa/greedy/mark-in-progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ complaint_id: data.next_complaint.id })
+        });
+        const markData = await markRes.json();
+        if (markData.changed) {
+          const statusEl = document.getElementById('greedyNextStatus');
+          if (statusEl) statusEl.innerHTML = _greedyStatusBadge('In Progress');
+          const tbody = document.getElementById('greedyTableBody');
+          if (tbody) {
+            const firstRow = tbody.querySelector('tr:first-child');
+            if (firstRow) {
+              const statusCell = firstRow.querySelector('td:nth-child(8)');
+              if (statusCell) statusCell.innerHTML = _greedyStatusBadge('In Progress');
+            }
+          }
+          if (typeof showToast === 'function') {
+            showToast('Complaint #' + data.next_complaint.id + ' marked In Progress — click again to find the next complaint.', 'info');
+          }
+        }
+      } catch (markErr) {
+        console.warn('Could not auto-mark complaint In Progress:', markErr);
+      }
     }
 
   } catch (err) {

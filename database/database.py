@@ -299,7 +299,8 @@ class Database:
         return res
 
     def add_complaint(self, citizen_id, title, description, category, location,
-                      priority="Medium", department=None, complaint_image=None):
+                      priority="Medium", department=None, complaint_image=None,
+                      ai_verified=False, ai_confidence=None, ai_status=None):
         """INSERT: Register a new civic complaint and save to static data."""
         with self.lock:
             max_id = max((c.get("id", 0) for c in self.data.get("complaints", [])), default=0)
@@ -322,6 +323,9 @@ class Database:
                 "admin_remarks": None,
                 "complaint_image": complaint_image,
                 "solution_image": None,
+                "ai_verified": bool(ai_verified),
+                "ai_confidence": ai_confidence,
+                "ai_status": ai_status,
                 "created_at": now_str,
                 "updated_at": now_str
             }
@@ -396,7 +400,8 @@ class Database:
                 "title", "description", "category", "location",
                 "priority", "status", "department",
                 "assigned_officer_id", "assigned_officer_name",
-                "admin_remarks", "complaint_image", "solution_image"
+                "admin_remarks", "complaint_image", "solution_image",
+                "ai_verified", "ai_confidence", "ai_status"
             }
             updates = {k: v for k, v in kwargs.items() if k in valid_fields}
             if "category" in updates:
